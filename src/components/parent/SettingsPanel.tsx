@@ -57,7 +57,7 @@ export function SettingsPanel() {
               {syncStatus === 'error' && '⚠️ Sync error — will retry'}
             </div>
           </div>
-          <button className="btn btn-primary" style={{ background: '#888' }} onClick={handleLeave}>
+          <button className="btn btn-primary btn-ghost" onClick={handleLeave}>
             Turn off cloud sync
           </button>
         </div>
@@ -144,10 +144,10 @@ export function SettingsPanel() {
         />
       </div>
       <div className="section-label">Reset</div>
-      <button className="btn btn-primary mt-8" style={{ background: '#CC2936' }} onClick={handleResetToday}>
+      <button className="btn btn-primary btn-pink mt-8" onClick={handleResetToday}>
         🔄 Reset Today's Progress
       </button>
-      <button className="btn btn-primary mt-8" style={{ background: '#888', marginTop: 8 }} onClick={handleResetAll}>
+      <button className="btn btn-primary btn-dark mt-8" style={{ marginTop: 8 }} onClick={handleResetAll}>
         ⚠️ Reset Everything
       </button>
     </div>

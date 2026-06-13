@@ -61,11 +61,11 @@ export function PinScreen({ onSuccess, onBack }: PinScreenProps) {
       <button
         className="btn btn-sm btn-ghost"
         onClick={onBack}
-        style={{ color: '#6B5E8A', borderColor: '#3D2F60', marginTop: 8 }}
+        style={{ marginTop: 8 }}
       >
         ← Back to Zack
       </button>
-      <div style={{ color: '#3D2F60', fontSize: '0.7rem', fontWeight: 700, marginTop: 8 }}>Default PIN: 1234</div>
+      <div style={{ color: 'var(--muted)', fontSize: '0.7rem', fontWeight: 700, marginTop: 8 }}>Default PIN: 1234</div>
     </div>
   );
 }

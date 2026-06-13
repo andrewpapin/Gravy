@@ -28,7 +28,7 @@ export function ParentDashboard({ onExit }: ParentDashboardProps) {
         <div className="parent-topbar-title">⚙️ Parent Dashboard</div>
         <button
           className="btn btn-sm"
-          style={{ background: '#2A2000', color: 'var(--yellow)', padding: '6px 12px', fontSize: '0.75rem' }}
+          style={{ background: 'var(--yellow)', color: 'var(--dark)', padding: '6px 12px', fontSize: '0.75rem' }}
           onClick={onExit}
         >
           ← Exit
@@ -41,7 +41,7 @@ export function ParentDashboard({ onExit }: ParentDashboardProps) {
           </button>
         ))}
       </div>
-      <div className="scroll-area" style={{ background: '#0E0E0E' }}>
+      <div className="scroll-area" style={{ background: 'var(--cream)' }}>
         {tab === 'approvals' && <ApprovalsPanel />}
         {tab === 'chores' && <ChoresPanel />}
         {tab === 'store' && <StorePanel />}

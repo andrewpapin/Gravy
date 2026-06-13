@@ -12,7 +12,7 @@ interface Piece {
   vr: number;
 }
 
-const COLORS = ['#FFD700', '#D4A017', '#F5C518', '#B8860B', '#C9A84C', '#8B6914'];
+const COLORS = ['#F6BD60', '#84A59D', '#F28482', '#F7EDE2', '#2F3E46'];
 
 export function Confetti() {
   const { confettiTrigger } = useGrubClub();
