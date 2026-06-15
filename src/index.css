@@ -53,6 +53,7 @@ body {
   border-bottom: 3px solid var(--dark);
 }
 .topbar-title { font-size: 1.2rem; font-weight: 900; letter-spacing: -0.5px; }
+.topbar-title-accent { color: var(--coral); }
 .topbar-logo { font-size: 1.4rem; }
 .points-pill {
   background: var(--yellow);
