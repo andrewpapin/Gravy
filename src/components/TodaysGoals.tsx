@@ -43,7 +43,7 @@ export function TodaysGoals() {
 
       {/* Daily goals list */}
       <div className="flex-between" style={{ marginBottom: 10 }}>
-        <div style={{ fontSize: '0.7rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--muted)' }}>
+        <div style={{ fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--dark)' }}>
           Daily Goals
         </div>
         {dailyGoals.length > 0 && (

@@ -346,7 +346,7 @@ body {
   justify-content: center;
 }
 .food-emoji { font-size: 1.6rem; line-height: 1; }
-.food-label { font-size: 0.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.food-label { font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: var(--dark); }
 .food-tile.checked .food-label { color: rgba(255,255,255,0.9); }
 
 /* ===== GOALS ===== */
@@ -420,8 +420,8 @@ body {
   background: rgba(255, 255, 255, 0.2);
   border: 2px solid white;
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -487,8 +487,8 @@ body {
 
 /* ===== TODAY'S GOALS (merged card) ===== */
 .todays-goals-divider {
-  border-top: 2px solid var(--cream);
-  margin: 14px 0;
+  border-top: 2px solid rgba(47, 62, 70, 0.12);
+  margin: 20px 0;
 }
 
 /* ===== TROPHY PILL ===== */
