@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHouse, faCartShopping, faMedal, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
+import { faHouse, faCartShopping, faMedal, faGear } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../state/GrubClubContext';
 
 export type Tab = 'home' | 'store' | 'badges' | 'calendar';
@@ -7,9 +7,10 @@ export type Tab = 'home' | 'store' | 'badges' | 'calendar';
 interface BottomNavProps {
   active: Tab;
   onChange: (tab: Tab) => void;
+  onEnterParent: () => void;
 }
 
-export function BottomNav({ active, onChange }: BottomNavProps) {
+export function BottomNav({ active, onChange, onEnterParent }: BottomNavProps) {
   const { state } = useGrubClub();
   const pendingCount = state.pendingRewards.length;
 
@@ -31,8 +32,8 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
       <button className={`nav-btn ${active === 'badges' ? 'active' : ''}`} onClick={() => onChange('badges')}>
         <span className="nav-icon"><FontAwesomeIcon icon={faMedal} /></span>Badges
       </button>
-      <button className={`nav-btn ${active === 'calendar' ? 'active' : ''}`} onClick={() => onChange('calendar')}>
-        <span className="nav-icon"><FontAwesomeIcon icon={faCalendarDays} /></span>Calendar
+      <button className="nav-btn" onClick={onEnterParent}>
+        <span className="nav-icon"><FontAwesomeIcon icon={faGear} /></span>Settings
       </button>
     </nav>
   );

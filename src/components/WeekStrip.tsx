@@ -1,3 +1,5 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCalendarDays } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../state/GrubClubContext';
 import { todayStr } from '../state/defaultState';
 import { getDayLog, hasAnyLog } from '../state/dayLog';
@@ -11,13 +13,14 @@ const MONTH_NAMES = [
 interface WeekStripProps {
   selectedDate: string;
   onSelectDate: (dateStr: string) => void;
+  onOpenCalendar?: () => void;
 }
 
 function toDateStr(y: number, m: number, d: number): string {
   return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
-export function WeekStrip({ selectedDate, onSelectDate }: WeekStripProps) {
+export function WeekStrip({ selectedDate, onSelectDate, onOpenCalendar }: WeekStripProps) {
   const { state } = useGrubClub();
   const today = todayStr();
   const now = new Date();
@@ -39,7 +42,14 @@ export function WeekStrip({ selectedDate, onSelectDate }: WeekStripProps) {
 
   return (
     <div className="week-strip-card">
-      <div className="week-strip-header">{headerLabel}</div>
+      <div className="week-strip-header">
+        <span>{headerLabel}</span>
+        {onOpenCalendar && (
+          <button className="week-strip-cal-btn" onClick={onOpenCalendar} aria-label="Open calendar">
+            <FontAwesomeIcon icon={faCalendarDays} />
+          </button>
+        )}
+      </div>
       <div className="week-strip-row">
         {days.map(({ dateStr, dayNum, dayLabel }) => {
           const isToday = dateStr === today;

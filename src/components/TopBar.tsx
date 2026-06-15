@@ -1,14 +1,14 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faUserGroup, faCloudArrowUp, faTrophy } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faCloudArrowUp, faTrophy } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../state/GrubClubContext';
 
 interface TopBarProps {
   title: string;
   highlightLast?: boolean;
-  onEnterParent: () => void;
+  onEnterParent?: () => void;
 }
 
-export function TopBar({ title, highlightLast, onEnterParent }: TopBarProps) {
+export function TopBar({ title, highlightLast }: TopBarProps) {
   const { state, householdCode, syncStatus } = useGrubClub();
   const splitIndex = title.lastIndexOf(' ');
   const syncError = !!householdCode && syncStatus === 'error';
@@ -35,9 +35,6 @@ export function TopBar({ title, highlightLast, onEnterParent }: TopBarProps) {
           <FontAwesomeIcon icon={faTrophy} /> <span>{state.earnedBadges.length}</span>
         </div>
       </div>
-      <button className="topbar-icon-btn" onClick={onEnterParent} aria-label="Grown-ups">
-        <FontAwesomeIcon icon={faUserGroup} />
-      </button>
     </div>
   );
 }
