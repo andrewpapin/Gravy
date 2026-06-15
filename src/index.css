@@ -135,7 +135,6 @@ body {
   overflow-y: auto;
   padding: var(--space-md);
   padding-bottom: var(--space-lg);
-  -webkit-overflow-scrolling: touch;
 }
 
 /* ===== CARDS ===== */
