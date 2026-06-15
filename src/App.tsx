@@ -3,6 +3,7 @@ import { GrubClubProvider } from './state/GrubClubContext';
 import { HomeScreen } from './components/HomeScreen';
 import { StoreScreen } from './components/StoreScreen';
 import { BadgesScreen } from './components/BadgesScreen';
+import { CalendarScreen } from './components/CalendarScreen';
 import { BottomNav, type Tab } from './components/BottomNav';
 import { PinScreen } from './components/PinScreen';
 import { ParentDashboard } from './components/parent/ParentDashboard';
@@ -25,6 +26,7 @@ function AppShell() {
           {tab === 'home' && <HomeScreen />}
           {tab === 'store' && <StoreScreen />}
           {tab === 'badges' && <BadgesScreen onShowBadge={setActiveBadge} />}
+          {tab === 'calendar' && <CalendarScreen />}
           <BottomNav active={tab} onChange={setTab} onEnterParent={() => setView('pin')} />
         </div>
       )}

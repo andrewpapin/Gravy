@@ -40,6 +40,12 @@ export interface Settings {
   childName: string;
 }
 
+export interface DayLog {
+  foodCounts: Record<string, number>;
+  choreIds: number[];
+  points: number;
+}
+
 export interface GrubClubState {
   points: number;
   totalPoints: number;
@@ -48,6 +54,7 @@ export interface GrubClubState {
   todayPoints: number;
   todayFoodCounts: Record<string, number>;
   todayChores: number[];
+  dayLogs: Record<string, DayLog>;
   pendingRewards: PendingReward[];
   earnedBadges: string[];
   counters: Counters;

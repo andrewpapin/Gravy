@@ -10,6 +10,7 @@ export const defaultState: GrubClubState = {
   todayPoints: 0,
   todayFoodCounts: {},
   todayChores: [],
+  dayLogs: {},
   pendingRewards: [],
   earnedBadges: [],
   counters: {
@@ -91,6 +92,17 @@ export function applyDayRollover(state: GrubClubState): GrubClubState {
       state.streak++;
     } else {
       state.streak = 0;
+    }
+    const hadActivity =
+      Object.keys(state.todayFoodCounts).length > 0 ||
+      state.todayChores.length > 0 ||
+      state.todayPoints > 0;
+    if (hadActivity) {
+      state.dayLogs[state.lastActiveDate] = {
+        foodCounts: { ...state.todayFoodCounts },
+        choreIds: [...state.todayChores],
+        points: state.todayPoints,
+      };
     }
     state.todayFoodCounts = {};
     state.todayChores = [];
