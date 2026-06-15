@@ -17,8 +17,8 @@ export function SettingsPanel() {
   } = useGrubClub();
   const [foodPts, setFoodPts] = useState(String(state.settings.foodPts));
   const [bonusPts, setBonusPts] = useState(String(state.settings.bonusPts));
-  const [weeklyCap, setWeeklyCap] = useState(String(state.settings.weeklyCap));
   const [pin, setPin] = useState(String(state.settings.pin));
+  const [childName, setChildName] = useState(state.settings.childName);
   const [joinCode, setJoinCode] = useState('');
 
   const handleResetAll = () => {
@@ -85,11 +85,26 @@ export function SettingsPanel() {
           </div>
         </div>
       )}
-      <div className="section-label">Points & Caps</div>
+      <div className="section-label">Profile</div>
+      <div className="settings-row">
+        <div>
+          <div className="settings-label">Child's name</div>
+          <div className="settings-sub">Shown throughout the app</div>
+        </div>
+        <input
+          type="text"
+          maxLength={20}
+          placeholder="Zack"
+          value={childName}
+          onChange={(e) => setChildName(e.target.value)}
+          onBlur={(e) => saveSetting('childName', e.target.value)}
+        />
+      </div>
+      <div className="section-label">Points</div>
       <div className="settings-row">
         <div>
           <div className="settings-label">Points per food group</div>
-          <div className="settings-sub">Awarded when Zack taps each food group</div>
+          <div className="settings-sub">Awarded when {state.settings.childName} taps each food group</div>
         </div>
         <input
           type="number"
@@ -112,20 +127,6 @@ export function SettingsPanel() {
           value={bonusPts}
           onChange={(e) => setBonusPts(e.target.value)}
           onBlur={(e) => saveSetting('bonusPts', e.target.value)}
-        />
-      </div>
-      <div className="settings-row">
-        <div>
-          <div className="settings-label">Weekly point cap</div>
-          <div className="settings-sub">Max points Zack can earn per week (0 = unlimited)</div>
-        </div>
-        <input
-          type="number"
-          min={0}
-          max={9999}
-          value={weeklyCap}
-          onChange={(e) => setWeeklyCap(e.target.value)}
-          onBlur={(e) => saveSetting('weeklyCap', e.target.value)}
         />
       </div>
       <div className="section-label">PIN</div>

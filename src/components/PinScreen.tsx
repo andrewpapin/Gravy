@@ -65,9 +65,8 @@ export function PinScreen({ onSuccess, onBack }: PinScreenProps) {
         onClick={onBack}
         style={{ marginTop: 8 }}
       >
-        ← Back to Zack
+        ← Back to {state.settings.childName}
       </button>
-      <div style={{ color: 'var(--muted)', fontSize: '0.7rem', fontWeight: 700, marginTop: 8 }}>Default PIN: 1234</div>
     </div>
   );
 }

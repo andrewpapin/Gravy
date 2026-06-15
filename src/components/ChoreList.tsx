@@ -27,7 +27,6 @@ export function ChoreList() {
                 <div className="chore-emoji">{c.emoji}</div>
                 <div className="chore-info">
                   <div className="chore-name">{c.name}</div>
-                  <div className="chore-pts">+{c.pts} pts</div>
                 </div>
                 <div className="pts-badge">+{c.pts}</div>
               </div>

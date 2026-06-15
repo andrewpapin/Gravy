@@ -288,6 +288,21 @@ body {
   font-weight: 900;
   color: white;
 }
+.food-count-badge {
+  position: absolute;
+  top: -6px; left: -6px;
+  background: var(--yellow);
+  color: var(--dark);
+  font-size: 0.65rem;
+  font-weight: 900;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .food-emoji { font-size: 1.6rem; line-height: 1; }
 .food-label { font-size: 0.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
 .food-tile.checked .food-label { color: rgba(255,255,255,0.9); }
@@ -324,7 +339,6 @@ body {
 .chore-info { flex: 1; }
 .chore-name { font-size: 0.95rem; font-weight: 800; }
 .chore-item.checked .chore-name { text-decoration: line-through; color: var(--muted); }
-.chore-pts { font-size: 0.75rem; font-weight: 700; color: var(--sage); }
 .pts-badge {
   background: var(--yellow);
   color: var(--dark);
@@ -354,20 +368,6 @@ body {
   position: relative;
 }
 .store-item:active { transform: scale(0.96); }
-.store-item.pending { border-color: var(--coral); }
-.store-item.pending::after {
-  content: 'PENDING';
-  position: absolute;
-  top: -10px; right: 8px;
-  background: var(--coral);
-  color: white;
-  font-size: 0.5rem;
-  font-weight: 900;
-  padding: 2px 6px;
-  border-radius: 50px;
-  letter-spacing: 1px;
-  border: 2px solid var(--dark);
-}
 .store-emoji { font-size: 2rem; display: block; margin-bottom: 6px; }
 .store-name { font-size: 0.8rem; font-weight: 800; margin-bottom: 6px; color: var(--text); }
 .store-cost {

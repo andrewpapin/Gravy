@@ -45,7 +45,7 @@ interface GrubClubContextValue {
   confettiTrigger: number;
   dismissToast: (id: number) => void;
   hideCelebration: () => void;
-  toggleFood: (id: string) => void;
+  logFood: (id: string) => void;
   toggleChore: (id: number) => void;
   requestReward: (id: number) => void;
   approveReward: (prId: string) => void;
@@ -174,30 +174,17 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
     [showToast],
   );
 
-  const toggleFood = useCallback((id: string) => {
+  const logFood = useCallback((id: string) => {
     setState((prev) => {
       const next = clone(prev);
-      if (next.todayFoods.includes(id)) {
-        const wasFull = FOODS.every((f) => next.todayFoods.includes(f.id));
-        next.todayFoods = next.todayFoods.filter((f) => f !== id);
-        next.points = Math.max(0, next.points - next.settings.foodPts);
-        next.totalPoints = Math.max(0, next.totalPoints - next.settings.foodPts);
-        next.todayPoints = Math.max(0, next.todayPoints - next.settings.foodPts);
-        next.counters.foodLogs[id] = Math.max(0, (next.counters.foodLogs[id] || 0) - 1);
-        if (wasFull && next.settings.bonusPts > 0) {
-          next.points = Math.max(0, next.points - next.settings.bonusPts);
-          next.totalPoints = Math.max(0, next.totalPoints - next.settings.bonusPts);
-          next.todayPoints = Math.max(0, next.todayPoints - next.settings.bonusPts);
-          next.counters.fullTrayDays = Math.max(0, next.counters.fullTrayDays - 1);
-        }
-        return next;
-      }
-      next.todayFoods.push(id);
+      const wasFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
+      next.todayFoodCounts[id] = (next.todayFoodCounts[id] || 0) + 1;
       next.counters.foodLogs[id] = (next.counters.foodLogs[id] || 0) + 1;
       const food = FOODS.find((f) => f.id === id);
       awardPoints(next, next.settings.foodPts, `${food?.label ?? ''} logged!`);
 
-      if (FOODS.every((f) => next.todayFoods.includes(f.id))) {
+      const isFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
+      if (!wasFull && isFull) {
         next.counters.fullTrayDays++;
         if (next.settings.bonusPts > 0) {
           awardPoints(next, next.settings.bonusPts, '🎉 Full Tray Bonus!');
@@ -229,7 +216,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       awardPoints(next, chore.pts, `${chore.name} done!`);
       if (next.chores.length > 0 && next.chores.every((c) => next.todayChores.includes(c.id))) {
         next.counters.allChoresDays++;
-        const fullTray = FOODS.every((f) => next.todayFoods.includes(f.id));
+        const fullTray = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
         if (fullTray) next.counters.comboDays++;
       }
       checkBadges(next);
@@ -321,6 +308,8 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       if (key === 'pin') {
         const p = String(val).slice(0, 4);
         next.settings.pin = p || '1234';
+      } else if (key === 'childName') {
+        next.settings.childName = val.trim() || 'Zack';
       } else {
         (next.settings[key] as number) = parseInt(val) || 0;
       }
@@ -334,7 +323,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       next.points = Math.max(0, next.points - next.todayPoints);
       next.totalPoints = Math.max(0, next.totalPoints - next.todayPoints);
       next.todayPoints = 0;
-      next.todayFoods = [];
+      next.todayFoodCounts = {};
       next.todayChores = [];
       showToast(faRotate, "Today reset!");
       return next;
@@ -419,7 +408,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
     confettiTrigger,
     dismissToast,
     hideCelebration,
-    toggleFood,
+    logFood,
     toggleChore,
     requestReward,
     approveReward,

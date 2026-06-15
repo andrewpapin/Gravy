@@ -8,7 +8,7 @@ export const defaultState: GrubClubState = {
   streak: 0,
   lastActiveDate: null,
   todayPoints: 0,
-  todayFoods: [],
+  todayFoodCounts: {},
   todayChores: [],
   pendingRewards: [],
   earnedBadges: [],
@@ -35,8 +35,8 @@ export const defaultState: GrubClubState = {
   settings: {
     foodPts: 10,
     bonusPts: 25,
-    weeklyCap: 0,
     pin: '1234',
+    childName: 'Zack',
   },
 };
 
@@ -92,7 +92,7 @@ export function applyDayRollover(state: GrubClubState): GrubClubState {
     } else {
       state.streak = 0;
     }
-    state.todayFoods = [];
+    state.todayFoodCounts = {};
     state.todayChores = [];
     state.todayPoints = 0;
   }

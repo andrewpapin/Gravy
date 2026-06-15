@@ -6,6 +6,7 @@ import { useGrubClub } from '../state/GrubClubContext';
 export function StoreScreen() {
   const { state, requestReward } = useGrubClub();
   const pendingIds = state.pendingRewards.map((r) => r.rewardId);
+  const available = state.rewards.filter((r) => !pendingIds.includes(r.id));
 
   return (
     <div className="screen active">
@@ -24,20 +25,24 @@ export function StoreScreen() {
               Ask a grown-up to add rewards.
             </div>
           </div>
+        ) : available.length === 0 ? (
+          <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
+            <span className="empty-state-emoji"><FontAwesomeIcon icon={faHourglassHalf} /></span>
+            <div className="empty-state-text">
+              All rewards requested!
+              <br />
+              Check below for approval status.
+            </div>
+          </div>
         ) : (
           <div className="store-grid">
-            {state.rewards.map((r) => {
+            {available.map((r) => {
               const affordable = state.points >= r.cost;
-              const pending = pendingIds.includes(r.id);
               return (
-                <div
-                  key={r.id}
-                  className={`store-item ${pending ? 'pending' : ''}`}
-                  onClick={() => !pending && requestReward(r.id)}
-                >
+                <div key={r.id} className="store-item" onClick={() => requestReward(r.id)}>
                   <span className="store-emoji">{r.emoji}</span>
                   <div className="store-name">{r.name}</div>
-                  <div className={`store-cost ${!affordable && !pending ? 'unaffordable' : ''}`}><FontAwesomeIcon icon={faStar} /> {r.cost}</div>
+                  <div className={`store-cost ${!affordable ? 'unaffordable' : ''}`}><FontAwesomeIcon icon={faStar} /> {r.cost}</div>
                 </div>
               );
             })}

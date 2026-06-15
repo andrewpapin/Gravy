@@ -36,8 +36,8 @@ export interface BadgeOverride {
 export interface Settings {
   foodPts: number;
   bonusPts: number;
-  weeklyCap: number;
   pin: string;
+  childName: string;
 }
 
 export interface GrubClubState {
@@ -46,7 +46,7 @@ export interface GrubClubState {
   streak: number;
   lastActiveDate: string | null;
   todayPoints: number;
-  todayFoods: string[];
+  todayFoodCounts: Record<string, number>;
   todayChores: number[];
   pendingRewards: PendingReward[];
   earnedBadges: string[];
