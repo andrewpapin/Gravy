@@ -26,9 +26,9 @@ export function StorePanel() {
       <div className="input-row">
         <input
           type="text"
+          className="emoji-input"
           placeholder="🎮"
           maxLength={2}
-          style={{ width: 52, flex: 'none', textAlign: 'center', fontSize: '1.2rem' }}
           value={emoji}
           onChange={(e) => setEmoji(e.target.value)}
         />
