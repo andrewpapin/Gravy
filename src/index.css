@@ -1,19 +1,73 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
-/* ===== DESIGN TOKENS ===== */
+/* ===== THEME TOKENS =====
+   Every color in this file is driven by the semantic custom properties
+   defined in this block. A theme is just a set of overrides for these
+   tokens — components never hard-code colors, so adding a theme never
+   requires touching component rules.
+
+   Roles:
+     --color-bg            page background
+     --color-surface       cards, top/bottom bars, inputs, popups
+     --color-surface-alt   secondary surface (tiles, chips, pills)
+     --color-text          primary text
+     --color-text-muted    secondary / de-emphasized text
+     --color-text-inverse  text on saturated accent backgrounds (white)
+     --color-border        card/button borders, dividers, shadow color
+     --color-ink           fixed dark tone for text/backgrounds paired
+                            with the bright accent color (does not flip
+                            between themes, since --color-accent stays
+                            bright in every theme)
+     --color-accent            primary brand accent (yellow)
+     --color-success            positive accent background (used with
+                                 --color-text-inverse)
+     --color-success-strong     darker variant for gradients
+     --color-success-text       success accent used as text/foreground
+                                 on a surface (tuned per theme for AA)
+     --color-danger / -strong / -text   same pattern as success, for the
+                                 warning/highlight accent
+     --color-overlay / -strong  modal & celebration backdrops
+
+   To add a new theme, add another `:root[data-theme="..."] { ... }`
+   block below redefining these same tokens — no other CSS changes
+   needed. To make it selectable without JS, also branch the
+   `prefers-color-scheme` block.
+*/
 :root {
-  --yellow: #F6BD60;
-  --cream: #F7EDE2;
-  --sage: #84A59D;
-  --coral: #F28482;
-  --dark: #2F3E46;
-  --card: #FFFFFF;
-  --bg: #F7EDE2;
-  --text: #2F3E46;
-  --muted: #8FA3A8;
-  --border: var(--dark);
-  --shadow: 4px 4px 0px var(--dark);
-  --shadow-lg: 5px 5px 0px var(--dark);
+  color-scheme: light dark;
+
+  /* --- Surfaces --- */
+  --color-bg: #F7EDE2;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #F7EDE2;
+
+  /* --- Text --- */
+  --color-text: #2F3E46;
+  --color-text-muted: #566B70;
+  --color-text-inverse: #FFFFFF;
+
+  /* --- Structure --- */
+  --color-border: #2F3E46;
+  --color-ink: #2F3E46;
+
+  /* --- Accents --- */
+  --color-accent: #F6BD60;
+  --color-success: #5C7A73;
+  --color-success-strong: #46615A;
+  --color-success-text: #5C7A73;
+  --color-danger: #A84E4B;
+  --color-danger-strong: #823F3C;
+  --color-danger-text: #A84E4B;
+
+  /* --- Overlays --- */
+  --color-overlay: rgba(47, 62, 70, 0.75);
+  --color-overlay-strong: rgba(47, 62, 70, 0.92);
+
+  /* --- Shadows (derived from structure) --- */
+  --shadow: 4px 4px 0px var(--color-border);
+  --shadow-lg: 5px 5px 0px var(--color-border);
+
+  /* --- Shape & layout --- */
   --radius: 22px;
   --radius-sm: 14px;
   --font-display: 'Nunito', system-ui, sans-serif;
@@ -21,6 +75,50 @@
   --space-sm: 10px;
   --space-md: 16px;
   --space-lg: 24px;
+
+  /* --- Legacy aliases (existing component rules use these names) --- */
+  --yellow: var(--color-accent);
+  --cream: var(--color-surface-alt);
+  --sage: var(--color-success);
+  --coral: var(--color-danger);
+  --dark: var(--color-border);
+  --card: var(--color-surface);
+  --bg: var(--color-bg);
+  --text: var(--color-text);
+  --muted: var(--color-text-muted);
+  --border: var(--color-border);
+}
+
+/* Dark theme, applied automatically from the OS preference with no JS
+   required. An explicit data-theme attribute (set by a future toggle)
+   takes precedence over the system preference. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-bg: #1A2228;
+    --color-surface: #232E36;
+    --color-surface-alt: #2C3941;
+    --color-text: #EDF1F2;
+    --color-text-muted: #9FB4BA;
+    --color-border: #EDF1F2;
+    --color-success-text: #9FC2BA;
+    --color-danger-text: #E8918E;
+    --color-overlay: rgba(0, 0, 0, 0.6);
+    --color-overlay-strong: rgba(0, 0, 0, 0.85);
+  }
+}
+
+/* Explicit dark theme override, e.g. <html data-theme="dark">. */
+:root[data-theme="dark"] {
+  --color-bg: #1A2228;
+  --color-surface: #232E36;
+  --color-surface-alt: #2C3941;
+  --color-text: #EDF1F2;
+  --color-text-muted: #9FB4BA;
+  --color-border: #EDF1F2;
+  --color-success-text: #9FC2BA;
+  --color-danger-text: #E8918E;
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-overlay-strong: rgba(0, 0, 0, 0.85);
 }
 
 
@@ -58,10 +156,10 @@ body {
   border-bottom: 3px solid var(--dark);
 }
 .topbar-title { font-size: 1.2rem; font-weight: 900; letter-spacing: -0.5px; }
-.topbar-title-accent { color: var(--coral); }
+.topbar-title-accent { color: var(--color-danger-text); }
 .points-pill {
   background: var(--yellow);
-  color: var(--dark);
+  color: var(--color-ink);
   font-weight: 900;
   font-size: 0.95rem;
   padding: 5px 12px;
@@ -114,7 +212,7 @@ body {
   top: -4px;
   right: -8px;
   background: var(--coral);
-  color: white;
+  color: var(--color-text-inverse);
   font-size: 0.6rem;
   font-weight: 900;
   width: 16px;
@@ -172,7 +270,7 @@ body {
 .btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 rgba(0,0,0,0.2) !important; }
 .btn-primary {
   background: var(--yellow);
-  color: var(--dark);
+  color: var(--color-ink);
   padding: 14px 24px;
   font-size: 1rem;
   border-radius: var(--radius);
@@ -185,19 +283,19 @@ body {
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
 }
-.btn-green { background: var(--sage); color: white; }
-.btn-purple { background: var(--dark); color: white; }
-.btn-pink { background: var(--coral); color: white; }
-.btn-yellow { background: var(--yellow); color: var(--dark); }
-.btn-dark { background: var(--dark); color: white; }
+.btn-green { background: var(--sage); color: var(--color-text-inverse); }
+.btn-purple { background: var(--color-ink); color: var(--color-text-inverse); }
+.btn-pink { background: var(--coral); color: var(--color-text-inverse); }
+.btn-yellow { background: var(--yellow); color: var(--color-ink); }
+.btn-dark { background: var(--color-ink); color: var(--color-text-inverse); }
 .btn-ghost { background: transparent; color: var(--dark); box-shadow: none; border: 3px solid var(--dark); }
 
 /* ===== HOME SCREEN ===== */
 .rank-banner {
-  background: linear-gradient(135deg, var(--sage), #6c8d85);
+  background: linear-gradient(135deg, var(--color-success), var(--color-success-strong));
   border-radius: var(--radius);
   padding: 20px;
-  color: white;
+  color: var(--color-text-inverse);
   text-align: center;
   margin-bottom: 14px;
   position: relative;
@@ -238,10 +336,10 @@ body {
 
 /* ===== STREAK CARD ===== */
 .streak-card {
-  background: linear-gradient(135deg, var(--coral), #d8635f);
+  background: linear-gradient(135deg, var(--color-danger), var(--color-danger-strong));
   border-radius: var(--radius);
   padding: 16px 20px;
-  color: white;
+  color: var(--color-text-inverse);
   display: flex;
   align-items: center;
   gap: 14px;
@@ -286,13 +384,13 @@ body {
   top: 2px; right: 5px;
   font-size: 0.65rem;
   font-weight: 900;
-  color: white;
+  color: var(--color-text-inverse);
 }
 .food-count-badge {
   position: absolute;
   top: -6px; left: -6px;
   background: var(--yellow);
-  color: var(--dark);
+  color: var(--color-ink);
   font-size: 0.65rem;
   font-weight: 900;
   min-width: 18px;
@@ -305,7 +403,7 @@ body {
 }
 .food-emoji { font-size: 1.6rem; line-height: 1; }
 .food-label { font-size: 0.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
-.food-tile.checked .food-label { color: rgba(255,255,255,0.9); }
+.food-tile.checked .food-label { color: var(--color-text-inverse); }
 
 /* ===== CHORES ===== */
 .chore-item {
@@ -333,7 +431,7 @@ body {
 .chore-item.checked .chore-check {
   background: var(--sage);
   border-color: var(--dark);
-  color: white;
+  color: var(--color-text-inverse);
 }
 .chore-emoji { font-size: 1.3rem; }
 .chore-info { flex: 1; }
@@ -341,7 +439,7 @@ body {
 .chore-item.checked .chore-name { text-decoration: line-through; color: var(--muted); }
 .pts-badge {
   background: var(--yellow);
-  color: var(--dark);
+  color: var(--color-ink);
   font-size: 0.7rem;
   font-weight: 900;
   padding: 3px 8px;
@@ -372,7 +470,7 @@ body {
 .store-name { font-size: 0.8rem; font-weight: 800; margin-bottom: 6px; color: var(--text); }
 .store-cost {
   background: var(--yellow);
-  color: var(--dark);
+  color: var(--color-ink);
   font-size: 0.75rem;
   font-weight: 900;
   padding: 4px 10px;
@@ -435,7 +533,7 @@ body {
 }
 .calendar-day.empty { cursor: default; }
 .calendar-day.today { border-color: var(--dark); }
-.calendar-day.selected { background: var(--yellow); border-color: var(--dark); box-shadow: 2px 2px 0 var(--dark); }
+.calendar-day.selected { background: var(--yellow); border-color: var(--dark); box-shadow: 2px 2px 0 var(--dark); color: var(--color-ink); }
 .calendar-day-dot {
   position: absolute;
   bottom: 4px;
@@ -510,8 +608,8 @@ body {
   transition: background 0.15s, color 0.15s;
   z-index: 2;
 }
-.badge-tile.unlocked .badge-info-btn { background: var(--yellow); color: var(--dark); }
-.badge-info-btn:active { background: var(--dark); color: white; }
+.badge-tile.unlocked .badge-info-btn { background: var(--yellow); color: var(--color-ink); }
+.badge-info-btn:active { background: var(--color-ink); color: var(--color-text-inverse); }
 
 /* Sync gate */
 .sync-gate-overlay {
@@ -523,7 +621,7 @@ body {
   justify-content: center;
   padding: 16px;
   padding-bottom: max(16px, env(safe-area-inset-bottom));
-  background: rgba(47,62,70,0.92);
+  background: var(--color-overlay-strong);
 }
 .sync-gate-card { transform: none; }
 .sync-gate-card .btn { margin-top: 12px; }
@@ -537,10 +635,11 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   color: var(--text);
+  background: var(--color-surface);
 }
 .sync-gate-join input:focus { border-color: var(--coral); outline: none; }
 .sync-gate-status { margin-top: 10px; }
-.sync-gate-error { color: var(--coral); }
+.sync-gate-error { color: var(--color-danger-text); }
 
 /* Badge popup */
 .badge-popup-overlay {
@@ -552,7 +651,7 @@ body {
   justify-content: center;
   padding: 16px;
   padding-bottom: max(16px, env(safe-area-inset-bottom));
-  background: rgba(47,62,70,0.75);
+  background: var(--color-overlay);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s;
@@ -589,7 +688,7 @@ body {
   border-radius: 50px;
   border: 2px solid var(--dark);
 }
-.badge-popup-status.earned { background: var(--sage); color: white; }
+.badge-popup-status.earned { background: var(--sage); color: var(--color-text-inverse); }
 .badge-popup-status.locked { background: var(--card); color: var(--muted); }
 .badge-popup-close {
   position: absolute;
@@ -648,7 +747,7 @@ body {
   transition: transform 0.08s, box-shadow 0.08s;
 }
 .pin-key:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--dark); }
-.pin-key.delete { background: var(--yellow); color: var(--dark); }
+.pin-key.delete { background: var(--yellow); color: var(--color-ink); }
 .pin-key.empty { background: transparent; box-shadow: none; border: none; pointer-events: none; }
 .pin-error { color: var(--coral); font-size: 0.8rem; font-weight: 800; opacity: 0; transition: opacity 0.2s; }
 .pin-error.show { opacity: 1; }
@@ -661,8 +760,8 @@ body {
 }
 .parent-screen-inner.active { display: flex; }
 .parent-topbar {
-  background: var(--dark);
-  color: white;
+  background: var(--color-ink);
+  color: var(--color-text-inverse);
   padding: 16px;
   display: flex;
   align-items: center;
@@ -694,7 +793,7 @@ body {
   letter-spacing: 0.5px;
   transition: all 0.15s;
 }
-.parent-tab.active { background: var(--coral); color: white; }
+.parent-tab.active { background: var(--coral); color: var(--color-text-inverse); }
 
 .parent-tab-panel { display: none; }
 .parent-tab-panel.active { display: block; }
@@ -714,7 +813,7 @@ body {
 .parent-item-emoji { font-size: 1.4rem; }
 .parent-item-info { flex: 1; }
 .parent-item-name { font-size: 0.9rem; font-weight: 800; }
-.parent-item-pts { font-size: 0.75rem; color: var(--sage); font-weight: 700; }
+.parent-item-pts { font-size: 0.75rem; color: var(--color-success-text); font-weight: 700; }
 .approve-btns { display: flex; gap: 8px; }
 
 .input-row {
@@ -778,7 +877,7 @@ body {
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--coral);
+  color: var(--color-danger-text);
   margin: var(--space-lg) 0 var(--space-xs);
 }
 
@@ -827,7 +926,7 @@ body {
 .celebration {
   position: fixed;
   inset: 0;
-  background: rgba(47,62,70,0.92);
+  background: var(--color-overlay-strong);
   z-index: 998;
   display: flex;
   flex-direction: column;
@@ -931,7 +1030,7 @@ body {
   transition: transform 0.2s;
 }
 .pbadge-toggle input:checked + .pbadge-toggle-track { background: var(--sage); }
-.pbadge-toggle input:checked + .pbadge-toggle-track::after { transform: translateX(18px); background: white; }
+.pbadge-toggle input:checked + .pbadge-toggle-track::after { transform: translateX(18px); background: var(--color-text-inverse); }
 .group-pill {
   background: var(--card);
   border: 2px solid var(--dark);
@@ -946,7 +1045,7 @@ body {
   letter-spacing: 0.5px;
   transition: all 0.15s;
 }
-.group-pill.active { background: var(--yellow); color: var(--dark); }
+.group-pill.active { background: var(--yellow); color: var(--color-ink); }
 .pbadge-earned-dot {
   width: 8px; height: 8px;
   border-radius: 50%;
