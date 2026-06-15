@@ -11,6 +11,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { Celebration } from './components/Celebration';
 import { Confetti } from './components/Confetti';
 import { BadgePopup } from './components/BadgePopup';
+import { SyncGateModal } from './components/SyncGateModal';
 
 type View = 'kid' | 'pin' | 'parent';
 
@@ -39,6 +40,7 @@ function AppShell() {
       <Celebration />
       <Confetti />
       <ToastContainer />
+      <SyncGateModal />
     </>
   );
 }
