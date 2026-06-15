@@ -46,7 +46,7 @@ export function SettingsPanel() {
     <div>
       <div className="section-label">Cloud Sync</div>
       {householdCode ? (
-        <div className="settings-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+        <div className="settings-row settings-row--col">
           <div>
             <div className="settings-label">
               Household code: <strong>{householdCode}</strong>
@@ -62,7 +62,7 @@ export function SettingsPanel() {
           </button>
         </div>
       ) : (
-        <div className="settings-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+        <div className="settings-row settings-row--col">
           <div>
             <div className="settings-label">Sync across phones</div>
             <div className="settings-sub">Create a household code, then enter it on other devices</div>
@@ -70,13 +70,12 @@ export function SettingsPanel() {
           <button className="btn btn-primary" onClick={() => createHousehold()} disabled={syncStatus === 'syncing'}>
             ☁️ Enable cloud sync
           </button>
-          <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+          <div className="flex-row-full">
             <input
               type="text"
               placeholder="Enter household code"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              style={{ flex: 1 }}
             />
             <button className="btn btn-primary" onClick={handleJoin} disabled={syncStatus === 'syncing'}>
               Join
