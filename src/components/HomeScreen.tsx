@@ -7,7 +7,7 @@ import { ChoreList } from './ChoreList';
 export function HomeScreen() {
   return (
     <div className="screen active">
-      <TopBar logo="🍕" title="Grub Club" />
+      <TopBar title="Grub Club" />
       <div className="scroll-area">
         <RankBanner />
         <StreakCard />
