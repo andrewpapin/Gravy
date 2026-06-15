@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLock, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../state/GrubClubContext';
 
 interface PinScreenProps {
@@ -35,7 +37,7 @@ export function PinScreen({ onSuccess, onBack }: PinScreenProps) {
 
   return (
     <div className="pin-screen">
-      <div style={{ fontSize: '3rem' }}>🔐</div>
+      <div style={{ fontSize: '3rem' }}><FontAwesomeIcon icon={faLock} /></div>
       <div className="pin-title">Grown-Up Mode</div>
       <div className="pin-sub">Enter the 4-digit PIN</div>
       <div className="pin-dots">
@@ -55,7 +57,7 @@ export function PinScreen({ onSuccess, onBack }: PinScreenProps) {
           0
         </button>
         <button className="pin-key delete" onClick={pinDelete}>
-          ⌫
+          <FontAwesomeIcon icon={faDeleteLeft} />
         </button>
       </div>
       <button

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTriangleExclamation, faCheck, faCloud, faRotate } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../../state/GrubClubContext';
 
 export function SettingsPanel() {
@@ -53,8 +55,8 @@ export function SettingsPanel() {
             </div>
             <div className="settings-sub">
               {syncStatus === 'syncing' && 'Syncing…'}
-              {syncStatus === 'idle' && 'Synced ✓ — enter this code on other phones to sync them'}
-              {syncStatus === 'error' && '⚠️ Sync error — will retry'}
+              {syncStatus === 'idle' && <><FontAwesomeIcon icon={faCheck} /> Synced — enter this code on other phones to sync them</>}
+              {syncStatus === 'error' && <><FontAwesomeIcon icon={faTriangleExclamation} /> Sync error — will retry</>}
             </div>
           </div>
           <button className="btn btn-primary btn-ghost" onClick={handleLeave}>
@@ -68,7 +70,7 @@ export function SettingsPanel() {
             <div className="settings-sub">Create a household code, then enter it on other devices</div>
           </div>
           <button className="btn btn-primary" onClick={() => createHousehold()} disabled={syncStatus === 'syncing'}>
-            ☁️ Enable cloud sync
+            <FontAwesomeIcon icon={faCloud} /> Enable cloud sync
           </button>
           <div className="flex-row-full">
             <input
@@ -144,10 +146,10 @@ export function SettingsPanel() {
       </div>
       <div className="section-label">Reset</div>
       <button className="btn btn-primary btn-pink mt-8" onClick={handleResetToday}>
-        🔄 Reset Today's Progress
+        <FontAwesomeIcon icon={faRotate} /> Reset Today's Progress
       </button>
       <button className="btn btn-primary btn-dark mt-8" style={{ marginTop: 8 }} onClick={handleResetAll}>
-        ⚠️ Reset Everything
+        <FontAwesomeIcon icon={faTriangleExclamation} /> Reset Everything
       </button>
     </div>
   );

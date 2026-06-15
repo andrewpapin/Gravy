@@ -1,3 +1,5 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMedal, faMoon } from '@fortawesome/free-solid-svg-icons';
 import { TopBar } from './TopBar';
 import { getBadgeDisplay, getEnabledBadges } from '../state/badges';
 import { useGrubClub } from '../state/GrubClubContext';
@@ -12,11 +14,11 @@ export function BadgesScreen({ onShowBadge }: BadgesScreenProps) {
 
   return (
     <div className="screen active">
-      <TopBar logo="🏅" title="My Badges" />
+      <TopBar logo={<FontAwesomeIcon icon={faMedal} />} title="My Badges" />
       <div className="scroll-area">
         {visible.length === 0 ? (
           <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
-            <span className="empty-state-emoji">😴</span>
+            <span className="empty-state-emoji"><FontAwesomeIcon icon={faMoon} /></span>
             <div className="empty-state-text">
               No badges enabled yet.
               <br />

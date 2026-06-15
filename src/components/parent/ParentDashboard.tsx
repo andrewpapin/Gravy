@@ -1,4 +1,13 @@
 import { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faCircleCheck,
+  faBroom,
+  faCartShopping,
+  faMedal,
+  faGear,
+  type IconDefinition,
+} from '@fortawesome/free-solid-svg-icons';
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { ChoresPanel } from './ChoresPanel';
 import { StorePanel } from './StorePanel';
@@ -7,12 +16,12 @@ import { SettingsPanel } from './SettingsPanel';
 
 type ParentTab = 'approvals' | 'chores' | 'store' | 'badges' | 'settings';
 
-const TABS: { id: ParentTab; label: string }[] = [
-  { id: 'approvals', label: '✅ Approvals' },
-  { id: 'chores', label: '🧹 Chores' },
-  { id: 'store', label: '🛒 Store' },
-  { id: 'badges', label: '🏅 Badges' },
-  { id: 'settings', label: '⚙️ Settings' },
+const TABS: { id: ParentTab; label: string; icon: IconDefinition }[] = [
+  { id: 'approvals', label: 'Approvals', icon: faCircleCheck },
+  { id: 'chores', label: 'Chores', icon: faBroom },
+  { id: 'store', label: 'Store', icon: faCartShopping },
+  { id: 'badges', label: 'Badges', icon: faMedal },
+  { id: 'settings', label: 'Settings', icon: faGear },
 ];
 
 interface ParentDashboardProps {
@@ -25,7 +34,7 @@ export function ParentDashboard({ onExit }: ParentDashboardProps) {
   return (
     <div className="parent-screen-inner active">
       <div className="parent-topbar">
-        <div className="parent-topbar-title">⚙️ Parent Dashboard</div>
+        <div className="parent-topbar-title"><FontAwesomeIcon icon={faGear} /> Parent Dashboard</div>
         <button
           className="btn btn-sm"
           style={{ background: 'var(--yellow)', color: 'var(--dark)', padding: '6px 12px', fontSize: '0.75rem' }}
@@ -37,7 +46,7 @@ export function ParentDashboard({ onExit }: ParentDashboardProps) {
       <div className="parent-tabs">
         {TABS.map((t) => (
           <button key={t.id} className={`parent-tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
-            {t.label}
+            <FontAwesomeIcon icon={t.icon} /> {t.label}
           </button>
         ))}
       </div>

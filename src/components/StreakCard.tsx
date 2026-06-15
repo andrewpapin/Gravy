@@ -1,10 +1,12 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFire } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../state/GrubClubContext';
 
 export function StreakCard() {
   const { state } = useGrubClub();
   return (
     <div className="streak-card">
-      <div className="streak-fire">🔥</div>
+      <div className="streak-fire"><FontAwesomeIcon icon={faFire} /></div>
       <div>
         <div className="streak-num">{state.streak}</div>
         <div className="streak-label">Day Streak</div>

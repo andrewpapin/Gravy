@@ -1,3 +1,5 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBroom, faMoon } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../state/GrubClubContext';
 
 export function ChoreList() {
@@ -5,10 +7,10 @@ export function ChoreList() {
 
   return (
     <div className="card">
-      <div className="card-title">🧹 Chores</div>
+      <div className="card-title"><FontAwesomeIcon icon={faBroom} /> Chores</div>
       {state.chores.length === 0 ? (
         <div className="empty-state">
-          <span className="empty-state-emoji">😴</span>
+          <span className="empty-state-emoji"><FontAwesomeIcon icon={faMoon} /></span>
           <div className="empty-state-text">
             No chores yet!
             <br />

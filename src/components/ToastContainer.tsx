@@ -1,3 +1,4 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useGrubClub } from '../state/GrubClubContext';
 
 export function ToastContainer() {
@@ -6,7 +7,7 @@ export function ToastContainer() {
     <div className="toast-container">
       {toasts.map((t) => (
         <div className="toast" key={t.id}>
-          <span>{t.icon}</span>
+          <span>{typeof t.icon === 'string' ? t.icon : <FontAwesomeIcon icon={t.icon} />}</span>
           <span>{t.msg}</span>
         </div>
       ))}

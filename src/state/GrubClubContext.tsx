@@ -1,4 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCircleXmark,
+  faCircleCheck,
+  faCartShopping,
+  faRotate,
+  faTriangleExclamation,
+  faEnvelope,
+  faCloud,
+  faUtensils,
+} from '@fortawesome/free-solid-svg-icons';
 import type { Chore, GrubClubState, Reward, Settings } from './types';
 import { applyDayRollover, loadState, saveState, cloneDefaultState } from './defaultState';
 import { FOODS } from '../data/foods';
@@ -17,12 +28,12 @@ const HOUSEHOLD_CODE_KEY = 'grubclub_household_code';
 
 export interface ToastItem {
   id: number;
-  icon: string;
+  icon: IconDefinition | string;
   msg: string;
 }
 
 export interface CelebrationData {
-  icon: string;
+  icon: IconDefinition | string;
   title: string;
   sub: string;
 }
@@ -116,7 +127,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
-  const showToast = useCallback((icon: string, msg: string) => {
+  const showToast = useCallback((icon: IconDefinition | string, msg: string) => {
     const id = ++toastIdCounter;
     setToasts((t) => [...t, { id, icon, msg }]);
     setTimeout(() => {
@@ -128,7 +139,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
     setToasts((t) => t.filter((toast) => toast.id !== id));
   }, []);
 
-  const showCelebration = useCallback((icon: string, title: string, sub: string) => {
+  const showCelebration = useCallback((icon: IconDefinition | string, title: string, sub: string) => {
     setCelebration({ icon, title, sub });
     setConfettiTrigger((n) => n + 1);
   }, []);
@@ -193,7 +204,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
         }
         const allChoresDone = next.chores.length > 0 && next.chores.every((c) => next.todayChores.includes(c.id));
         if (allChoresDone) next.counters.comboDays++;
-        showCelebration('🍽️', 'Full Tray!', `All 5 food groups eaten! +${next.settings.bonusPts} bonus!`);
+        showCelebration(faUtensils, 'Full Tray!', `All 5 food groups eaten! +${next.settings.bonusPts} bonus!`);
       }
       checkBadges(next);
       return next;
@@ -231,14 +242,14 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       const reward = prev.rewards.find((r) => r.id === id);
       if (!reward) return prev;
       if (prev.points < reward.cost) {
-        showToast('❌', `Need ${reward.cost - prev.points} more points!`);
+        showToast(faCircleXmark, `Need ${reward.cost - prev.points} more points!`);
         return prev;
       }
       const next = clone(prev);
       const pr = { id: Date.now().toString(), rewardId: id };
       next.pendingRewards.push(pr);
       next.counters.totalRewards++;
-      showToast('📬', `${reward.name} requested!`);
+      showToast(faEnvelope, `${reward.name} requested!`);
       checkBadges(next);
       return next;
     });
@@ -253,7 +264,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       next.pendingRewards = next.pendingRewards.filter((p) => p.id !== prId);
       if (reward) {
         next.points = Math.max(0, next.points - reward.cost);
-        showToast('✅', `${reward.name} approved!`);
+        showToast(faCircleCheck, `${reward.name} approved!`);
       }
       return next;
     });
@@ -263,7 +274,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
     setState((prev) => {
       const next = clone(prev);
       next.pendingRewards = next.pendingRewards.filter((p) => p.id !== prId);
-      showToast('❌', 'Request declined');
+      showToast(faCircleXmark, 'Request declined');
       return next;
     });
   }, [showToast]);
@@ -272,7 +283,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
     setState((prev) => {
       const next = clone(prev);
       next.chores.push({ id: Date.now(), ...chore });
-      showToast('✅', `"${chore.name}" added!`);
+      showToast(faCircleCheck, `"${chore.name}" added!`);
       return next;
     });
   }, [showToast]);
@@ -290,7 +301,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
     setState((prev) => {
       const next = clone(prev);
       next.rewards.push({ id: Date.now(), ...reward });
-      showToast('🛒', `"${reward.name}" added to store!`);
+      showToast(faCartShopping, `"${reward.name}" added to store!`);
       return next;
     });
   }, [showToast]);
@@ -325,7 +336,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       next.todayPoints = 0;
       next.todayFoods = [];
       next.todayChores = [];
-      showToast('🔄', "Today reset!");
+      showToast(faRotate, "Today reset!");
       return next;
     });
   }, [showToast]);
@@ -337,7 +348,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       const next = cloneDefaultState();
       next.settings.pin = pin;
       next.badgeConfig = badgeConfig;
-      showToast('⚠️', 'Everything reset');
+      showToast(faTriangleExclamation, 'Everything reset');
       return applyDayRollover(next);
     });
   }, [showToast]);
@@ -360,11 +371,11 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(HOUSEHOLD_CODE_KEY, code);
       setHouseholdCode(code);
       setSyncStatus('idle');
-      showToast('☁️', `Cloud sync enabled! Code: ${code}`);
+      showToast(faCloud, `Cloud sync enabled! Code: ${code}`);
       return code;
     } catch {
       setSyncStatus('error');
-      showToast('❌', 'Failed to enable cloud sync');
+      showToast(faCircleXmark, 'Failed to enable cloud sync');
       return null;
     }
   }, [state, showToast]);
@@ -376,7 +387,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       const remoteState = await fetchHousehold(normalized);
       if (!remoteState) {
         setSyncStatus('error');
-        showToast('❌', 'Household code not found');
+        showToast(faCircleXmark, 'Household code not found');
         return false;
       }
       lastSyncedRef.current = JSON.stringify(remoteState);
@@ -384,11 +395,11 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(HOUSEHOLD_CODE_KEY, normalized);
       setHouseholdCode(normalized);
       setSyncStatus('idle');
-      showToast('☁️', 'Joined household sync!');
+      showToast(faCloud, 'Joined household sync!');
       return true;
     } catch {
       setSyncStatus('error');
-      showToast('❌', 'Failed to join household');
+      showToast(faCircleXmark, 'Failed to join household');
       return false;
     }
   }, [showToast]);
@@ -398,7 +409,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
     setHouseholdCode(null);
     lastSyncedRef.current = null;
     setSyncStatus('idle');
-    showToast('☁️', 'Cloud sync turned off');
+    showToast(faCloud, 'Cloud sync turned off');
   }, [showToast]);
 
   const value: GrubClubContextValue = {
