@@ -64,7 +64,7 @@ export function CalendarScreen({ onEnterParent }: CalendarScreenProps) {
 
   return (
     <div className="screen active">
-      <TopBar title="Calendar" highlightLast onEnterParent={onEnterParent} />
+      <TopBar title="Calendar" highlightLast />
       <div className="scroll-area">
         <div className="card">
           <div className="calendar-header">
@@ -87,22 +87,25 @@ export function CalendarScreen({ onEnterParent }: CalendarScreenProps) {
           </div>
           <div className="calendar-grid">
             {cells.map((day, i) => {
-              if (day === null) return <div key={i} className="calendar-day empty" />;
+              if (day === null) return <span key={i} className="calendar-day empty" aria-hidden="true" />;
               const dateStr = toDateStr(viewYear, viewMonth, day);
               const isToday = dateStr === today;
               const isSelected = dateStr === selectedDate;
               const log = getDayLog(state, dateStr, today);
               const hasLog = hasAnyLog(log);
               return (
-                <div
+                <button
                   key={i}
+                  type="button"
                   className={`calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`}
                   onClick={() => setSelectedDate(dateStr)}
+                  aria-label={`${day} ${MONTH_NAMES[viewMonth]}${isToday ? ', today' : ''}${hasLog ? ', has activity' : ''}`}
+                  aria-pressed={isSelected}
                 >
                   {day}
-                  {isToday && <div className="calendar-day-today-marker" aria-label="Today" />}
-                  {hasLog && <div className="calendar-day-dot" />}
-                </div>
+                  {isToday && <div className="calendar-day-today-marker" aria-hidden="true" />}
+                  {hasLog && <div className="calendar-day-dot" aria-hidden="true" />}
+                </button>
               );
             })}
           </div>

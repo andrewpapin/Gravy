@@ -57,15 +57,18 @@ export function WeekStrip({ selectedDate, onSelectDate, onOpenCalendar }: WeekSt
           const log = getDayLog(state, dateStr, today);
           const hasLog = hasAnyLog(log);
           return (
-            <div
+            <button
               key={dateStr}
+              type="button"
               className={`week-day${isToday ? ' today' : ''}${isSelected && !isToday ? ' selected' : ''}`}
               onClick={() => onSelectDate(dateStr)}
+              aria-label={`${dayLabel} ${dayNum}${isToday ? ', today' : ''}${hasLog ? ', has activity' : ''}`}
+              aria-pressed={isSelected}
             >
-              <span className="week-day-label">{dayLabel}</span>
-              <span className="week-day-num">{dayNum}</span>
-              {hasLog && !isToday && !isSelected && <span className="week-day-dot" />}
-            </div>
+              <span className="week-day-label" aria-hidden="true">{dayLabel}</span>
+              <span className="week-day-num" aria-hidden="true">{dayNum}</span>
+              {hasLog && !isToday && !isSelected && <span className="week-day-dot" aria-hidden="true" />}
+            </button>
           );
         })}
       </div>

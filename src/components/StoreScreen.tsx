@@ -14,7 +14,7 @@ export function StoreScreen({ onEnterParent }: StoreScreenProps) {
 
   return (
     <div className="screen active">
-      <TopBar title="Reward Store" onEnterParent={onEnterParent} />
+      <TopBar title="Reward Store" />
       <div className="scroll-area">
         <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--muted)', marginBottom: 14, textAlign: 'center' }}>
           Tap a reward to ask for it — a grown-up will need to say yes!
@@ -43,23 +43,26 @@ export function StoreScreen({ onEnterParent }: StoreScreenProps) {
             {available.map((r) => {
               const affordable = state.points >= r.cost;
               return (
-                <div
+                <button
                   key={r.id}
+                  type="button"
                   className={`store-item ${!affordable ? 'unaffordable' : ''}`}
                   onClick={() => requestReward(r.id)}
+                  aria-label={`${r.name}, ${r.cost} points${!affordable ? `, need ${r.cost - state.points} more` : ''}`}
+                  aria-disabled={!affordable}
                 >
                   {!affordable && (
-                    <span className="store-lock">
+                    <span className="store-lock" aria-hidden="true">
                       <FontAwesomeIcon icon={faLock} />
                     </span>
                   )}
-                  <span className="store-emoji">{r.emoji}</span>
+                  <span className="store-emoji" aria-hidden="true">{r.emoji}</span>
                   <div className="store-name">{r.name}</div>
-                  <div className={`store-cost ${!affordable ? 'unaffordable' : ''}`}><FontAwesomeIcon icon={faStar} /> {r.cost}</div>
+                  <div className={`store-cost ${!affordable ? 'unaffordable' : ''}`}><FontAwesomeIcon icon={faStar} aria-hidden="true" /> {r.cost}</div>
                   {!affordable && (
                     <div className="store-need-more">Need {r.cost - state.points} more</div>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
@@ -79,12 +82,12 @@ export function StoreScreen({ onEnterParent }: StoreScreenProps) {
                 const reward = state.rewards.find((r) => r.id === pr.rewardId);
                 if (!reward) return null;
                 return (
-                  <div className="parent-item" key={pr.id}>
-                    <div className="parent-item-emoji">{reward.emoji}</div>
-                    <div className="parent-item-info">
-                      <div className="parent-item-name">{reward.name}</div>
-                      <div className="parent-item-pts" style={{ color: 'var(--orange)' }}>
-                        <FontAwesomeIcon icon={faStar} /> {reward.cost} pts • Waiting for approval
+                  <div className="pending-item" key={pr.id}>
+                    <div className="pending-item-emoji" aria-hidden="true">{reward.emoji}</div>
+                    <div className="pending-item-info">
+                      <div className="pending-item-name">{reward.name}</div>
+                      <div className="pending-item-status">
+                        <FontAwesomeIcon icon={faHourglassHalf} aria-hidden="true" /> {reward.cost} pts · Waiting for approval
                       </div>
                     </div>
                   </div>

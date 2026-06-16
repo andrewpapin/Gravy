@@ -5,7 +5,6 @@ import { useGrubClub } from '../state/GrubClubContext';
 interface TopBarProps {
   title: string;
   highlightLast?: boolean;
-  onEnterParent?: () => void;
 }
 
 export function TopBar({ title, highlightLast }: TopBarProps) {
@@ -26,8 +25,13 @@ export function TopBar({ title, highlightLast }: TopBarProps) {
         <div className="points-pill">
           <FontAwesomeIcon icon={faStar} /> <span>{state.points}</span>
           {syncError && (
-            <span className="sync-warning-icon" title="Sync issue — your progress is saved here and will sync once connection is back">
-              <FontAwesomeIcon icon={faCloudArrowUp} />
+            <span
+              className="sync-warning-icon"
+              title="Sync issue — your progress is saved here and will sync once connection is back"
+              aria-label="Sync issue — progress saved locally"
+              role="img"
+            >
+              <FontAwesomeIcon icon={faCloudArrowUp} aria-hidden="true" />
             </span>
           )}
         </div>

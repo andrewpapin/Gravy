@@ -38,10 +38,15 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
             {FOODS.map((f) => {
               const count = log!.foodCounts[f.id] || 0;
               return (
-                <div key={f.id} className={`food-tile ${count > 0 ? 'checked' : ''}`}>
-                  {count > 1 && <div className="food-count-badge">{count}</div>}
-                  <div className="food-emoji">{f.emoji}</div>
-                  <div className="food-label">{f.label}</div>
+                <div
+                  key={f.id}
+                  className={`food-tile ${count > 0 ? 'checked' : ''}`}
+                  role="img"
+                  aria-label={count > 0 ? `${f.label} eaten${count > 1 ? ` ×${count}` : ''}` : `${f.label} not eaten`}
+                >
+                  {count > 1 && <div className="food-count-badge" aria-hidden="true">{count}</div>}
+                  <div className="food-emoji" aria-hidden="true">{f.emoji}</div>
+                  <div className="food-label" aria-hidden="true">{f.label}</div>
                 </div>
               );
             })}

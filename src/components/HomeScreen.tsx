@@ -22,7 +22,7 @@ export function HomeScreen({ onEnterParent, onOpenCalendar }: HomeScreenProps) {
 
   return (
     <div className="screen active">
-      <TopBar title="Grub Club" highlightLast onEnterParent={onEnterParent} />
+      <TopBar title="Grub Club" highlightLast />
       <div className="scroll-area">
         <WeekStrip selectedDate={selectedDate} onSelectDate={setSelectedDate} onOpenCalendar={onOpenCalendar} />
         <StatsCard />
