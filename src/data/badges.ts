@@ -47,7 +47,7 @@ export const BADGE_MASTER: BadgeDef[] = [
   { id: 'all_chores7',  emoji: '💥', name: 'Unstoppable',       desc: 'Finish all chores 7 days',                trigger: 'all_chores:7',   group: 'Chores' },
   { id: 'all_chores14', emoji: '🌊', name: 'Chore Tsunami',     desc: 'Finish all chores 14 days',               trigger: 'all_chores:14',  group: 'Chores' },
   { id: 'all_chores30', emoji: '🏅', name: 'Legendary Cleaner', desc: 'Finish all chores 30 days',               trigger: 'all_chores:30',  group: 'Chores' },
-  { id: 'chore_streak7',emoji: '🔥', name: 'Chore Streak',      desc: 'Do at least one chore 7 days in a row',  trigger: 'streak:7',       group: 'Chores' },
+  { id: 'chore_streak7',emoji: '🔥', name: 'Chore Streak',      desc: 'Use the app 7 days in a row',             trigger: 'streak:6',       group: 'Chores' },
 
   // ── POINTS (10) ────────────────────────────────────────────────────
   { id: 'pts50',        emoji: '🌱', name: 'Just Starting',     desc: 'Earn 50 points total',                    trigger: 'pts:50',      group: 'Points' },
@@ -62,14 +62,14 @@ export const BADGE_MASTER: BadgeDef[] = [
   { id: 'pts5000',      emoji: '🦄', name: 'Unicorn',           desc: 'Earn 5,000 points total',                 trigger: 'pts:5000',    group: 'Points' },
 
   // ── STREAKS (8) ────────────────────────────────────────────────────
-  { id: 'streak2',      emoji: '✌️', name: 'Two Days',          desc: 'Use the app 2 days in a row',             trigger: 'streak:2',    group: 'Streaks' },
-  { id: 'streak3',      emoji: '🔥', name: 'On Fire',           desc: 'Use the app 3 days in a row',             trigger: 'streak:3',    group: 'Streaks' },
-  { id: 'streak5',      emoji: '⚡', name: 'Lightning',         desc: 'Use the app 5 days in a row',             trigger: 'streak:5',    group: 'Streaks' },
-  { id: 'streak7',      emoji: '🌋', name: 'Inferno',           desc: 'Use the app 7 days in a row',             trigger: 'streak:7',    group: 'Streaks' },
-  { id: 'streak10',     emoji: '💫', name: 'Ten Day Hero',      desc: 'Use the app 10 days in a row',            trigger: 'streak:10',   group: 'Streaks' },
-  { id: 'streak14',     emoji: '🦅', name: 'Two Weeks Strong',  desc: 'Use the app 14 days in a row',            trigger: 'streak:14',   group: 'Streaks' },
-  { id: 'streak21',     emoji: '🏔️', name: 'Mountain Top',      desc: 'Use the app 21 days in a row',            trigger: 'streak:21',   group: 'Streaks' },
-  { id: 'streak30',     emoji: '🌞', name: 'Month Master',      desc: 'Use the app 30 days in a row',            trigger: 'streak:30',   group: 'Streaks' },
+  { id: 'streak2',      emoji: '✌️', name: 'Two Days',          desc: 'Use the app 2 days in a row',             trigger: 'streak:1',    group: 'Streaks' },
+  { id: 'streak3',      emoji: '🔥', name: 'On Fire',           desc: 'Use the app 3 days in a row',             trigger: 'streak:2',    group: 'Streaks' },
+  { id: 'streak5',      emoji: '⚡', name: 'Lightning',         desc: 'Use the app 5 days in a row',             trigger: 'streak:4',    group: 'Streaks' },
+  { id: 'streak7',      emoji: '🌋', name: 'Inferno',           desc: 'Use the app 7 days in a row',             trigger: 'streak:6',    group: 'Streaks' },
+  { id: 'streak10',     emoji: '💫', name: 'Ten Day Hero',      desc: 'Use the app 10 days in a row',            trigger: 'streak:9',    group: 'Streaks' },
+  { id: 'streak14',     emoji: '🦅', name: 'Two Weeks Strong',  desc: 'Use the app 14 days in a row',            trigger: 'streak:13',   group: 'Streaks' },
+  { id: 'streak21',     emoji: '🏔️', name: 'Mountain Top',      desc: 'Use the app 21 days in a row',            trigger: 'streak:20',   group: 'Streaks' },
+  { id: 'streak30',     emoji: '🌞', name: 'Month Master',      desc: 'Use the app 30 days in a row',            trigger: 'streak:29',   group: 'Streaks' },
 
   // ── STORE (5) ──────────────────────────────────────────────────────
   { id: 'first_reward', emoji: '🎁', name: 'Spender',           desc: 'Request your first reward',               trigger: 'first_reward',    group: 'Store' },

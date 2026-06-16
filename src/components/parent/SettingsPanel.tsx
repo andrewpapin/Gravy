@@ -153,12 +153,13 @@ export function SettingsPanel() {
           <div className="settings-sub">Enter a new 4-digit PIN</div>
         </div>
         <input
-          type="number"
-          min={0}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
           maxLength={4}
           placeholder="1234"
           value={pin}
-          onChange={(e) => setPin(e.target.value)}
+          onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
           onBlur={(e) => {
             saveSetting('pin', e.target.value);
             flashSaved('pin');

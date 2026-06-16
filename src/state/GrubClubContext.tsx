@@ -232,7 +232,8 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
         const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
         const allDailyGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => next.todayGoals.includes(g.id));
         if (allDailyGoalsDone) next.counters.comboDays++;
-        showCelebration(faUtensils, 'Full Tray!', `All 5 food groups eaten! +${next.settings.bonusPts} bonus!`);
+        const bonusText = next.settings.bonusPts > 0 ? ` +${next.settings.bonusPts} bonus!` : '';
+        showCelebration(faUtensils, 'Full Tray!', `All 5 food groups eaten!${bonusText}`);
       }
       // Defer badge toasts so they don't pile up on top of the celebration overlay.
       checkBadges(next, !wasFull && isFull ? 1400 : 0);
@@ -304,11 +305,18 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       if (!next.todayGoalCounts) next.todayGoalCounts = {};
       next.todayGoalCounts[id] = currentCount - 1;
       if (currentCount >= target && next.todayGoals.includes(id)) {
+        const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
+        const wasAllGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => next.todayGoals.includes(g.id));
         next.todayGoals = next.todayGoals.filter((g) => g !== id);
         next.counters.totalGoals = Math.max(0, next.counters.totalGoals - 1);
         next.points = Math.max(0, next.points - goal.pts);
         next.totalPoints = Math.max(0, next.totalPoints - goal.pts);
         next.todayPoints = Math.max(0, next.todayPoints - goal.pts);
+        if (wasAllGoalsDone) {
+          next.counters.allGoalsDays = Math.max(0, next.counters.allGoalsDays - 1);
+          const fullTray = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
+          if (fullTray) next.counters.comboDays = Math.max(0, next.counters.comboDays - 1);
+        }
       }
       return next;
     });
@@ -497,6 +505,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       const next = clone(prev);
       next.goals = next.goals.filter((g) => g.id !== id);
       next.todayGoals = next.todayGoals.filter((g) => g !== id);
+      if (next.todayGoalCounts) delete next.todayGoalCounts[id];
       showToast(faTrashCan, `"${goal.name}" removed`, {
         label: 'Undo',
         onClick: () => setState(() => snapshot),
@@ -549,7 +558,8 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       } else if (key === 'childName') {
         next.settings.childName = val.trim() || 'Zack';
       } else {
-        (next.settings[key] as number) = parseInt(val) || 0;
+        const parsed = parseInt(val);
+        (next.settings[key] as number) = isNaN(parsed) ? (prev.settings[key] as number) : Math.max(0, parsed);
       }
       return next;
     });
@@ -563,6 +573,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       next.todayPoints = 0;
       next.todayFoodCounts = {};
       next.todayGoals = [];
+      next.todayGoalCounts = {};
       showToast(faRotate, "Today reset!");
       return next;
     });

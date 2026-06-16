@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Component, useState, type ReactNode } from 'react';
 import { GrubClubProvider } from './state/GrubClubContext';
 import { HomeScreen } from './components/HomeScreen';
 import { StoreScreen } from './components/StoreScreen';
@@ -13,6 +13,28 @@ import { Confetti } from './components/Confetti';
 import { BadgePopup } from './components/BadgePopup';
 import { SyncGateModal } from './components/SyncGateModal';
 
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', gap: 16, padding: 24, textAlign: 'center' }}>
+          <div style={{ fontSize: '3rem' }}>😵</div>
+          <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>Something went wrong</div>
+          <button className="btn btn-primary" onClick={() => window.location.reload()}>Reload app</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 type View = 'kid' | 'pin' | 'parent';
 
 function AppShell() {
@@ -24,10 +46,10 @@ function AppShell() {
     <>
       {view === 'kid' && (
         <div id="kidApp">
-          {tab === 'home' && <HomeScreen onEnterParent={() => setView('pin')} onOpenCalendar={() => setTab('calendar')} />}
-          {tab === 'store' && <StoreScreen onEnterParent={() => setView('pin')} />}
-          {tab === 'badges' && <BadgesScreen onShowBadge={setActiveBadge} onEnterParent={() => setView('pin')} />}
-          {tab === 'calendar' && <CalendarScreen onEnterParent={() => setView('pin')} />}
+          {tab === 'home' && <HomeScreen onOpenCalendar={() => setTab('calendar')} />}
+          {tab === 'store' && <StoreScreen />}
+          {tab === 'badges' && <BadgesScreen onShowBadge={setActiveBadge} />}
+          {tab === 'calendar' && <CalendarScreen />}
           <BottomNav active={tab} onChange={setTab} onEnterParent={() => setView('pin')} />
         </div>
       )}
@@ -47,9 +69,11 @@ function AppShell() {
 
 function App() {
   return (
-    <GrubClubProvider>
-      <AppShell />
-    </GrubClubProvider>
+    <ErrorBoundary>
+      <GrubClubProvider>
+        <AppShell />
+      </GrubClubProvider>
+    </ErrorBoundary>
   );
 }
 

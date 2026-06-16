@@ -3,11 +3,7 @@ import { faStore, faHourglassHalf, faStar, faLock } from '@fortawesome/free-soli
 import { TopBar } from './TopBar';
 import { useGrubClub } from '../state/GrubClubContext';
 
-interface StoreScreenProps {
-  onEnterParent: () => void;
-}
-
-export function StoreScreen({ onEnterParent: _onEnterParent }: StoreScreenProps) {
+export function StoreScreen() {
   const { state, requestReward } = useGrubClub();
   const pendingIds = state.pendingRewards.map((r) => r.rewardId);
   const available = state.rewards.filter((r) => !pendingIds.includes(r.id));
@@ -49,7 +45,7 @@ export function StoreScreen({ onEnterParent: _onEnterParent }: StoreScreenProps)
                   className={`store-item ${!affordable ? 'unaffordable' : ''}`}
                   onClick={() => requestReward(r.id)}
                   aria-label={`${r.name}, ${r.cost} points${!affordable ? `, need ${r.cost - state.points} more` : ''}`}
-                  aria-disabled={!affordable}
+                  disabled={!affordable}
                 >
                   {!affordable && (
                     <span className="store-lock" aria-hidden="true">

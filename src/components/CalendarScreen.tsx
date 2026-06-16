@@ -19,11 +19,7 @@ function toDateStr(year: number, month: number, day: number): string {
   return `${year}-${m}-${d}`;
 }
 
-interface CalendarScreenProps {
-  onEnterParent: () => void;
-}
-
-export function CalendarScreen({ onEnterParent: _onEnterParent }: CalendarScreenProps) {
+export function CalendarScreen() {
   const { state, showToast } = useGrubClub();
   const today = todayStr();
   const now = new Date();

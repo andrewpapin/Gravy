@@ -6,10 +6,9 @@ import { useGrubClub } from '../state/GrubClubContext';
 
 interface BadgesScreenProps {
   onShowBadge: (id: string) => void;
-  onEnterParent: () => void;
 }
 
-export function BadgesScreen({ onShowBadge, onEnterParent: _onEnterParent }: BadgesScreenProps) {
+export function BadgesScreen({ onShowBadge }: BadgesScreenProps) {
   const { state } = useGrubClub();
   const visible = getEnabledBadges(state);
 

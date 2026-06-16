@@ -9,11 +9,10 @@ import { useGrubClub } from '../state/GrubClubContext';
 import { todayStr } from '../state/defaultState';
 
 interface HomeScreenProps {
-  onEnterParent: () => void;
   onOpenCalendar: () => void;
 }
 
-export function HomeScreen({ onEnterParent: _onEnterParent, onOpenCalendar }: HomeScreenProps) {
+export function HomeScreen({ onOpenCalendar }: HomeScreenProps) {
   const { state } = useGrubClub();
   const today = todayStr();
   const [selectedDate, setSelectedDate] = useState(today);

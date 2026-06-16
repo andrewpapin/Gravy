@@ -4,7 +4,14 @@ import { useGrubClub } from '../state/GrubClubContext';
 export function Celebration() {
   const { celebration, hideCelebration } = useGrubClub();
   return (
-    <div className={`celebration ${celebration ? 'show' : ''}`} onClick={hideCelebration}>
+    <div
+      className={`celebration ${celebration ? 'show' : ''}`}
+      onClick={hideCelebration}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') hideCelebration(); }}
+      role="button"
+      tabIndex={celebration ? 0 : -1}
+      aria-label="Tap to continue"
+    >
       {celebration && (
         <>
           <div className="celebration-icon">
