@@ -388,12 +388,12 @@ button.calendar-day {
   margin-top: 2px;
 }
 .stepper-btn {
-  width: 20px;
-  height: 20px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 2px solid var(--dark);
   background: var(--cream);
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 900;
   cursor: pointer;
   display: flex;

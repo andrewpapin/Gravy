@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faDeleteLeft } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../state/GrubClubContext';
@@ -39,6 +39,32 @@ export function PinScreen({ onSuccess, onBack }: PinScreenProps) {
     setShowError(false);
     setPin((p) => p.slice(0, -1));
   };
+
+  // Use a ref so the keyboard handler always sees the latest pin value
+  const pinRef = useRef(pin);
+  useEffect(() => { pinRef.current = pin; }, [pin]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key >= '0' && e.key <= '9') {
+        const current = pinRef.current;
+        if (current.length >= 4) return;
+        setShowError(false);
+        const next = current + e.key;
+        setPin(next);
+        if (next.length === 4) {
+          setTimeout(() => checkPin(next), 150);
+        }
+      } else if (e.key === 'Backspace') {
+        setShowError(false);
+        setPin((p) => p.slice(0, -1));
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  // checkPin is stable for the life of the component; re-run only when PIN setting changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.settings.pin]);
 
   return (
     <div className="pin-screen">

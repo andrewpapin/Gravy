@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { BADGE_MASTER } from '../../data/badges';
 import { getEnabledBadgeCount } from '../../state/badges';
 import { useGrubClub } from '../../state/GrubClubContext';
@@ -6,6 +6,19 @@ import { useGrubClub } from '../../state/GrubClubContext';
 export function BadgesPanel() {
   const { state, updateBadgeConfig } = useGrubClub();
   const [activeGroup, setActiveGroup] = useState('All');
+  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const debouncedUpdate = (badgeId: string, key: 'enabled' | 'name' | 'emoji', value: string | boolean) => {
+    if (key === 'enabled') {
+      updateBadgeConfig(badgeId, key, value);
+      return;
+    }
+    const timerKey = `${badgeId}-${key}`;
+    clearTimeout(debounceTimers.current[timerKey]);
+    debounceTimers.current[timerKey] = setTimeout(() => {
+      updateBadgeConfig(badgeId, key, value);
+    }, 300);
+  };
 
   const enabledCount = getEnabledBadgeCount(state);
   const groups = ['All', ...new Set(BADGE_MASTER.map((b) => b.group))];
@@ -49,7 +62,7 @@ export function BadgesPanel() {
                 maxLength={2}
                 defaultValue={emoji}
                 key={`${b.id}-emoji-${emoji}`}
-                onChange={(e) => updateBadgeConfig(b.id, 'emoji', e.target.value)}
+                onChange={(e) => debouncedUpdate(b.id, 'emoji', e.target.value)}
                 onClick={(e) => (e.target as HTMLInputElement).select()}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -58,7 +71,7 @@ export function BadgesPanel() {
                   type="text"
                   defaultValue={name}
                   key={`${b.id}-name-${name}`}
-                  onChange={(e) => updateBadgeConfig(b.id, 'name', e.target.value)}
+                  onChange={(e) => debouncedUpdate(b.id, 'name', e.target.value)}
                 />
                 <div className="pbadge-desc">{b.desc}</div>
               </div>
@@ -66,7 +79,7 @@ export function BadgesPanel() {
                 <input
                   type="checkbox"
                   checked={enabled}
-                  onChange={(e) => updateBadgeConfig(b.id, 'enabled', e.target.checked)}
+                  onChange={(e) => debouncedUpdate(b.id, 'enabled', e.target.checked)}
                 />
                 <div className="pbadge-toggle-track" />
               </label>

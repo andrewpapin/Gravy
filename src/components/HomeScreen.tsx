@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { TopBar } from './TopBar';
 import { StatsCard } from './StatsCard';
 import { WeekStrip } from './WeekStrip';
@@ -11,12 +10,13 @@ import { todayStr } from '../state/defaultState';
 interface HomeScreenProps {
   onEnterParent: () => void;
   onOpenCalendar: () => void;
+  selectedDate: string;
+  onSelectDate: (date: string) => void;
 }
 
-export function HomeScreen({ onEnterParent: _onEnterParent, onOpenCalendar }: HomeScreenProps) {
+export function HomeScreen({ onEnterParent: _onEnterParent, onOpenCalendar, selectedDate, onSelectDate }: HomeScreenProps) {
   const { state } = useGrubClub();
   const today = todayStr();
-  const [selectedDate, setSelectedDate] = useState(today);
   const isToday = selectedDate === today;
   const hasOtherGoals = state.goals.some((g) => g.isDaily === false);
 
@@ -24,7 +24,7 @@ export function HomeScreen({ onEnterParent: _onEnterParent, onOpenCalendar }: Ho
     <div className="screen active">
       <TopBar title="Grub Club" highlightLast />
       <div className="scroll-area">
-        <WeekStrip selectedDate={selectedDate} onSelectDate={setSelectedDate} onOpenCalendar={onOpenCalendar} />
+        <WeekStrip selectedDate={selectedDate} onSelectDate={onSelectDate} onOpenCalendar={onOpenCalendar} />
         <StatsCard />
         {isToday ? (
           <>

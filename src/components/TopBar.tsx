@@ -22,7 +22,7 @@ export function TopBar({ title, highlightLast }: TopBarProps) {
         <span className="topbar-title">{title}</span>
       )}
       <div className="topbar-pills">
-        <div className="points-pill">
+        <div className="points-pill" aria-label={`${state.points} points`}>
           <FontAwesomeIcon icon={faStar} /> <span>{state.points}</span>
           {syncError && (
             <span

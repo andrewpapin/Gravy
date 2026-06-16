@@ -6,7 +6,7 @@ import { useGrubClub } from '../state/GrubClubContext';
 import { todayStr } from '../state/defaultState';
 import { getDayLog, hasAnyLog } from '../state/dayLog';
 
-const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -21,15 +21,16 @@ function toDateStr(year: number, month: number, day: number): string {
 interface CalendarScreenProps {
   open: boolean;
   onClose: () => void;
+  selectedDate: string;
+  onSelectDate: (date: string) => void;
 }
 
-export function CalendarScreen({ open, onClose }: CalendarScreenProps) {
+export function CalendarScreen({ open, onClose, selectedDate, onSelectDate }: CalendarScreenProps) {
   const { state, showToast } = useGrubClub();
   const today = todayStr();
   const now = new Date();
   const [viewYear, setViewYear] = useState(now.getFullYear());
   const [viewMonth, setViewMonth] = useState(now.getMonth());
-  const [selectedDate, setSelectedDate] = useState(today);
 
   const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth();
 
@@ -70,7 +71,7 @@ export function CalendarScreen({ open, onClose }: CalendarScreenProps) {
       <div className="calendar-modal-sheet">
         <div className="calendar-modal-header">
           <span className="calendar-modal-title">Calendar</span>
-          <button className="calendar-modal-close" onClick={onClose} aria-label="Close calendar">
+          <button className="calendar-modal-close" onClick={onClose} aria-label="Close calendar" type="button">
             <FontAwesomeIcon icon={faXmark} />
           </button>
         </div>
@@ -107,7 +108,7 @@ export function CalendarScreen({ open, onClose }: CalendarScreenProps) {
                     key={i}
                     type="button"
                     className={`calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`}
-                    onClick={() => setSelectedDate(dateStr)}
+                    onClick={() => onSelectDate(dateStr)}
                     aria-label={`${day} ${MONTH_NAMES[viewMonth]}${isToday ? ', today' : ''}${hasLog ? ', has activity' : ''}`}
                     aria-pressed={isSelected}
                   >

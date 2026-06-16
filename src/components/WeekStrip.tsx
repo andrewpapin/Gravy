@@ -1,6 +1,8 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarDays } from '@fortawesome/free-solid-svg-icons';
 import { todayStr } from '../state/defaultState';
+import { useGrubClub } from '../state/GrubClubContext';
+import { getDayLog, hasAnyLog } from '../state/dayLog';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = [
@@ -19,6 +21,7 @@ function toDateStr(y: number, m: number, d: number): string {
 }
 
 export function WeekStrip({ selectedDate, onSelectDate, onOpenCalendar }: WeekStripProps) {
+  const { state } = useGrubClub();
   const today = todayStr();
   const now = new Date();
 
@@ -35,7 +38,10 @@ export function WeekStrip({ selectedDate, onSelectDate, onOpenCalendar }: WeekSt
 
   // Header shows the selected date's full date
   const selDateObj = new Date(selectedDate + 'T00:00:00');
-  const headerLabel = `${MONTH_NAMES[selDateObj.getMonth()]}, ${selDateObj.getDate()}`;
+  const currentYear = now.getFullYear();
+  const selYear = selDateObj.getFullYear();
+  const yearSuffix = selYear !== currentYear ? ` ${selYear}` : '';
+  const headerLabel = `${MONTH_NAMES[selDateObj.getMonth()]} ${selDateObj.getDate()}${yearSuffix}`;
 
   return (
     <div className="week-strip-card">
@@ -51,17 +57,20 @@ export function WeekStrip({ selectedDate, onSelectDate, onOpenCalendar }: WeekSt
         {days.map(({ dateStr, dayNum, dayLabel }) => {
           const isToday = dateStr === today;
           const isSelected = dateStr === selectedDate;
+          const log = getDayLog(state, dateStr, today);
+          const hasDot = hasAnyLog(log);
           return (
             <button
               key={dateStr}
               type="button"
               className={`week-day${isToday ? ' today' : ''}${isSelected && !isToday ? ' selected' : ''}`}
               onClick={() => onSelectDate(dateStr)}
-              aria-label={`${dayLabel} ${dayNum}${isToday ? ', today' : ''}`}
+              aria-label={`${dayLabel} ${dayNum}${isToday ? ', today' : ''}${hasDot ? ', has activity' : ''}`}
               aria-pressed={isSelected}
             >
               <span className="week-day-label" aria-hidden="true">{dayLabel}</span>
               <span className="week-day-num" aria-hidden="true">{dayNum}</span>
+              {hasDot && <div className="week-day-dot" aria-hidden="true" />}
             </button>
           );
         })}

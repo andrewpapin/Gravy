@@ -29,7 +29,7 @@ export function GoalsPanel() {
   return (
     <div>
       <div className="section-label">Add a Goal</div>
-      <div className="input-row">
+      <form className="input-row" onSubmit={(e) => { e.preventDefault(); handleAdd(); }}>
         <input
           type="text"
           className="emoji-input"
@@ -58,10 +58,10 @@ export function GoalsPanel() {
           value={target}
           onChange={(e) => setTarget(e.target.value)}
         />
-        <button className="btn btn-sm btn-purple" onClick={handleAdd}>
+        <button type="submit" className="btn btn-sm btn-purple">
           Add
         </button>
-      </div>
+      </form>
       <div className="flex-between" style={{ marginBottom: 'var(--space-md)' }}>
         <div>
           <div className="settings-label">Daily Goal</div>

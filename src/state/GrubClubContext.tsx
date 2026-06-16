@@ -26,6 +26,7 @@ import {
 export type SyncStatus = 'idle' | 'syncing' | 'error';
 
 const HOUSEHOLD_CODE_KEY = 'grubclub_household_code';
+export const SYNC_SKIPPED_KEY = 'grubclub_sync_skipped';
 
 export interface ToastAction {
   label: string;
@@ -352,9 +353,10 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
 
       const food = FOODS.find((f) => f.id === foodId);
       showToast(food?.emoji ?? faUtensils, `${food?.label ?? ''} added!`);
+      checkBadges(next);
       return next;
     });
-  }, [showToast]);
+  }, [showToast, checkBadges]);
 
   const removeFoodForDay = useCallback((dateStr: string, foodId: string) => {
     setState((prev) => {
@@ -432,16 +434,18 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
           if (fullTray) next.counters.comboDays++;
         }
         showToast(goal.emoji, `${goal.name} logged!`);
+        checkBadges(next);
       }
 
       return next;
     });
-  }, [showToast]);
+  }, [showToast, checkBadges]);
 
   const requestReward = useCallback((id: number) => {
     setState((prev) => {
       const reward = prev.rewards.find((r) => r.id === id);
       if (!reward) return prev;
+      if (prev.pendingRewards.some((p) => p.rewardId === id)) return prev;
       if (prev.points < reward.cost) {
         showToast(faCircleXmark, `Need ${reward.cost - prev.points} more points!`);
         return prev;
@@ -548,8 +552,12 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
         next.settings.pin = p || '1234';
       } else if (key === 'childName') {
         next.settings.childName = val.trim() || 'Zack';
+      } else if (key === 'foodPts') {
+        next.settings.foodPts = Math.max(1, parseInt(val) || 1);
+      } else if (key === 'bonusPts') {
+        next.settings.bonusPts = Math.max(0, parseInt(val) || 0);
       } else {
-        (next.settings[key] as number) = parseInt(val) || 0;
+        (next.settings[key] as number) = Math.max(0, parseInt(val) || 0);
       }
       return next;
     });
@@ -563,12 +571,20 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       next.todayPoints = 0;
       next.todayFoodCounts = {};
       next.todayGoals = [];
+      next.todayGoalCounts = {};
       showToast(faRotate, "Today reset!");
       return next;
     });
   }, [showToast]);
 
   const resetAll = useCallback(() => {
+    // Disconnect from household sync before resetting so the blank state
+    // doesn't propagate to all other family devices.
+    localStorage.removeItem(HOUSEHOLD_CODE_KEY);
+    localStorage.removeItem(SYNC_SKIPPED_KEY);
+    setHouseholdCode(null);
+    lastSyncedRef.current = null;
+    setSyncStatus('idle');
     setState((prev) => {
       const pin = prev.settings.pin;
       const badgeConfig = prev.badgeConfig;

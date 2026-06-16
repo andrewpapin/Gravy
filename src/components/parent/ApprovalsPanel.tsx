@@ -1,9 +1,20 @@
+import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoon, faStar, faCheck, faXmark, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../../state/GrubClubContext';
+import { ConfirmDialog } from '../ConfirmDialog';
 
 export function ApprovalsPanel() {
   const { state, approveReward, declineReward } = useGrubClub();
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+
+  const handleApprove = (prId: string, insufficient: boolean) => {
+    if (insufficient) {
+      setConfirmId(prId);
+    } else {
+      approveReward(prId);
+    }
+  };
 
   if (state.pendingRewards.length === 0) {
     return (
@@ -37,16 +48,26 @@ export function ApprovalsPanel() {
               )}
             </div>
             <div className="approve-btns">
-              <button className="btn btn-sm btn-green" onClick={() => approveReward(pr.id)}>
+              <button className="btn btn-sm btn-green" onClick={() => handleApprove(pr.id, insufficient)} aria-label={`Approve ${reward.name}`}>
                 <FontAwesomeIcon icon={faCheck} />
               </button>
-              <button className="btn btn-sm btn-pink" onClick={() => declineReward(pr.id)}>
+              <button className="btn btn-sm btn-pink" onClick={() => declineReward(pr.id)} aria-label={`Decline ${reward.name}`}>
                 <FontAwesomeIcon icon={faXmark} />
               </button>
             </div>
           </div>
         );
       })}
+      <ConfirmDialog
+        open={confirmId !== null}
+        icon={faTriangleExclamation}
+        title="Not enough points"
+        message={`Only ${state.points} pts available. Approving this reward will spend all of them. Continue?`}
+        confirmLabel="Approve anyway"
+        danger
+        onConfirm={() => { if (confirmId) { approveReward(confirmId); } setConfirmId(null); }}
+        onCancel={() => setConfirmId(null)}
+      />
     </div>
   );
 }

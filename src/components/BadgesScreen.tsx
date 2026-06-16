@@ -35,7 +35,7 @@ export function BadgesScreen({ onShowBadge, onEnterParent: _onEnterParent }: Bad
               const progress = getBadgeProgress(state, b);
               return (
                 <div key={b.id} className={`badge-tile ${earned ? 'unlocked' : 'locked'}`}>
-                  <button className="badge-info-btn" onClick={() => onShowBadge(b.id)}>
+                  <button className="badge-info-btn" onClick={() => onShowBadge(b.id)} aria-label={`Info about ${display.name} badge`} type="button">
                     ?
                   </button>
                   <span className="badge-icon">{display.emoji}</span>

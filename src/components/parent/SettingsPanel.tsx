@@ -74,6 +74,7 @@ export function SettingsPanel() {
               placeholder="Enter household code"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleJoin(); }}
             />
             <button className="btn btn-primary" onClick={handleJoin} disabled={syncStatus === 'syncing'}>
               Join
@@ -118,6 +119,8 @@ export function SettingsPanel() {
           value={foodPts}
           onChange={(e) => setFoodPts(e.target.value)}
           onBlur={(e) => {
+            const clamped = Math.max(1, parseInt(e.target.value) || 1);
+            setFoodPts(String(clamped));
             saveSetting('foodPts', e.target.value);
             flashSaved('foodPts');
           }}
@@ -138,6 +141,8 @@ export function SettingsPanel() {
           value={bonusPts}
           onChange={(e) => setBonusPts(e.target.value)}
           onBlur={(e) => {
+            const clamped = Math.max(0, parseInt(e.target.value) || 0);
+            setBonusPts(String(clamped));
             saveSetting('bonusPts', e.target.value);
             flashSaved('bonusPts');
           }}
@@ -153,15 +158,23 @@ export function SettingsPanel() {
           <div className="settings-sub">Enter a new 4-digit PIN</div>
         </div>
         <input
-          type="number"
-          min={0}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
           maxLength={4}
           placeholder="1234"
           value={pin}
-          onChange={(e) => setPin(e.target.value)}
-          onBlur={(e) => {
-            saveSetting('pin', e.target.value);
-            flashSaved('pin');
+          onChange={(e) => {
+            const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
+            setPin(digits);
+          }}
+          onBlur={() => {
+            if (pin.length === 4) {
+              saveSetting('pin', pin);
+              flashSaved('pin');
+            } else {
+              setPin(String(state.settings.pin));
+            }
           }}
         />
       </div>

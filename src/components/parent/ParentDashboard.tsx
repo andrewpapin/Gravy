@@ -36,9 +36,15 @@ export function ParentDashboard({ onExit }: ParentDashboardProps) {
   return (
     <div className="parent-screen-inner active">
       <ParentTopBar onExit={onExit} />
-      <div className="parent-tabs">
+      <div className="parent-tabs" role="tablist" aria-label="Parent dashboard">
         {TABS.map((t) => (
-          <button key={t.id} className={`parent-tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={tab === t.id}
+            className={`parent-tab ${tab === t.id ? 'active' : ''}`}
+            onClick={() => setTab(t.id)}
+          >
             <FontAwesomeIcon icon={t.icon} /> {t.label}
           </button>
         ))}

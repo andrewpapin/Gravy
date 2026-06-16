@@ -30,8 +30,7 @@ export async function fetchHousehold(code: string): Promise<GrubClubState | null
 export async function pushHouseholdState(code: string, state: GrubClubState): Promise<void> {
   const { error } = await supabase
     .from('households')
-    .update({ state, updated_at: new Date().toISOString() })
-    .eq('code', code);
+    .upsert({ code, state, updated_at: new Date().toISOString() });
   if (error) throw error;
 }
 

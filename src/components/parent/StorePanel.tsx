@@ -23,7 +23,7 @@ export function StorePanel() {
   return (
     <div>
       <div className="section-label">Add a Reward</div>
-      <div className="input-row">
+      <form className="input-row" onSubmit={(e) => { e.preventDefault(); handleAdd(); }}>
         <input
           type="text"
           className="emoji-input"
@@ -42,10 +42,10 @@ export function StorePanel() {
           value={cost}
           onChange={(e) => setCost(e.target.value)}
         />
-        <button className="btn btn-sm btn-purple" onClick={handleAdd}>
+        <button type="submit" className="btn btn-sm btn-purple">
           Add
         </button>
-      </div>
+      </form>
       <div className="section-label">Current Rewards</div>
       {state.rewards.length === 0 ? (
         <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontWeight: 700, padding: '12px 0' }}>

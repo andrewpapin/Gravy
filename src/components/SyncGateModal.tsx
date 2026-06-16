@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCloud, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { useGrubClub } from '../state/GrubClubContext';
-
-const SYNC_SKIPPED_KEY = 'grubclub_sync_skipped';
+import { useGrubClub, SYNC_SKIPPED_KEY } from '../state/GrubClubContext';
 
 export function SyncGateModal() {
   const { householdCode, syncStatus, createHousehold, joinHousehold } = useGrubClub();
@@ -30,11 +28,10 @@ export function SyncGateModal() {
     <div className="sync-gate-overlay">
       <div className="badge-popup sync-gate-card">
         <span className="badge-popup-icon"><FontAwesomeIcon icon={faCloud} /></span>
-        <div className="badge-popup-name">Cloud Sync Required</div>
+        <div className="badge-popup-name">Set Up Cloud Sync</div>
         <div className="badge-popup-desc">
-          GrubClub needs a household code to keep this device in sync with the
-          rest of the family. Create a new household, or enter an existing
-          code to join one.
+          Keep this device in sync with the rest of the family. Create a new
+          household code, or enter an existing one to join.
         </div>
         <button className="btn btn-primary" onClick={() => createHousehold()} disabled={syncing}>
           <FontAwesomeIcon icon={faCloud} /> Create New Household

@@ -47,7 +47,7 @@ export const BADGE_MASTER: BadgeDef[] = [
   { id: 'all_chores7',  emoji: '💥', name: 'Unstoppable',       desc: 'Finish all chores 7 days',                trigger: 'all_chores:7',   group: 'Chores' },
   { id: 'all_chores14', emoji: '🌊', name: 'Chore Tsunami',     desc: 'Finish all chores 14 days',               trigger: 'all_chores:14',  group: 'Chores' },
   { id: 'all_chores30', emoji: '🏅', name: 'Legendary Cleaner', desc: 'Finish all chores 30 days',               trigger: 'all_chores:30',  group: 'Chores' },
-  { id: 'chore_streak7',emoji: '🔥', name: 'Chore Streak',      desc: 'Do at least one chore 7 days in a row',  trigger: 'streak:7',       group: 'Chores' },
+  { id: 'chore_streak7',emoji: '🔥', name: 'Chore Streak',      desc: 'Use the app 7 days in a row',             trigger: 'streak:7',       group: 'Chores' },
 
   // ── POINTS (10) ────────────────────────────────────────────────────
   { id: 'pts50',        emoji: '🌱', name: 'Just Starting',     desc: 'Earn 50 points total',                    trigger: 'pts:50',      group: 'Points' },

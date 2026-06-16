@@ -47,7 +47,8 @@ export function cloneDefaultState(): GrubClubState {
 }
 
 export function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 // Migrates saved state that was written by an older version of the app
@@ -150,7 +151,7 @@ export function applyDayRollover(state: GrubClubState): GrubClubState {
   if (state.lastActiveDate && state.lastActiveDate !== today) {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yStr = yesterday.toISOString().split('T')[0];
+    const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
     if (state.lastActiveDate === yStr) {
       state.streak++;
     } else {

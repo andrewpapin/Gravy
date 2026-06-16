@@ -108,7 +108,7 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
           </>
         )}
 
-        {state.goals.length === 0 && (foodCounts === null || Object.values(foodCounts).every((c) => c === 0)) && (
+        {state.goals.length === 0 && Object.values(foodCounts).every((c) => c === 0) && (
           <div className="empty-state" style={{ marginTop: 8 }}>
             <span className="empty-state-emoji"><FontAwesomeIcon icon={faMoon} /></span>
             <div className="empty-state-text">Tap a food to log it!</div>
@@ -119,6 +119,7 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
   }
 
   // Read-only view for today (or future, which CalendarScreen prevents)
+  const isToday = dateStr === today;
   const hasActivity = log && (
     Object.values(log.foodCounts).some((c) => c > 0) || log.goalIds.length > 0 || log.points > 0
   );
@@ -128,10 +129,15 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
       <div className="card-title mb-0" style={{ marginBottom: 12 }}>
         <FontAwesomeIcon icon={faCalendarDays} /> {label}
       </div>
+      {isToday && (
+        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted)', textAlign: 'center', marginBottom: 12 }}>
+          Go to Home to log today's food and goals
+        </div>
+      )}
       {!hasActivity ? (
         <div className="empty-state">
           <span className="empty-state-emoji"><FontAwesomeIcon icon={faMoon} /></span>
-          <div className="empty-state-text">Nothing logged this day</div>
+          <div className="empty-state-text">{isToday ? 'Nothing logged yet today' : 'Nothing logged this day'}</div>
         </div>
       ) : (
         <>
