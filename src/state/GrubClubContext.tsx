@@ -55,6 +55,9 @@ interface GrubClubContextValue {
   hideCelebration: () => void;
   logFood: (id: string) => void;
   toggleGoal: (id: number) => void;
+  logFoodForDay: (dateStr: string, foodId: string) => void;
+  removeFoodForDay: (dateStr: string, foodId: string) => void;
+  toggleGoalForDay: (dateStr: string, goalId: number) => void;
   requestReward: (id: number) => void;
   approveReward: (prId: string) => void;
   declineReward: (prId: string) => void;
@@ -262,6 +265,130 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       return next;
     });
   }, [awardPoints, checkBadges]);
+
+  const logFoodForDay = useCallback((dateStr: string, foodId: string) => {
+    setState((prev) => {
+      const next = clone(prev);
+      if (!next.dayLogs[dateStr]) {
+        next.dayLogs[dateStr] = { foodCounts: {}, goalIds: [], points: 0 };
+      }
+      const log = next.dayLogs[dateStr];
+      const wasFullTray = FOODS.every((f) => (log.foodCounts[f.id] || 0) > 0);
+
+      log.foodCounts[foodId] = (log.foodCounts[foodId] || 0) + 1;
+      next.counters.foodLogs[foodId] = (next.counters.foodLogs[foodId] || 0) + 1;
+
+      const foodPts = next.settings.foodPts;
+      next.points += foodPts;
+      next.totalPoints += foodPts;
+      log.points += foodPts;
+
+      const isFullTray = FOODS.every((f) => (log.foodCounts[f.id] || 0) > 0);
+      if (!wasFullTray && isFullTray) {
+        next.counters.fullTrayDays++;
+        const bonus = next.settings.bonusPts;
+        if (bonus > 0) {
+          next.points += bonus;
+          next.totalPoints += bonus;
+          log.points += bonus;
+        }
+        const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
+        if (dailyGoals.length > 0 && dailyGoals.every((g) => log.goalIds.includes(g.id))) {
+          next.counters.comboDays++;
+        }
+      }
+
+      if (log.points > (next.counters.maxDayPoints || 0)) {
+        next.counters.maxDayPoints = log.points;
+      }
+
+      const food = FOODS.find((f) => f.id === foodId);
+      showToast(food?.emoji ?? faUtensils, `${food?.label ?? ''} added!`);
+      return next;
+    });
+  }, [showToast]);
+
+  const removeFoodForDay = useCallback((dateStr: string, foodId: string) => {
+    setState((prev) => {
+      const log = prev.dayLogs[dateStr];
+      if (!log || (log.foodCounts[foodId] || 0) <= 0) return prev;
+
+      const next = clone(prev);
+      const nextLog = next.dayLogs[dateStr];
+      const wasFullTray = FOODS.every((f) => (nextLog.foodCounts[f.id] || 0) > 0);
+      const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
+      const wasAllGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => nextLog.goalIds.includes(g.id));
+
+      nextLog.foodCounts[foodId] = Math.max(0, (nextLog.foodCounts[foodId] || 0) - 1);
+      next.counters.foodLogs[foodId] = Math.max(0, (next.counters.foodLogs[foodId] || 0) - 1);
+
+      const foodPts = next.settings.foodPts;
+      next.points = Math.max(0, next.points - foodPts);
+      next.totalPoints = Math.max(0, next.totalPoints - foodPts);
+      nextLog.points = Math.max(0, nextLog.points - foodPts);
+
+      const isFullTray = FOODS.every((f) => (nextLog.foodCounts[f.id] || 0) > 0);
+      if (wasFullTray && !isFullTray) {
+        next.counters.fullTrayDays = Math.max(0, next.counters.fullTrayDays - 1);
+        const bonus = next.settings.bonusPts;
+        if (bonus > 0) {
+          next.points = Math.max(0, next.points - bonus);
+          next.totalPoints = Math.max(0, next.totalPoints - bonus);
+          nextLog.points = Math.max(0, nextLog.points - bonus);
+        }
+        if (wasAllGoalsDone) {
+          next.counters.comboDays = Math.max(0, next.counters.comboDays - 1);
+        }
+      }
+
+      return next;
+    });
+  }, []);
+
+  const toggleGoalForDay = useCallback((dateStr: string, goalId: number) => {
+    setState((prev) => {
+      const goal = prev.goals.find((g) => g.id === goalId);
+      if (!goal) return prev;
+
+      const next = clone(prev);
+      if (!next.dayLogs[dateStr]) {
+        next.dayLogs[dateStr] = { foodCounts: {}, goalIds: [], points: 0 };
+      }
+      const log = next.dayLogs[dateStr];
+      const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
+      const fullTray = FOODS.every((f) => (log.foodCounts[f.id] || 0) > 0);
+
+      if (log.goalIds.includes(goalId)) {
+        const wasAllGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => log.goalIds.includes(g.id));
+        log.goalIds = log.goalIds.filter((id) => id !== goalId);
+        next.counters.totalGoals = Math.max(0, next.counters.totalGoals - 1);
+        next.points = Math.max(0, next.points - goal.pts);
+        next.totalPoints = Math.max(0, next.totalPoints - goal.pts);
+        log.points = Math.max(0, log.points - goal.pts);
+        if (wasAllGoalsDone) {
+          next.counters.allGoalsDays = Math.max(0, next.counters.allGoalsDays - 1);
+          if (fullTray) next.counters.comboDays = Math.max(0, next.counters.comboDays - 1);
+        }
+      } else {
+        log.goalIds.push(goalId);
+        next.counters.totalGoals++;
+        next.points += goal.pts;
+        next.totalPoints += goal.pts;
+        log.points += goal.pts;
+        if (log.points > (next.counters.maxDayPoints || 0)) {
+          next.counters.maxDayPoints = log.points;
+        }
+        const isAllGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => log.goalIds.includes(g.id));
+        if (isAllGoalsDone) {
+          next.counters.allGoalsDays++;
+          if (fullTray) next.counters.comboDays++;
+        }
+        showToast(goal.emoji, `${goal.name} logged!`);
+      }
+
+      return next;
+    });
+  }, [showToast]);
 
   const requestReward = useCallback((id: number) => {
     setState((prev) => {
@@ -476,6 +603,9 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
     hideCelebration,
     logFood,
     toggleGoal,
+    logFoodForDay,
+    removeFoodForDay,
+    toggleGoalForDay,
     requestReward,
     approveReward,
     declineReward,
