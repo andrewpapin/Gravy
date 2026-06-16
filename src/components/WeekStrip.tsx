@@ -1,8 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarDays } from '@fortawesome/free-solid-svg-icons';
-import { useGrubClub } from '../state/GrubClubContext';
 import { todayStr } from '../state/defaultState';
-import { getDayLog, hasAnyLog } from '../state/dayLog';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = [
@@ -21,7 +19,6 @@ function toDateStr(y: number, m: number, d: number): string {
 }
 
 export function WeekStrip({ selectedDate, onSelectDate, onOpenCalendar }: WeekStripProps) {
-  const { state } = useGrubClub();
   const today = todayStr();
   const now = new Date();
 
@@ -54,20 +51,17 @@ export function WeekStrip({ selectedDate, onSelectDate, onOpenCalendar }: WeekSt
         {days.map(({ dateStr, dayNum, dayLabel }) => {
           const isToday = dateStr === today;
           const isSelected = dateStr === selectedDate;
-          const log = getDayLog(state, dateStr, today);
-          const hasLog = hasAnyLog(log);
           return (
             <button
               key={dateStr}
               type="button"
               className={`week-day${isToday ? ' today' : ''}${isSelected && !isToday ? ' selected' : ''}`}
               onClick={() => onSelectDate(dateStr)}
-              aria-label={`${dayLabel} ${dayNum}${isToday ? ', today' : ''}${hasLog ? ', has activity' : ''}`}
+              aria-label={`${dayLabel} ${dayNum}${isToday ? ', today' : ''}`}
               aria-pressed={isSelected}
             >
               <span className="week-day-label" aria-hidden="true">{dayLabel}</span>
               <span className="week-day-num" aria-hidden="true">{dayNum}</span>
-              {hasLog && !isToday && !isSelected && <span className="week-day-dot" aria-hidden="true" />}
             </button>
           );
         })}

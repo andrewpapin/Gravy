@@ -32,14 +32,18 @@ export function StatsCard() {
           <div className="xp-bar-fill" style={{ width: `${pct}%` }} />
         </div>
       </div>
-      <div className="stats-streak">
-        <div className="stats-streak-top">
-          <span className="stats-streak-fire"><FontAwesomeIcon icon={faFire} /></span>
-          <span className="stats-streak-num">{state.streak}</span>
+      <div className="stats-bottom">
+        <div className="stats-streak">
+          <div className="stats-streak-top">
+            <span className="stats-streak-fire"><FontAwesomeIcon icon={faFire} /></span>
+            <span className="stats-streak-num">{state.streak}</span>
+          </div>
+          <div className="stats-streak-label">Day Streak</div>
         </div>
-        <div className="stats-streak-label">Day Streak</div>
-        <div className="stats-points-label">Today's Points</div>
-        <div className="stats-points-num">{state.todayPoints}</div>
+        <div className="stats-points">
+          <div className="stats-points-label">Today's Points</div>
+          <div className="stats-points-num">{state.todayPoints}</div>
+        </div>
       </div>
     </div>
   );

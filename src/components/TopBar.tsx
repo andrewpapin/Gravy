@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faCloudArrowUp, faTrophy } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faCloudArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../state/GrubClubContext';
 
 interface TopBarProps {
@@ -34,9 +34,6 @@ export function TopBar({ title, highlightLast }: TopBarProps) {
               <FontAwesomeIcon icon={faCloudArrowUp} aria-hidden="true" />
             </span>
           )}
-        </div>
-        <div className="trophy-pill">
-          <FontAwesomeIcon icon={faTrophy} /> <span>{state.earnedBadges.length}</span>
         </div>
       </div>
     </div>
