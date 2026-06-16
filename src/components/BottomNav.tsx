@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHouse, faCartShopping, faMedal, faGear } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../state/GrubClubContext';
 
-export type Tab = 'home' | 'store' | 'badges' | 'calendar';
+export type Tab = 'home' | 'store' | 'badges';
 
 interface BottomNavProps {
   active: Tab;
