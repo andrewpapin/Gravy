@@ -1,7 +1,8 @@
 import { TopBar } from './TopBar';
 import { StatsCard } from './StatsCard';
 import { WeekStrip } from './WeekStrip';
-import { TodaysGoals } from './TodaysGoals';
+import { FoodTray } from './FoodTray';
+import { DailyGoals } from './DailyGoals';
 import { OtherGoals } from './OtherGoals';
 import { DaySummaryCard } from './DaySummaryCard';
 import { useGrubClub } from '../state/GrubClubContext';
@@ -28,7 +29,8 @@ export function HomeScreen({ onEnterParent: _onEnterParent, onOpenCalendar, sele
         <StatsCard />
         {isToday ? (
           <>
-            <TodaysGoals />
+            <FoodTray />
+            <DailyGoals />
             {hasOtherGoals && <OtherGoals />}
           </>
         ) : (

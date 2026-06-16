@@ -318,7 +318,7 @@ button.calendar-day {
 }
 .stats-points {
   flex: 1;
-  background: linear-gradient(135deg, #d8635f, #c95550);
+  background: linear-gradient(135deg, var(--coral), #d8635f);
   color: white;
   padding: 14px 16px;
   display: flex;
@@ -327,16 +327,14 @@ button.calendar-day {
   gap: 2px;
   border-left: 3px solid var(--dark);
 }
-.stats-streak-top {
+.stats-streak-top, .stats-points-top {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.stats-streak-fire { font-size: 1.5rem; }
-.stats-streak-num { font-size: 1.6rem; font-weight: 900; line-height: 1; }
-.stats-streak-label { font-size: 0.7rem; font-weight: 800; opacity: 0.9; }
-.stats-points-label { font-size: 0.7rem; font-weight: 800; opacity: 0.85; }
-.stats-points-num { font-size: 1.2rem; font-weight: 900; line-height: 1; }
+.stats-streak-fire, .stats-points-star { font-size: 1.5rem; }
+.stats-streak-num, .stats-points-num { font-size: 1.6rem; font-weight: 900; line-height: 1; }
+.stats-streak-label, .stats-points-label { font-size: 0.7rem; font-weight: 800; opacity: 0.9; }
 
 /* ===== FOOD TRAY ===== */
 .tray-grid {
@@ -344,7 +342,14 @@ button.calendar-day {
   grid-template-columns: repeat(5, 1fr);
   gap: 6px;
 }
+.tray-tile-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
 .food-tile {
+  width: 100%;
   border-radius: 14px;
   border: 3px solid var(--dark);
   background: var(--cream);
@@ -353,16 +358,31 @@ button.calendar-day {
   align-items: center;
   justify-content: center;
   gap: 3px;
+  cursor: pointer;
   transition: box-shadow var(--transition), border-color var(--transition), background var(--transition);
   box-shadow: 3px 3px 0 var(--dark);
   position: relative;
   padding: 6px 4px;
 }
+.food-tile:active { transform: scale(0.96); }
 .food-tile.checked {
   border-color: var(--dark);
   background: var(--sage);
   box-shadow: 3px 3px 0 var(--dark);
 }
+.food-remove-btn {
+  background: var(--cream);
+  border: 2px solid var(--dark);
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 900;
+  padding: 1px 8px;
+  cursor: pointer;
+  color: var(--dark);
+  line-height: 1.4;
+  font-family: var(--font-display);
+}
+.food-remove-btn:active { transform: scale(0.9); }
 .food-count-badge {
   position: absolute;
   top: -6px; left: -6px;
@@ -381,12 +401,6 @@ button.calendar-day {
 .food-emoji { font-size: 1.6rem; line-height: 1; }
 .food-label { font-size: var(--text-2xs); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: var(--dark); }
 .food-tile.checked .food-label { color: rgba(255,255,255,0.9); }
-.food-stepper {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 2px;
-}
 .stepper-btn {
   width: 32px;
   height: 32px;
@@ -416,8 +430,6 @@ button.calendar-day {
   color: var(--dark);
   line-height: 1;
 }
-.food-tile.checked .stepper-btn { border-color: white; background: rgba(255,255,255,0.35); color: white; }
-.food-tile.checked .stepper-count { color: white; }
 
 /* ===== GOALS ===== */
 .goal-card-title {
@@ -569,12 +581,6 @@ button.calendar-day {
   background: rgba(255, 255, 255, 0.7);
   position: absolute;
   bottom: 0;
-}
-
-/* ===== TODAY'S GOALS (merged card) ===== */
-.todays-goals-divider {
-  border-top: 2px solid rgba(47, 62, 70, 0.12);
-  margin: 20px 0;
 }
 
 /* ===== TROPHY PILL ===== */

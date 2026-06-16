@@ -43,11 +43,10 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
           {FOODS.map((f) => {
             const count = foodCounts[f.id] || 0;
             return (
-              <div key={f.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <div key={f.id} className="tray-tile-wrap">
                 <button
                   type="button"
                   className={`food-tile ${count > 0 ? 'checked' : ''}`}
-                  style={{ width: '100%' }}
                   onClick={() => logFoodForDay(dateStr, f.id)}
                   aria-label={`Add ${f.label}${count > 0 ? ` (${count} logged)` : ''}`}
                 >
@@ -57,20 +56,10 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
                 </button>
                 <button
                   type="button"
+                  className="food-remove-btn"
                   onClick={() => removeFoodForDay(dateStr, f.id)}
                   aria-label={`Remove one ${f.label}`}
-                  style={{
-                    visibility: count > 0 ? 'visible' : 'hidden',
-                    background: 'var(--cream)',
-                    border: '2px solid var(--dark)',
-                    borderRadius: '50px',
-                    fontSize: '0.7rem',
-                    fontWeight: 900,
-                    padding: '1px 8px',
-                    cursor: 'pointer',
-                    color: 'var(--dark)',
-                    lineHeight: 1.4,
-                  }}
+                  style={{ visibility: count > 0 ? 'visible' : 'hidden' }}
                 >
                   −
                 </button>

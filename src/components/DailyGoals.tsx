@@ -1,13 +1,9 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUtensils, faMoon } from '@fortawesome/free-solid-svg-icons';
-import { FOODS } from '../data/foods';
+import { faListCheck, faMoon } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../state/GrubClubContext';
 
-export function TodaysGoals() {
-  const { state, logFood, removeFood, incrementGoal, decrementGoal } = useGrubClub();
-  const eatenCount = Object.values(state.todayFoodCounts).filter((v) => v > 0).length;
-  const allEaten = eatenCount === FOODS.length;
-
+export function DailyGoals() {
+  const { state, incrementGoal, decrementGoal } = useGrubClub();
   const dailyGoals = state.goals.filter((g) => g.isDaily !== false);
   const goalCounts = state.todayGoalCounts || {};
   const completedGoals = dailyGoals.filter((g) => (goalCounts[g.id] || 0) >= (g.target || 1)).length;
@@ -15,53 +11,7 @@ export function TodaysGoals() {
   return (
     <div className="card">
       <div className="flex-between" style={{ marginBottom: 12 }}>
-        <div className="goal-card-title"><FontAwesomeIcon icon={faUtensils} /> Today's Goals</div>
-        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--sage)' }}>
-          {allEaten ? '🎉 Full Tray Bonus!' : `${eatenCount}/5 eaten`}
-        </div>
-      </div>
-
-      {/* Food tray grid */}
-      <div className="tray-grid">
-        {FOODS.map((f) => {
-          const count = state.todayFoodCounts[f.id] || 0;
-          return (
-            <div
-              key={f.id}
-              className={`food-tile ${count > 0 ? 'checked' : ''}`}
-              aria-label={`${f.label}${count > 0 ? `, logged ${count}` : ''}`}
-            >
-              <div className="food-emoji">{f.emoji}</div>
-              <div className="food-label">{f.label}</div>
-              <div className="food-stepper">
-                <button
-                  type="button"
-                  className="stepper-btn"
-                  onClick={() => removeFood(f.id)}
-                  disabled={count === 0}
-                  aria-label={`Remove one ${f.label}`}
-                >−</button>
-                <span className="stepper-count">{count}</span>
-                <button
-                  type="button"
-                  className="stepper-btn"
-                  onClick={() => logFood(f.id)}
-                  aria-label={`Add one ${f.label}`}
-                >+</button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Divider between tray and daily goals */}
-      <div className="todays-goals-divider" />
-
-      {/* Daily goals list */}
-      <div className="flex-between" style={{ marginBottom: 10 }}>
-        <div style={{ fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--dark)' }}>
-          Daily Goals
-        </div>
+        <div className="goal-card-title"><FontAwesomeIcon icon={faListCheck} /> Daily Goals</div>
         {dailyGoals.length > 0 && (
           <div className="goal-progress-badge">{completedGoals}/{dailyGoals.length} done</div>
         )}

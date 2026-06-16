@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFire } from '@fortawesome/free-solid-svg-icons';
+import { faFire, faStar } from '@fortawesome/free-solid-svg-icons';
 import { getRank, RANKS } from '../data/ranks';
 import { useGrubClub } from '../state/GrubClubContext';
 
@@ -41,8 +41,11 @@ export function StatsCard() {
           <div className="stats-streak-label">Day Streak</div>
         </div>
         <div className="stats-points">
+          <div className="stats-points-top">
+            <span className="stats-points-star"><FontAwesomeIcon icon={faStar} /></span>
+            <span className="stats-points-num">{state.todayPoints}</span>
+          </div>
           <div className="stats-points-label">Today's Points</div>
-          <div className="stats-points-num">{state.todayPoints}</div>
         </div>
       </div>
     </div>
