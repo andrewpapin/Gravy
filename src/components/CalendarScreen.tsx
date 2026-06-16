@@ -64,7 +64,7 @@ export function CalendarScreen({ onEnterParent }: CalendarScreenProps) {
 
   return (
     <div className="screen active">
-      <TopBar title="Calendar" highlightLast />
+      <TopBar title="Calendar" />
       <div className="scroll-area">
         <div className="card">
           <div className="calendar-header">

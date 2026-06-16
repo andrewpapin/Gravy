@@ -8,11 +8,13 @@ import {
   faGear,
   type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
+
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { GoalsPanel } from './GoalsPanel';
 import { StorePanel } from './StorePanel';
 import { BadgesPanel } from './BadgesPanel';
 import { SettingsPanel } from './SettingsPanel';
+import { ParentTopBar } from './ParentTopBar';
 
 type ParentTab = 'approvals' | 'goals' | 'store' | 'badges' | 'settings';
 
@@ -33,16 +35,7 @@ export function ParentDashboard({ onExit }: ParentDashboardProps) {
 
   return (
     <div className="parent-screen-inner active">
-      <div className="parent-topbar">
-        <div className="parent-topbar-title"><FontAwesomeIcon icon={faGear} /> Parent Dashboard</div>
-        <button
-          className="btn btn-sm"
-          style={{ background: 'var(--yellow)', color: 'var(--dark)', padding: '6px 12px', fontSize: '0.75rem' }}
-          onClick={onExit}
-        >
-          ← Exit
-        </button>
-      </div>
+      <ParentTopBar onExit={onExit} />
       <div className="parent-tabs">
         {TABS.map((t) => (
           <button key={t.id} className={`parent-tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>

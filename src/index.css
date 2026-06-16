@@ -987,6 +987,16 @@ button.calendar-day {
   border-bottom: 3px solid var(--dark);
 }
 .parent-topbar-title { font-size: 1.1rem; font-weight: 900; }
+.parent-topbar-exit-btn {
+  background: var(--yellow);
+  color: var(--dark);
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 900;
+  border: 2px solid var(--dark);
+  border-radius: 6px;
+  cursor: pointer;
+}
 
 .parent-tabs {
   display: flex;
