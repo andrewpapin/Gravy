@@ -4,12 +4,13 @@ import { FOODS } from '../data/foods';
 import { useGrubClub } from '../state/GrubClubContext';
 
 export function TodaysGoals() {
-  const { state, logFood, toggleGoal } = useGrubClub();
+  const { state, logFood, removeFood, incrementGoal, decrementGoal } = useGrubClub();
   const eatenCount = Object.values(state.todayFoodCounts).filter((v) => v > 0).length;
   const allEaten = eatenCount === FOODS.length;
 
   const dailyGoals = state.goals.filter((g) => g.isDaily !== false);
-  const completedGoals = dailyGoals.filter((g) => state.todayGoals.includes(g.id)).length;
+  const goalCounts = state.todayGoalCounts || {};
+  const completedGoals = dailyGoals.filter((g) => (goalCounts[g.id] || 0) >= (g.target || 1)).length;
 
   return (
     <div className="card">
@@ -25,17 +26,30 @@ export function TodaysGoals() {
         {FOODS.map((f) => {
           const count = state.todayFoodCounts[f.id] || 0;
           return (
-            <button
+            <div
               key={f.id}
-              type="button"
               className={`food-tile ${count > 0 ? 'checked' : ''}`}
-              onClick={() => logFood(f.id)}
-              aria-label={`Log ${f.label}${count > 0 ? ` (logged ${count} time${count > 1 ? 's' : ''})` : ''}`}
+              aria-label={`${f.label}${count > 0 ? `, logged ${count}` : ''}`}
             >
-              {count > 1 && <div className="food-count-badge">{count}</div>}
               <div className="food-emoji">{f.emoji}</div>
               <div className="food-label">{f.label}</div>
-            </button>
+              <div className="food-stepper">
+                <button
+                  type="button"
+                  className="stepper-btn"
+                  onClick={() => removeFood(f.id)}
+                  disabled={count === 0}
+                  aria-label={`Remove one ${f.label}`}
+                >−</button>
+                <span className="stepper-count">{count}</span>
+                <button
+                  type="button"
+                  className="stepper-btn"
+                  onClick={() => logFood(f.id)}
+                  aria-label={`Add one ${f.label}`}
+                >+</button>
+              </div>
+            </div>
           );
         })}
       </div>
@@ -65,22 +79,37 @@ export function TodaysGoals() {
       ) : (
         <div>
           {dailyGoals.map((g) => {
-            const checked = state.todayGoals.includes(g.id);
+            const target = g.target || 1;
+            const count = goalCounts[g.id] || 0;
+            const done = count >= target;
             return (
-              <button
+              <div
                 key={g.id}
-                type="button"
-                className={`goal-item ${checked ? 'checked' : ''}`}
-                onClick={() => toggleGoal(g.id)}
-                aria-pressed={checked}
+                className={`goal-item ${done ? 'checked' : ''}`}
               >
-                <div className="goal-check">{checked ? '✓' : ''}</div>
+                <div className="goal-stepper">
+                  <button
+                    type="button"
+                    className="stepper-btn"
+                    onClick={() => decrementGoal(g.id)}
+                    disabled={count === 0}
+                    aria-label={`Undo ${g.name}`}
+                  >−</button>
+                  <span className="stepper-count">{count}/{target}</span>
+                  <button
+                    type="button"
+                    className="stepper-btn"
+                    onClick={() => incrementGoal(g.id)}
+                    disabled={done}
+                    aria-label={`Complete ${g.name}`}
+                  >+</button>
+                </div>
                 <div className="goal-emoji">{g.emoji}</div>
                 <div className="goal-info">
                   <div className="goal-name">{g.name}</div>
                 </div>
                 <div className="pts-badge">+{g.pts}</div>
-              </button>
+              </div>
             );
           })}
         </div>

@@ -4,6 +4,7 @@ export interface Goal {
   name: string;
   pts: number;
   isDaily?: boolean; // true when undefined (default behavior: daily)
+  target?: number;  // how many times to complete (default 1)
 }
 
 export interface Reward {
@@ -55,6 +56,7 @@ export interface GrubClubState {
   todayPoints: number;
   todayFoodCounts: Record<string, number>;
   todayGoals: number[];
+  todayGoalCounts: Record<number, number>;
   dayLogs: Record<string, DayLog>;
   pendingRewards: PendingReward[];
   earnedBadges: string[];

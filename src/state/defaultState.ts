@@ -10,6 +10,7 @@ export const defaultState: GrubClubState = {
   todayPoints: 0,
   todayFoodCounts: {},
   todayGoals: [],
+  todayGoalCounts: {},
   dayLogs: {},
   pendingRewards: [],
   earnedBadges: [],
@@ -68,6 +69,16 @@ export function migrateLegacyState(state: Record<string, unknown>): void {
     for (const g of state.goals as Record<string, unknown>[]) {
       if (!('isDaily' in g)) g.isDaily = true;
     }
+  }
+
+  // Backfill todayGoalCounts from todayGoals for saves that predate count tracking
+  if (!state.todayGoalCounts && Array.isArray(state.todayGoals) && Array.isArray(state.goals)) {
+    const counts: Record<number, number> = {};
+    for (const id of state.todayGoals as number[]) {
+      const goal = (state.goals as Record<string, unknown>[]).find((g) => g.id === id);
+      counts[id] = (goal?.target as number | undefined) || 1;
+    }
+    state.todayGoalCounts = counts;
   }
 
   // Counter renames
@@ -163,6 +174,10 @@ export function applyDayRollover(state: GrubClubState): GrubClubState {
       (state.goals || []).filter((g) => g.isDaily !== false).map((g) => g.id)
     );
     state.todayGoals = (state.todayGoals || []).filter((id) => !dailyIds.has(id));
+    if (!state.todayGoalCounts) state.todayGoalCounts = {};
+    for (const id of dailyIds) {
+      delete state.todayGoalCounts[id];
+    }
   }
   state.lastActiveDate = today;
   return state;

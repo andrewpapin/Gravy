@@ -211,9 +211,7 @@ body {
 
 /* ===== INTERACTIVE ELEMENT RESETS ===== */
 /* Buttons used as card tiles need their browser defaults reset */
-button.food-tile,
 button.store-item,
-button.goal-item,
 button.week-day,
 button.calendar-day {
   appearance: none;
@@ -342,7 +340,6 @@ button.calendar-day {
   gap: 6px;
 }
 .food-tile {
-  aspect-ratio: 1;
   border-radius: 14px;
   border: 3px solid var(--dark);
   background: var(--cream);
@@ -351,25 +348,15 @@ button.calendar-day {
   align-items: center;
   justify-content: center;
   gap: 3px;
-  cursor: pointer;
-  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition);
+  transition: box-shadow var(--transition), border-color var(--transition), background var(--transition);
   box-shadow: 3px 3px 0 var(--dark);
   position: relative;
-  padding: 0;
+  padding: 6px 4px;
 }
-.food-tile:active { transform: scale(0.92); }
 .food-tile.checked {
   border-color: var(--dark);
   background: var(--sage);
   box-shadow: 3px 3px 0 var(--dark);
-}
-.food-tile.checked::after {
-  content: '✓';
-  position: absolute;
-  top: 2px; right: 5px;
-  font-size: 0.65rem;
-  font-weight: 900;
-  color: white;
 }
 .food-count-badge {
   position: absolute;
@@ -389,6 +376,43 @@ button.calendar-day {
 .food-emoji { font-size: 1.6rem; line-height: 1; }
 .food-label { font-size: var(--text-2xs); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: var(--dark); }
 .food-tile.checked .food-label { color: rgba(255,255,255,0.9); }
+.food-stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+.stepper-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--dark);
+  background: var(--cream);
+  font-size: 0.85rem;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  color: var(--dark);
+  -webkit-tap-highlight-color: transparent;
+}
+.stepper-btn:active { transform: scale(0.88); }
+.stepper-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.stepper-count {
+  font-size: 0.72rem;
+  font-weight: 900;
+  min-width: 14px;
+  text-align: center;
+  color: var(--dark);
+  line-height: 1;
+}
+.food-tile.checked .stepper-btn { border-color: white; background: rgba(255,255,255,0.35); color: white; }
+.food-tile.checked .stepper-count { color: white; }
 
 /* ===== GOALS ===== */
 .goal-card-title {
@@ -412,13 +436,9 @@ button.calendar-day {
   gap: 12px;
   padding: 10px 0;
   border-bottom: 2px solid var(--cream);
-  cursor: pointer;
   width: 100%;
   min-height: 44px;
   background: none;
-  border-left: none;
-  border-right: none;
-  border-top: none;
 }
 .goal-item:last-child { border-bottom: none; }
 .goal-check {
@@ -438,6 +458,16 @@ button.calendar-day {
   background: var(--sage);
   border-color: var(--dark);
   color: white;
+}
+.goal-stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.goal-stepper .stepper-count {
+  min-width: 28px;
+  font-size: 0.78rem;
 }
 .goal-emoji { font-size: 1.3rem; }
 .goal-info { flex: 1; }

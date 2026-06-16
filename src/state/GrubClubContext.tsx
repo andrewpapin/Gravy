@@ -54,7 +54,9 @@ interface GrubClubContextValue {
   dismissToast: (id: number) => void;
   hideCelebration: () => void;
   logFood: (id: string) => void;
-  toggleGoal: (id: number) => void;
+  removeFood: (id: string) => void;
+  incrementGoal: (id: number) => void;
+  decrementGoal: (id: number) => void;
   logFoodForDay: (dateStr: string, foodId: string) => void;
   removeFoodForDay: (dateStr: string, foodId: string) => void;
   toggleGoalForDay: (dateStr: string, goalId: number) => void;
@@ -238,33 +240,79 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
     });
   }, [awardPoints, checkBadges, showCelebration]);
 
-  const toggleGoal = useCallback((id: number) => {
+  const removeFood = useCallback((id: string) => {
+    setState((prev) => {
+      const currentCount = prev.todayFoodCounts[id] || 0;
+      if (currentCount <= 0) return prev;
+      const next = clone(prev);
+      const wasFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
+      next.todayFoodCounts[id] = currentCount - 1;
+      next.counters.foodLogs[id] = Math.max(0, (next.counters.foodLogs[id] || 0) - 1);
+      next.points = Math.max(0, next.points - next.settings.foodPts);
+      next.totalPoints = Math.max(0, next.totalPoints - next.settings.foodPts);
+      next.todayPoints = Math.max(0, next.todayPoints - next.settings.foodPts);
+      const isFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
+      if (wasFull && !isFull) {
+        next.counters.fullTrayDays = Math.max(0, next.counters.fullTrayDays - 1);
+        if (next.settings.bonusPts > 0) {
+          next.points = Math.max(0, next.points - next.settings.bonusPts);
+          next.totalPoints = Math.max(0, next.totalPoints - next.settings.bonusPts);
+          next.todayPoints = Math.max(0, next.todayPoints - next.settings.bonusPts);
+        }
+        const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
+        const allGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => next.todayGoals.includes(g.id));
+        if (allGoalsDone) next.counters.comboDays = Math.max(0, next.counters.comboDays - 1);
+      }
+      return next;
+    });
+  }, []);
+
+  const incrementGoal = useCallback((id: number) => {
     setState((prev) => {
       const goal = prev.goals.find((g) => g.id === id);
       if (!goal) return prev;
+      const target = goal.target || 1;
+      const currentCount = (prev.todayGoalCounts || {})[id] || 0;
+      if (currentCount >= target) return prev;
       const next = clone(prev);
-      if (next.todayGoals.includes(id)) {
-        next.todayGoals = next.todayGoals.filter((g) => g !== id);
-        next.points = Math.max(0, next.points - goal.pts);
-        next.totalPoints = Math.max(0, next.totalPoints - goal.pts);
-        next.todayPoints = Math.max(0, next.todayPoints - goal.pts);
-        next.counters.totalGoals = Math.max(0, next.counters.totalGoals - 1);
-        return next;
+      if (!next.todayGoalCounts) next.todayGoalCounts = {};
+      next.todayGoalCounts[id] = currentCount + 1;
+      if (currentCount + 1 >= target && !next.todayGoals.includes(id)) {
+        next.todayGoals.push(id);
+        next.counters.totalGoals++;
+        awardPoints(next, goal.pts, `${goal.name} done!`);
+        const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
+        if (dailyGoals.length > 0 && dailyGoals.every((g) => next.todayGoals.includes(g.id))) {
+          next.counters.allGoalsDays++;
+          const fullTray = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
+          if (fullTray) next.counters.comboDays++;
+        }
+        checkBadges(next);
       }
-      next.todayGoals.push(id);
-      next.counters.totalGoals++;
-      awardPoints(next, goal.pts, `${goal.name} done!`);
-      // Only daily goals count toward "all goals done" badges
-      const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
-      if (dailyGoals.length > 0 && dailyGoals.every((g) => next.todayGoals.includes(g.id))) {
-        next.counters.allGoalsDays++;
-        const fullTray = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
-        if (fullTray) next.counters.comboDays++;
-      }
-      checkBadges(next);
       return next;
     });
   }, [awardPoints, checkBadges]);
+
+  const decrementGoal = useCallback((id: number) => {
+    setState((prev) => {
+      const goal = prev.goals.find((g) => g.id === id);
+      if (!goal) return prev;
+      const target = goal.target || 1;
+      const currentCount = (prev.todayGoalCounts || {})[id] || 0;
+      if (currentCount <= 0) return prev;
+      const next = clone(prev);
+      if (!next.todayGoalCounts) next.todayGoalCounts = {};
+      next.todayGoalCounts[id] = currentCount - 1;
+      if (currentCount >= target && next.todayGoals.includes(id)) {
+        next.todayGoals = next.todayGoals.filter((g) => g !== id);
+        next.counters.totalGoals = Math.max(0, next.counters.totalGoals - 1);
+        next.points = Math.max(0, next.points - goal.pts);
+        next.totalPoints = Math.max(0, next.totalPoints - goal.pts);
+        next.todayPoints = Math.max(0, next.todayPoints - goal.pts);
+      }
+      return next;
+    });
+  }, []);
 
   const logFoodForDay = useCallback((dateStr: string, foodId: string) => {
     setState((prev) => {
@@ -602,7 +650,9 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
     dismissToast,
     hideCelebration,
     logFood,
-    toggleGoal,
+    removeFood,
+    incrementGoal,
+    decrementGoal,
     logFoodForDay,
     removeFoodForDay,
     toggleGoalForDay,

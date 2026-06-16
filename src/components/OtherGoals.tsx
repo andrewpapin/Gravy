@@ -3,12 +3,13 @@ import { faListCheck } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../state/GrubClubContext';
 
 export function OtherGoals() {
-  const { state, toggleGoal } = useGrubClub();
+  const { state, incrementGoal, decrementGoal } = useGrubClub();
   const otherGoals = state.goals.filter((g) => g.isDaily === false);
 
   if (otherGoals.length === 0) return null;
 
-  const completed = otherGoals.filter((g) => state.todayGoals.includes(g.id)).length;
+  const goalCounts = state.todayGoalCounts || {};
+  const completed = otherGoals.filter((g) => (goalCounts[g.id] || 0) >= (g.target || 1)).length;
 
   return (
     <div className="card">
@@ -18,10 +19,28 @@ export function OtherGoals() {
       </div>
       <div>
         {otherGoals.map((g) => {
-          const checked = state.todayGoals.includes(g.id);
+          const target = g.target || 1;
+          const count = goalCounts[g.id] || 0;
+          const done = count >= target;
           return (
-            <div key={g.id} className={`goal-item ${checked ? 'checked' : ''}`} onClick={() => toggleGoal(g.id)}>
-              <div className="goal-check">{checked ? '✓' : ''}</div>
+            <div key={g.id} className={`goal-item ${done ? 'checked' : ''}`}>
+              <div className="goal-stepper">
+                <button
+                  type="button"
+                  className="stepper-btn"
+                  onClick={() => decrementGoal(g.id)}
+                  disabled={count === 0}
+                  aria-label={`Undo ${g.name}`}
+                >−</button>
+                <span className="stepper-count">{count}/{target}</span>
+                <button
+                  type="button"
+                  className="stepper-btn"
+                  onClick={() => incrementGoal(g.id)}
+                  disabled={done}
+                  aria-label={`Complete ${g.name}`}
+                >+</button>
+              </div>
               <div className="goal-emoji">{g.emoji}</div>
               <div className="goal-info">
                 <div className="goal-name">{g.name}</div>

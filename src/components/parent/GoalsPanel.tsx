@@ -6,6 +6,7 @@ export function GoalsPanel() {
   const [emoji, setEmoji] = useState('');
   const [name, setName] = useState('');
   const [pts, setPts] = useState('');
+  const [target, setTarget] = useState('1');
   const [isDaily, setIsDaily] = useState(true);
 
   const handleAdd = () => {
@@ -15,11 +16,13 @@ export function GoalsPanel() {
       emoji: emoji.trim() || '✅',
       name: trimmedName,
       pts: parseInt(pts) || 10,
+      target: Math.max(1, parseInt(target) || 1),
       isDaily,
     });
     setEmoji('');
     setName('');
     setPts('');
+    setTarget('1');
     setIsDaily(true);
   };
 
@@ -44,6 +47,16 @@ export function GoalsPanel() {
           max={999}
           value={pts}
           onChange={(e) => setPts(e.target.value)}
+        />
+        <input
+          type="number"
+          className="pts-input"
+          placeholder="×"
+          title="Times to complete"
+          min={1}
+          max={99}
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
         />
         <button className="btn btn-sm btn-purple" onClick={handleAdd}>
           Add
@@ -71,7 +84,10 @@ export function GoalsPanel() {
             <div className="parent-item-emoji">{g.emoji}</div>
             <div className="parent-item-info">
               <div className="parent-item-name">{g.name}</div>
-              <div className="parent-item-pts">+{g.pts} pts · {g.isDaily !== false ? 'Daily' : 'One-time'}</div>
+              <div className="parent-item-pts">
+                +{g.pts} pts · {g.isDaily !== false ? 'Daily' : 'One-time'}
+                {(g.target || 1) > 1 ? ` · ×${g.target}` : ''}
+              </div>
             </div>
             <label className="pbadge-toggle" title="Toggle daily / one-time">
               <input
