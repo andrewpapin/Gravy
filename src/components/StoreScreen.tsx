@@ -7,7 +7,7 @@ interface StoreScreenProps {
   onEnterParent: () => void;
 }
 
-export function StoreScreen({ onEnterParent }: StoreScreenProps) {
+export function StoreScreen({ onEnterParent: _onEnterParent }: StoreScreenProps) {
   const { state, requestReward } = useGrubClub();
   const pendingIds = state.pendingRewards.map((r) => r.rewardId);
   const available = state.rewards.filter((r) => !pendingIds.includes(r.id));

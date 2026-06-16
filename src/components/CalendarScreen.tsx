@@ -23,7 +23,7 @@ interface CalendarScreenProps {
   onEnterParent: () => void;
 }
 
-export function CalendarScreen({ onEnterParent }: CalendarScreenProps) {
+export function CalendarScreen({ onEnterParent: _onEnterParent }: CalendarScreenProps) {
   const { state, showToast } = useGrubClub();
   const today = todayStr();
   const now = new Date();

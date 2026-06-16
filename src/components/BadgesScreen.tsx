@@ -9,7 +9,7 @@ interface BadgesScreenProps {
   onEnterParent: () => void;
 }
 
-export function BadgesScreen({ onShowBadge, onEnterParent }: BadgesScreenProps) {
+export function BadgesScreen({ onShowBadge, onEnterParent: _onEnterParent }: BadgesScreenProps) {
   const { state } = useGrubClub();
   const visible = getEnabledBadges(state);
 

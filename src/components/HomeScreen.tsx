@@ -13,7 +13,7 @@ interface HomeScreenProps {
   onOpenCalendar: () => void;
 }
 
-export function HomeScreen({ onEnterParent, onOpenCalendar }: HomeScreenProps) {
+export function HomeScreen({ onEnterParent: _onEnterParent, onOpenCalendar }: HomeScreenProps) {
   const { state } = useGrubClub();
   const today = todayStr();
   const [selectedDate, setSelectedDate] = useState(today);
