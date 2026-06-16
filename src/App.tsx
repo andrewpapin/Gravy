@@ -19,16 +19,17 @@ function AppShell() {
   const [view, setView] = useState<View>('kid');
   const [tab, setTab] = useState<Tab>('home');
   const [activeBadge, setActiveBadge] = useState<string | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   return (
     <>
       {view === 'kid' && (
         <div id="kidApp">
-          {tab === 'home' && <HomeScreen onEnterParent={() => setView('pin')} onOpenCalendar={() => setTab('calendar')} />}
+          {tab === 'home' && <HomeScreen onEnterParent={() => setView('pin')} onOpenCalendar={() => setCalendarOpen(true)} />}
           {tab === 'store' && <StoreScreen onEnterParent={() => setView('pin')} />}
           {tab === 'badges' && <BadgesScreen onShowBadge={setActiveBadge} onEnterParent={() => setView('pin')} />}
-          {tab === 'calendar' && <CalendarScreen onEnterParent={() => setView('pin')} />}
           <BottomNav active={tab} onChange={setTab} onEnterParent={() => setView('pin')} />
+          <CalendarScreen open={calendarOpen} onClose={() => setCalendarOpen(false)} />
         </div>
       )}
 

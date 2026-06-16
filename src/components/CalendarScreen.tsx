@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faChevronRight, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
-import { TopBar } from './TopBar';
+import { faChevronLeft, faChevronRight, faCalendarDays, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { DaySummaryCard } from './DaySummaryCard';
 import { useGrubClub } from '../state/GrubClubContext';
 import { todayStr } from '../state/defaultState';
@@ -20,10 +19,11 @@ function toDateStr(year: number, month: number, day: number): string {
 }
 
 interface CalendarScreenProps {
-  onEnterParent: () => void;
+  open: boolean;
+  onClose: () => void;
 }
 
-export function CalendarScreen({ onEnterParent: _onEnterParent }: CalendarScreenProps) {
+export function CalendarScreen({ open, onClose }: CalendarScreenProps) {
   const { state, showToast } = useGrubClub();
   const today = todayStr();
   const now = new Date();
@@ -63,55 +63,65 @@ export function CalendarScreen({ onEnterParent: _onEnterParent }: CalendarScreen
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
   return (
-    <div className="screen active">
-      <TopBar title="Calendar" />
-      <div className="scroll-area">
-        <div className="card">
-          <div className="calendar-header">
-            <button className="calendar-nav-btn" onClick={prevMonth}>
-              <FontAwesomeIcon icon={faChevronLeft} />
-            </button>
-            <div className="calendar-month-label">{MONTH_NAMES[viewMonth]} {viewYear}</div>
-            <button
-              className={`calendar-nav-btn ${isCurrentMonth ? 'muted' : ''}`}
-              onClick={nextMonth}
-              aria-label={isCurrentMonth ? "Can't view future months" : 'Next month'}
-            >
-              <FontAwesomeIcon icon={faChevronRight} />
-            </button>
-          </div>
-          <div className="calendar-grid calendar-weekdays">
-            {WEEKDAYS.map((w, i) => (
-              <div key={i} className="calendar-weekday">{w}</div>
-            ))}
-          </div>
-          <div className="calendar-grid">
-            {cells.map((day, i) => {
-              if (day === null) return <span key={i} className="calendar-day empty" aria-hidden="true" />;
-              const dateStr = toDateStr(viewYear, viewMonth, day);
-              const isToday = dateStr === today;
-              const isSelected = dateStr === selectedDate;
-              const log = getDayLog(state, dateStr, today);
-              const hasLog = hasAnyLog(log);
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  className={`calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`}
-                  onClick={() => setSelectedDate(dateStr)}
-                  aria-label={`${day} ${MONTH_NAMES[viewMonth]}${isToday ? ', today' : ''}${hasLog ? ', has activity' : ''}`}
-                  aria-pressed={isSelected}
-                >
-                  {day}
-                  {isToday && <div className="calendar-day-today-marker" aria-hidden="true" />}
-                  {hasLog && <div className="calendar-day-dot" aria-hidden="true" />}
-                </button>
-              );
-            })}
-          </div>
+    <div
+      className={`calendar-modal-overlay ${open ? 'show' : ''}`}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="calendar-modal-sheet">
+        <div className="calendar-modal-header">
+          <span className="calendar-modal-title">Calendar</span>
+          <button className="calendar-modal-close" onClick={onClose} aria-label="Close calendar">
+            <FontAwesomeIcon icon={faXmark} />
+          </button>
         </div>
+        <div className="calendar-modal-body">
+          <div className="card">
+            <div className="calendar-header">
+              <button className="calendar-nav-btn" onClick={prevMonth}>
+                <FontAwesomeIcon icon={faChevronLeft} />
+              </button>
+              <div className="calendar-month-label">{MONTH_NAMES[viewMonth]} {viewYear}</div>
+              <button
+                className={`calendar-nav-btn ${isCurrentMonth ? 'muted' : ''}`}
+                onClick={nextMonth}
+                aria-label={isCurrentMonth ? "Can't view future months" : 'Next month'}
+              >
+                <FontAwesomeIcon icon={faChevronRight} />
+              </button>
+            </div>
+            <div className="calendar-grid calendar-weekdays">
+              {WEEKDAYS.map((w, i) => (
+                <div key={i} className="calendar-weekday">{w}</div>
+              ))}
+            </div>
+            <div className="calendar-grid">
+              {cells.map((day, i) => {
+                if (day === null) return <span key={i} className="calendar-day empty" aria-hidden="true" />;
+                const dateStr = toDateStr(viewYear, viewMonth, day);
+                const isToday = dateStr === today;
+                const isSelected = dateStr === selectedDate;
+                const log = getDayLog(state, dateStr, today);
+                const hasLog = hasAnyLog(log);
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`}
+                    onClick={() => setSelectedDate(dateStr)}
+                    aria-label={`${day} ${MONTH_NAMES[viewMonth]}${isToday ? ', today' : ''}${hasLog ? ', has activity' : ''}`}
+                    aria-pressed={isSelected}
+                  >
+                    {day}
+                    {isToday && <div className="calendar-day-today-marker" aria-hidden="true" />}
+                    {hasLog && <div className="calendar-day-dot" aria-hidden="true" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-        <DaySummaryCard dateStr={selectedDate} />
+          <DaySummaryCard dateStr={selectedDate} />
+        </div>
       </div>
     </div>
   );
