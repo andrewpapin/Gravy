@@ -48,7 +48,7 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
                   type="button"
                   className={`food-tile ${count > 0 ? 'checked' : ''}`}
                   onClick={() => logFoodForDay(dateStr, f.id)}
-                  aria-label={`Add ${f.label}${count > 0 ? ` (${count} logged)` : ''}`}
+                  aria-label={count > 0 ? `${f.label}, logged` : `Add ${f.label}`}
                 >
                   {count > 1 && <div className="food-count-badge" aria-hidden="true">{count}</div>}
                   <div className="food-emoji" aria-hidden="true">{f.emoji}</div>

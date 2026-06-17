@@ -206,6 +206,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
 
   const logFood = useCallback((id: string) => {
     setState((prev) => {
+      if ((prev.todayFoodCounts[id] || 0) >= 1) return prev;
       const snapshot = clone(prev);
       const next = clone(prev);
       const wasFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
@@ -317,6 +318,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
 
   const logFoodForDay = useCallback((dateStr: string, foodId: string) => {
     setState((prev) => {
+      if ((prev.dayLogs[dateStr]?.foodCounts[foodId] || 0) >= 1) return prev;
       const next = clone(prev);
       if (!next.dayLogs[dateStr]) {
         next.dayLogs[dateStr] = { foodCounts: {}, goalIds: [], points: 0 };

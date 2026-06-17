@@ -26,7 +26,7 @@ export function FoodTray() {
                 type="button"
                 className={`food-tile ${count > 0 ? 'checked' : ''}`}
                 onClick={() => logFood(f.id)}
-                aria-label={`${f.label}${count > 0 ? `, logged ${count}` : ''}. Tap to add one.`}
+                aria-label={count > 0 ? `${f.label}, logged` : `${f.label}. Tap to log.`}
               >
                 {count > 1 && <span className="food-count-badge" aria-hidden="true">{count}</span>}
                 <div className="food-emoji" aria-hidden="true">{f.emoji}</div>
