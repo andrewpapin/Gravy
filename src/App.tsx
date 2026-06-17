@@ -56,12 +56,19 @@ function AppShell() {
             <HomeScreen
               onEnterParent={() => setView('pin')}
               onOpenCalendar={() => setCalendarOpen(true)}
+              onOpenStore={() => setTab('store')}
               selectedDate={selectedDate}
               onSelectDate={setSelectedDate}
             />
           )}
           {tab === 'store' && <StoreScreen onEnterParent={() => setView('pin')} />}
-          {tab === 'badges' && <BadgesScreen onShowBadge={setActiveBadge} onEnterParent={() => setView('pin')} />}
+          {tab === 'badges' && (
+            <BadgesScreen
+              onShowBadge={setActiveBadge}
+              onEnterParent={() => setView('pin')}
+              onOpenStore={() => setTab('store')}
+            />
+          )}
           <BottomNav active={tab} onChange={setTab} onEnterParent={() => setView('pin')} />
           <CalendarScreen
             open={calendarOpen}

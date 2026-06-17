@@ -11,11 +11,12 @@ import { todayStr } from '../state/defaultState';
 interface HomeScreenProps {
   onEnterParent: () => void;
   onOpenCalendar: () => void;
+  onOpenStore: () => void;
   selectedDate: string;
   onSelectDate: (date: string) => void;
 }
 
-export function HomeScreen({ onEnterParent: _onEnterParent, onOpenCalendar, selectedDate, onSelectDate }: HomeScreenProps) {
+export function HomeScreen({ onEnterParent: _onEnterParent, onOpenCalendar, onOpenStore, selectedDate, onSelectDate }: HomeScreenProps) {
   const { state } = useGrubClub();
   const today = todayStr();
   const isToday = selectedDate === today;
@@ -23,7 +24,7 @@ export function HomeScreen({ onEnterParent: _onEnterParent, onOpenCalendar, sele
 
   return (
     <div className="screen active">
-      <TopBar title="Grub Club" highlightLast />
+      <TopBar title="Grub Club" highlightLast onTapPoints={onOpenStore} />
       <div className="scroll-area">
         <WeekStrip selectedDate={selectedDate} onSelectDate={onSelectDate} onOpenCalendar={onOpenCalendar} />
         <StatsCard />
