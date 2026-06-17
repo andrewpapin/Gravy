@@ -37,6 +37,11 @@ export function DailyGoals() {
                 key={g.id}
                 className={`goal-item ${done ? 'checked' : ''}`}
               >
+                <div className="goal-emoji">{g.emoji}</div>
+                <div className="goal-info">
+                  <div className="goal-name">{g.name}</div>
+                </div>
+                <div className="pts-badge">+{g.pts}</div>
                 <div className="goal-stepper">
                   <button
                     type="button"
@@ -50,15 +55,9 @@ export function DailyGoals() {
                     type="button"
                     className="stepper-btn"
                     onClick={() => incrementGoal(g.id)}
-                    disabled={done}
                     aria-label={`Complete ${g.name}`}
                   >+</button>
                 </div>
-                <div className="goal-emoji">{g.emoji}</div>
-                <div className="goal-info">
-                  <div className="goal-name">{g.name}</div>
-                </div>
-                <div className="pts-badge">+{g.pts}</div>
               </div>
             );
           })}

@@ -206,6 +206,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
 
   const logFood = useCallback((id: string) => {
     setState((prev) => {
+      if ((prev.todayFoodCounts[id] || 0) >= 1) return prev;
       const snapshot = clone(prev);
       const next = clone(prev);
       const wasFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
@@ -274,7 +275,6 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       if (!goal) return prev;
       const target = goal.target || 1;
       const currentCount = (prev.todayGoalCounts || {})[id] || 0;
-      if (currentCount >= target) return prev;
       const next = clone(prev);
       if (!next.todayGoalCounts) next.todayGoalCounts = {};
       next.todayGoalCounts[id] = currentCount + 1;
@@ -303,8 +303,9 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
       if (currentCount <= 0) return prev;
       const next = clone(prev);
       if (!next.todayGoalCounts) next.todayGoalCounts = {};
-      next.todayGoalCounts[id] = currentCount - 1;
-      if (currentCount >= target && next.todayGoals.includes(id)) {
+      const newCount = currentCount - 1;
+      next.todayGoalCounts[id] = newCount;
+      if (newCount < target && next.todayGoals.includes(id)) {
         next.todayGoals = next.todayGoals.filter((g) => g !== id);
         next.counters.totalGoals = Math.max(0, next.counters.totalGoals - 1);
         next.points = Math.max(0, next.points - goal.pts);
@@ -317,6 +318,7 @@ export function GrubClubProvider({ children }: { children: ReactNode }) {
 
   const logFoodForDay = useCallback((dateStr: string, foodId: string) => {
     setState((prev) => {
+      if ((prev.dayLogs[dateStr]?.foodCounts[foodId] || 0) >= 1) return prev;
       const next = clone(prev);
       if (!next.dayLogs[dateStr]) {
         next.dayLogs[dateStr] = { foodCounts: {}, goalIds: [], points: 0 };

@@ -43,27 +43,17 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
           {FOODS.map((f) => {
             const count = foodCounts[f.id] || 0;
             return (
-              <div key={f.id} className="tray-tile-wrap">
-                <button
-                  type="button"
-                  className={`food-tile ${count > 0 ? 'checked' : ''}`}
-                  onClick={() => logFoodForDay(dateStr, f.id)}
-                  aria-label={`Add ${f.label}${count > 0 ? ` (${count} logged)` : ''}`}
-                >
-                  {count > 1 && <div className="food-count-badge" aria-hidden="true">{count}</div>}
-                  <div className="food-emoji" aria-hidden="true">{f.emoji}</div>
-                  <div className="food-label" aria-hidden="true">{f.label}</div>
-                </button>
-                <button
-                  type="button"
-                  className="food-remove-btn"
-                  onClick={() => removeFoodForDay(dateStr, f.id)}
-                  aria-label={`Remove one ${f.label}`}
-                  style={{ visibility: count > 0 ? 'visible' : 'hidden' }}
-                >
-                  −
-                </button>
-              </div>
+              <button
+                key={f.id}
+                type="button"
+                className={`food-tile ${count > 0 ? 'checked' : ''}`}
+                onClick={() => (count > 0 ? removeFoodForDay(dateStr, f.id) : logFoodForDay(dateStr, f.id))}
+                aria-label={count > 0 ? `${f.label}, logged. Tap to undo.` : `Add ${f.label}`}
+              >
+                {count > 1 && <div className="food-count-badge" aria-hidden="true">{count}</div>}
+                <div className="food-emoji" aria-hidden="true">{f.emoji}</div>
+                <div className="food-label" aria-hidden="true">{f.label}</div>
+              </button>
             );
           })}
         </div>

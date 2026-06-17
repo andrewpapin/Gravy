@@ -342,12 +342,6 @@ button.calendar-day {
   grid-template-columns: repeat(5, 1fr);
   gap: 6px;
 }
-.tray-tile-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
 .food-tile {
   width: 100%;
   border-radius: 14px;
@@ -370,19 +364,6 @@ button.calendar-day {
   background: var(--sage);
   box-shadow: 3px 3px 0 var(--dark);
 }
-.food-remove-btn {
-  background: var(--cream);
-  border: 2px solid var(--dark);
-  border-radius: 50px;
-  font-size: 0.7rem;
-  font-weight: 900;
-  padding: 1px 8px;
-  cursor: pointer;
-  color: var(--dark);
-  line-height: 1.4;
-  font-family: var(--font-display);
-}
-.food-remove-btn:active { transform: scale(0.9); }
 .food-count-badge {
   position: absolute;
   top: -6px; left: -6px;
@@ -489,7 +470,7 @@ button.calendar-day {
 .goal-emoji { font-size: 1.3rem; }
 .goal-info { flex: 1; }
 .goal-name { font-size: 0.95rem; font-weight: 800; }
-.goal-item.checked .goal-name { text-decoration: line-through; color: var(--muted); }
+.goal-item.checked .goal-name { color: var(--muted); }
 
 /* ===== WEEK STRIP ===== */
 .week-strip-card {

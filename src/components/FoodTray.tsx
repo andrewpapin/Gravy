@@ -21,25 +21,16 @@ export function FoodTray() {
         {FOODS.map((f) => {
           const count = state.todayFoodCounts[f.id] || 0;
           return (
-            <div key={f.id} className="tray-tile-wrap">
-              <button
-                type="button"
-                className={`food-tile ${count > 0 ? 'checked' : ''}`}
-                onClick={() => logFood(f.id)}
-                aria-label={`${f.label}${count > 0 ? `, logged ${count}` : ''}. Tap to add one.`}
-              >
-                {count > 1 && <span className="food-count-badge" aria-hidden="true">{count}</span>}
-                <div className="food-emoji" aria-hidden="true">{f.emoji}</div>
-                <div className="food-label" aria-hidden="true">{f.label}</div>
-              </button>
-              <button
-                type="button"
-                className="food-remove-btn"
-                style={{ visibility: count > 0 ? 'visible' : 'hidden' }}
-                onClick={() => removeFood(f.id)}
-                aria-label={`Remove one ${f.label}`}
-              >−</button>
-            </div>
+            <button
+              key={f.id}
+              type="button"
+              className={`food-tile ${count > 0 ? 'checked' : ''}`}
+              onClick={() => (count > 0 ? removeFood(f.id) : logFood(f.id))}
+              aria-label={count > 0 ? `${f.label}, logged. Tap to undo.` : `${f.label}. Tap to log.`}
+            >
+              <div className="food-emoji" aria-hidden="true">{f.emoji}</div>
+              <div className="food-label" aria-hidden="true">{f.label}</div>
+            </button>
           );
         })}
       </div>
