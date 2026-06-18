@@ -152,15 +152,17 @@ export function applyDayRollover(state: GrubClubState): GrubClubState {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-    if (state.lastActiveDate === yStr) {
-      state.streak++;
-    } else {
-      state.streak = 0;
-    }
     const hadActivity =
       Object.keys(state.todayFoodCounts).length > 0 ||
       state.todayGoals.length > 0 ||
       state.todayPoints > 0;
+    // The streak only extends if the day being closed out had real activity logged —
+    // just having the app open isn't enough, otherwise the streak couldn't ever be "at risk".
+    if (state.lastActiveDate === yStr && hadActivity) {
+      state.streak++;
+    } else {
+      state.streak = 0;
+    }
     if (hadActivity) {
       state.dayLogs[state.lastActiveDate] = {
         foodCounts: { ...state.todayFoodCounts },
