@@ -273,7 +273,7 @@ button.calendar-day {
   border: 3px solid var(--dark);
 }
 .stats-rank {
-  background: linear-gradient(135deg, var(--sage), #6c8d85);
+  background: linear-gradient(135deg, var(--sage), var(--coral));
   color: white;
   padding: 14px 16px;
 }
@@ -304,40 +304,6 @@ button.calendar-day {
   border-radius: 50px;
   transition: width 0.5s ease;
 }
-.stats-bottom {
-  display: flex;
-  border-top: 3px solid var(--dark);
-}
-.stats-streak {
-  flex: 1;
-  background: linear-gradient(135deg, var(--coral), #d8635f);
-  color: white;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-}
-.stats-points {
-  flex: 1;
-  background: linear-gradient(135deg, var(--coral), #d8635f);
-  color: white;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-  border-left: 3px solid var(--dark);
-}
-.stats-streak-top, .stats-points-top {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.stats-streak-fire, .stats-points-star { font-size: 1.5rem; }
-.stats-streak-num, .stats-points-num { font-size: 1.6rem; font-weight: 900; line-height: 1; }
-.stats-streak-label, .stats-points-label { font-size: 0.7rem; font-weight: 800; opacity: 0.9; }
-
 /* ===== FOOD TRAY ===== */
 .tray-grid {
   display: grid;
