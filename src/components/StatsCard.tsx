@@ -1,3 +1,5 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFire } from '@fortawesome/free-solid-svg-icons';
 import { getRank, RANKS } from '../data/ranks';
 import { useGrubClub } from '../state/GrubClubContext';
 
@@ -24,6 +26,11 @@ export function StatsCard() {
         <div className="stats-rank-top">
           <span className="stats-rank-emoji">{rank.emoji}</span>
           <span className="stats-rank-name">{rank.name}</span>
+          {state.streak > 0 && (
+            <span className="streak-badge" title={`${state.streak} day streak`}>
+              <FontAwesomeIcon icon={faFire} /> {state.streak}
+            </span>
+          )}
         </div>
         <div className="stats-rank-xp">{xpText}</div>
         <div className="xp-bar-track">
