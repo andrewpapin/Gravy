@@ -11,7 +11,9 @@ export function FoodTray() {
   return (
     <div className="card">
       <div className="flex-between" style={{ marginBottom: 12 }}>
-        <div className="goal-card-title"><FontAwesomeIcon icon={faUtensils} /> Today's Food</div>
+        <div className="goal-card-title">
+          <span className="card-title-icon icon-sage"><FontAwesomeIcon icon={faUtensils} /></span> Today's Food
+        </div>
         <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--sage)' }}>
           {allEaten ? '🎉 Full Tray Bonus!' : `${eatenCount}/5 eaten`}
         </div>

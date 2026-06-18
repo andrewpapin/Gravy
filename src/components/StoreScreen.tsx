@@ -70,7 +70,7 @@ export function StoreScreen({ onEnterParent: _onEnterParent }: StoreScreenProps)
 
         <div style={{ marginTop: 16 }}>
           <div className="card-title" style={{ marginBottom: 8 }}>
-            <FontAwesomeIcon icon={faHourglassHalf} /> Pending Requests
+            <span className="card-title-icon icon-coral"><FontAwesomeIcon icon={faHourglassHalf} /></span> Pending Requests
           </div>
           {state.pendingRewards.length === 0 ? (
             <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontWeight: 700, textAlign: 'center', padding: 8 }}>

@@ -14,21 +14,43 @@ export function OtherGoals() {
   return (
     <div className="card">
       <div className="flex-between" style={{ marginBottom: 12 }}>
-        <div className="goal-card-title"><FontAwesomeIcon icon={faListCheck} /> Other Goals</div>
+        <div className="goal-card-title">
+          <span className="card-title-icon icon-coral"><FontAwesomeIcon icon={faListCheck} /></span> Other Goals
+        </div>
         <div className="goal-progress-badge">{completed}/{otherGoals.length} done</div>
       </div>
-      <div>
+      <div className="goal-grid">
         {otherGoals.map((g) => {
           const target = g.target || 1;
           const count = goalCounts[g.id] || 0;
           const done = count >= target;
+
+          if (target === 1) {
+            return (
+              <button
+                key={g.id}
+                type="button"
+                className={`goal-tile ${done ? 'checked' : ''}`}
+                onClick={() => (count > 0 ? decrementGoal(g.id) : incrementGoal(g.id))}
+                aria-pressed={done}
+                aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
+              >
+                <div className="goal-tile-top">
+                  <span className="goal-tile-emoji" aria-hidden="true">{g.emoji}</span>
+                  <span className="pts-badge">+{g.pts}</span>
+                </div>
+                <div className="goal-tile-name">{g.name}</div>
+              </button>
+            );
+          }
+
           return (
-            <div key={g.id} className={`goal-item ${done ? 'checked' : ''}`}>
-              <div className="goal-emoji">{g.emoji}</div>
-              <div className="goal-info">
-                <div className="goal-name">{g.name}</div>
+            <div key={g.id} className={`goal-tile ${done ? 'checked' : ''}`}>
+              <div className="goal-tile-top">
+                <span className="goal-tile-emoji" aria-hidden="true">{g.emoji}</span>
+                <span className="pts-badge">+{g.pts}</span>
               </div>
-              <div className="pts-badge">+{g.pts}</div>
+              <div className="goal-tile-name">{g.name}</div>
               <div className="goal-stepper">
                 <button
                   type="button"
