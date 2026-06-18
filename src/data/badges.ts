@@ -33,6 +33,7 @@ export const BADGE_MASTER: BadgeDef[] = [
   { id: 'full_tray7',   emoji: '🌈', name: 'Rainbow Week',      desc: 'Eat all 5 food groups 7 days',            trigger: 'full_tray:7', group: 'Food' },
   { id: 'full_tray30',  emoji: '🏆', name: 'Tray Legend',       desc: 'Eat all 5 food groups 30 days',           trigger: 'full_tray:30',group: 'Food' },
   { id: 'food_count25', emoji: '🍴', name: 'Munch Machine',     desc: 'Log 25 food groups total',                trigger: 'food_count:25',group:'Food' },
+  { id: 'food_count50', emoji: '🍱', name: 'Plate Pro',         desc: 'Log 50 food groups total',                trigger: 'food_count:50',group:'Food' },
   { id: 'food_count100',emoji: '💪', name: 'Nutrition Ninja',   desc: 'Log 100 food groups total',               trigger: 'food_count:100',group:'Food'},
 
   // ── CHORES (12) ────────────────────────────────────────────────────
@@ -58,7 +59,9 @@ export const BADGE_MASTER: BadgeDef[] = [
   { id: 'pts1000',      emoji: '👑', name: 'Point King',        desc: 'Earn 1,000 points total',                 trigger: 'pts:1000',    group: 'Points' },
   { id: 'pts1500',      emoji: '🌙', name: 'Moonshot',          desc: 'Earn 1,500 points total',                 trigger: 'pts:1500',    group: 'Points' },
   { id: 'pts2000',      emoji: '🌠', name: 'Star Power',        desc: 'Earn 2,000 points total',                 trigger: 'pts:2000',    group: 'Points' },
+  { id: 'pts2500',      emoji: '🛰️', name: 'Orbit Master',      desc: 'Earn 2,500 points total',                 trigger: 'pts:2500',    group: 'Points' },
   { id: 'pts3000',      emoji: '🌌', name: 'Galaxy Brain',      desc: 'Earn 3,000 points total',                 trigger: 'pts:3000',    group: 'Points' },
+  { id: 'pts4000',      emoji: '☄️', name: 'Comet Chaser',      desc: 'Earn 4,000 points total',                 trigger: 'pts:4000',    group: 'Points' },
   { id: 'pts5000',      emoji: '🦄', name: 'Unicorn',           desc: 'Earn 5,000 points total',                 trigger: 'pts:5000',    group: 'Points' },
 
   // ── STREAKS (8) ────────────────────────────────────────────────────
@@ -66,8 +69,10 @@ export const BADGE_MASTER: BadgeDef[] = [
   { id: 'streak3',      emoji: '🔥', name: 'On Fire',           desc: 'Use the app 3 days in a row',             trigger: 'streak:3',    group: 'Streaks' },
   { id: 'streak5',      emoji: '⚡', name: 'Lightning',         desc: 'Use the app 5 days in a row',             trigger: 'streak:5',    group: 'Streaks' },
   { id: 'streak7',      emoji: '🌋', name: 'Inferno',           desc: 'Use the app 7 days in a row',             trigger: 'streak:7',    group: 'Streaks' },
+  { id: 'streak9',      emoji: '🎆', name: 'Hot Streak',        desc: 'Use the app 9 days in a row',             trigger: 'streak:9',    group: 'Streaks' },
   { id: 'streak10',     emoji: '💫', name: 'Ten Day Hero',      desc: 'Use the app 10 days in a row',            trigger: 'streak:10',   group: 'Streaks' },
   { id: 'streak14',     emoji: '🦅', name: 'Two Weeks Strong',  desc: 'Use the app 14 days in a row',            trigger: 'streak:14',   group: 'Streaks' },
+  { id: 'streak18',     emoji: '🌪️', name: 'Storm Chaser',      desc: 'Use the app 18 days in a row',            trigger: 'streak:18',   group: 'Streaks' },
   { id: 'streak21',     emoji: '🏔️', name: 'Mountain Top',      desc: 'Use the app 21 days in a row',            trigger: 'streak:21',   group: 'Streaks' },
   { id: 'streak30',     emoji: '🌞', name: 'Month Master',      desc: 'Use the app 30 days in a row',            trigger: 'streak:30',   group: 'Streaks' },
 
@@ -81,6 +86,7 @@ export const BADGE_MASTER: BadgeDef[] = [
   // ── COMBOS (8) ─────────────────────────────────────────────────────
   { id: 'combo1',       emoji: '🌮', name: 'Perfect Day',       desc: 'Full tray + all chores in one day',       trigger: 'combo:1',     group: 'Combos' },
   { id: 'combo3',       emoji: '🎪', name: 'Hat Trick Hero',    desc: 'Perfect day 3 times',                     trigger: 'combo:3',     group: 'Combos' },
+  { id: 'combo5',       emoji: '🎢', name: 'Streak of Perfect', desc: 'Perfect day 5 times',                     trigger: 'combo:5',     group: 'Combos' },
   { id: 'combo7',       emoji: '🎇', name: 'Flawless Week',     desc: 'Perfect day 7 times',                     trigger: 'combo:7',     group: 'Combos' },
   { id: 'pts_day50',    emoji: '⚡', name: 'Big Day',           desc: 'Earn 50 points in a single day',          trigger: 'pts_day:50',  group: 'Combos' },
   { id: 'pts_day100',   emoji: '💣', name: 'Mega Day',          desc: 'Earn 100 points in a single day',         trigger: 'pts_day:100', group: 'Combos' },
