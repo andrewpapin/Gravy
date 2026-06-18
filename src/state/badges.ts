@@ -1,4 +1,5 @@
 import { BADGE_MASTER, type BadgeDef } from '../data/badges';
+import type { IconKey } from '../data/icons';
 import type { GrubClubState } from './types';
 
 export interface BadgeDisplay extends BadgeDef {
@@ -12,6 +13,7 @@ export function getBadgeDisplay(state: GrubClubState, id: string): BadgeDisplay 
   return {
     ...master,
     emoji: cfg.emoji ?? master.emoji,
+    icon: (cfg.icon as IconKey | undefined) ?? master.icon,
     name: cfg.name ?? master.name,
     enabled: cfg.enabled !== undefined ? cfg.enabled : true,
   };

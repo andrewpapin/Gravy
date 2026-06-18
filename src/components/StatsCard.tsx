@@ -1,6 +1,8 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFire } from '@fortawesome/free-solid-svg-icons';
+import { faFire, faUtensils, faListCheck } from '@fortawesome/free-solid-svg-icons';
 import { getRank, RANKS } from '../data/ranks';
+import { FOODS } from '../data/foods';
+import { AppIcon } from './AppIcon';
 import { useGrubClub } from '../state/GrubClubContext';
 
 export function StatsCard() {
@@ -9,6 +11,14 @@ export function StatsCard() {
   const hasLoggedToday =
     Object.keys(state.todayFoodCounts).length > 0 || state.todayGoals.length > 0 || state.todayPoints > 0;
   const streakAtRisk = state.streak > 0 && !hasLoggedToday;
+
+  // At-a-glance "today" snapshot, tying the food + goal cards back into the rank banner.
+  const eatenCount = Object.values(state.todayFoodCounts).filter((v) => v > 0).length;
+  const dailyGoals = state.goals.filter((g) => g.isDaily !== false);
+  const goalCounts = state.todayGoalCounts || {};
+  const goalsDone = dailyGoals.filter((g) => (goalCounts[g.id] || 0) >= (g.target || 1)).length;
+  const foodDone = eatenCount === FOODS.length;
+  const goalsAllDone = dailyGoals.length > 0 && goalsDone === dailyGoals.length;
 
   let xpText: string;
   let pct: number;
@@ -27,7 +37,7 @@ export function StatsCard() {
     <div className="stats-card">
       <div className="stats-rank">
         <div className="stats-rank-top">
-          <span className="stats-rank-emoji">{rank.emoji}</span>
+          <AppIcon iconKey={rank.icon} emojiFallback={rank.emoji} className="stats-rank-emoji" />
           <span className="stats-rank-name">{rank.name}</span>
           {state.streak > 0 && (
             <span
@@ -41,6 +51,16 @@ export function StatsCard() {
         <div className="stats-rank-xp">{xpText}</div>
         <div className="xp-bar-track">
           <div className="xp-bar-fill" style={{ width: `${pct}%` }} />
+        </div>
+        <div className="stats-today" aria-label={`Today: ${eatenCount} of ${FOODS.length} foods, ${goalsDone} of ${dailyGoals.length} goals`}>
+          <span className={`stats-today-chip ${foodDone ? 'done' : ''}`}>
+            <FontAwesomeIcon icon={faUtensils} aria-hidden="true" /> {eatenCount}/{FOODS.length}
+          </span>
+          {dailyGoals.length > 0 && (
+            <span className={`stats-today-chip ${goalsAllDone ? 'done' : ''}`}>
+              <FontAwesomeIcon icon={faListCheck} aria-hidden="true" /> {goalsDone}/{dailyGoals.length}
+            </span>
+          )}
         </div>
         {streakAtRisk && (
           <div className="streak-risk-nudge">

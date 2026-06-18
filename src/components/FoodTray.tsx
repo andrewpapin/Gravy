@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUtensils } from '@fortawesome/free-solid-svg-icons';
+import { faUtensils, faStar, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { FOODS } from '../data/foods';
+import { AppIcon } from './AppIcon';
 import { useGrubClub } from '../state/GrubClubContext';
 
 export function FoodTray() {
@@ -14,23 +15,39 @@ export function FoodTray() {
         <div className="goal-card-title">
           <span className="card-title-icon icon-sage"><FontAwesomeIcon icon={faUtensils} /></span> Today's Food
         </div>
-        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--sage)' }}>
-          {allEaten ? '🎉 Full Tray Bonus!' : `${eatenCount}/5 eaten`}
-        </div>
+        {allEaten ? (
+          <div className="tray-progress-bonus"><FontAwesomeIcon icon={faStar} aria-hidden="true" /> Full Tray Bonus!</div>
+        ) : (
+          <div className="progress-pips" role="img" aria-label={`${eatenCount} of ${FOODS.length} foods logged`}>
+            {FOODS.map((f) => (
+              <span
+                key={f.id}
+                className={`progress-pip ${(state.todayFoodCounts[f.id] || 0) > 0 ? 'filled' : ''}`}
+                aria-hidden="true"
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="tray-grid">
         {FOODS.map((f) => {
           const count = state.todayFoodCounts[f.id] || 0;
+          const logged = count > 0;
           return (
             <button
               key={f.id}
               type="button"
-              className={`food-tile ${count > 0 ? 'checked' : ''}`}
-              onClick={() => (count > 0 ? removeFood(f.id) : logFood(f.id))}
-              aria-label={count > 0 ? `${f.label}, logged. Tap to undo.` : `${f.label}. Tap to log.`}
+              className={`food-tile ${logged ? 'checked' : ''}`}
+              onClick={() => (logged ? removeFood(f.id) : logFood(f.id))}
+              aria-label={logged ? `${f.label}, logged. Tap to undo.` : `${f.label}. Tap to log.`}
             >
-              <div className="food-emoji" aria-hidden="true">{f.emoji}</div>
+              {logged && (
+                <span className="food-check-badge" aria-hidden="true">
+                  <FontAwesomeIcon icon={faCheck} />
+                </span>
+              )}
+              <AppIcon iconKey={f.icon} emojiFallback={f.emoji} className="food-emoji" />
               <div className="food-label" aria-hidden="true">{f.label}</div>
             </button>
           );

@@ -2,28 +2,32 @@ import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPen, faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../../state/GrubClubContext';
+import { AppIcon } from '../AppIcon';
+import { IconPicker } from './IconPicker';
 import type { Goal } from '../../state/types';
+
+const DEFAULT_GOAL_ICON = 'circleCheck';
 
 export function GoalsPanel() {
   const { state, addGoal, removeGoal, updateGoal } = useGrubClub();
-  const [emoji, setEmoji] = useState('');
+  const [icon, setIcon] = useState(DEFAULT_GOAL_ICON);
   const [name, setName] = useState('');
   const [pts, setPts] = useState('');
   const [target, setTarget] = useState('1');
   const [isDaily, setIsDaily] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editGoal, setEditGoal] = useState({ emoji: '', name: '', pts: '', target: '1' });
+  const [editGoal, setEditGoal] = useState({ icon: '', emoji: '', name: '', pts: '', target: '1' });
 
   const startEdit = (g: Goal) => {
     setEditingId(g.id);
-    setEditGoal({ emoji: g.emoji, name: g.name, pts: String(g.pts), target: String(g.target || 1) });
+    setEditGoal({ icon: g.icon || '', emoji: g.emoji, name: g.name, pts: String(g.pts), target: String(g.target || 1) });
   };
 
   const saveEdit = (id: number) => {
     const trimmedName = editGoal.name.trim();
     if (!trimmedName) return;
     updateGoal(id, {
-      emoji: editGoal.emoji.trim() || '✅',
+      icon: editGoal.icon || DEFAULT_GOAL_ICON,
       name: trimmedName,
       pts: parseInt(editGoal.pts) || 10,
       target: Math.max(1, parseInt(editGoal.target) || 1),
@@ -35,13 +39,14 @@ export function GoalsPanel() {
     const trimmedName = name.trim();
     if (!trimmedName) return;
     addGoal({
-      emoji: emoji.trim() || '✅',
+      emoji: '',
+      icon: icon || DEFAULT_GOAL_ICON,
       name: trimmedName,
       pts: parseInt(pts) || 10,
       target: Math.max(1, parseInt(target) || 1),
       isDaily,
     });
-    setEmoji('');
+    setIcon(DEFAULT_GOAL_ICON);
     setName('');
     setPts('');
     setTarget('1');
@@ -52,14 +57,7 @@ export function GoalsPanel() {
     <div>
       <div className="section-label">Add a Goal</div>
       <form className="input-row" onSubmit={(e) => { e.preventDefault(); handleAdd(); }}>
-        <input
-          type="text"
-          className="emoji-input"
-          placeholder="🧹"
-          maxLength={2}
-          value={emoji}
-          onChange={(e) => setEmoji(e.target.value)}
-        />
+        <IconPicker value={icon} onChange={setIcon} ariaLabel="Choose a goal icon" />
         <input type="text" placeholder="Goal name..." value={name} onChange={(e) => setName(e.target.value)} />
         <input
           type="number"
@@ -111,12 +109,11 @@ export function GoalsPanel() {
               key={g.id}
               onSubmit={(e) => { e.preventDefault(); saveEdit(g.id); }}
             >
-              <input
-                type="text"
-                className="emoji-input"
-                maxLength={2}
-                value={editGoal.emoji}
-                onChange={(e) => setEditGoal({ ...editGoal, emoji: e.target.value })}
+              <IconPicker
+                value={editGoal.icon}
+                legacyEmoji={editGoal.emoji}
+                onChange={(key) => setEditGoal({ ...editGoal, icon: key })}
+                ariaLabel="Choose a goal icon"
               />
               <input
                 type="text"
@@ -148,7 +145,7 @@ export function GoalsPanel() {
             </form>
           ) : (
             <div className="parent-item" key={g.id}>
-              <div className="parent-item-emoji">{g.emoji}</div>
+              <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="parent-item-emoji" />
               <div className="parent-item-info">
                 <div className="parent-item-name">{g.name}</div>
                 <div className="parent-item-pts">
