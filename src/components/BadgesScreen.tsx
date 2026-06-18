@@ -7,16 +7,15 @@ import { useGrubClub } from '../state/GrubClubContext';
 interface BadgesScreenProps {
   onShowBadge: (id: string) => void;
   onEnterParent: () => void;
-  onOpenStore: () => void;
 }
 
-export function BadgesScreen({ onShowBadge, onEnterParent: _onEnterParent, onOpenStore }: BadgesScreenProps) {
+export function BadgesScreen({ onShowBadge, onEnterParent: _onEnterParent }: BadgesScreenProps) {
   const { state } = useGrubClub();
   const visible = getEnabledBadges(state);
 
   return (
     <div className="screen active">
-      <TopBar title="My Badges" onOpenStore={onOpenStore} />
+      <TopBar title="My Badges" />
       <div className="scroll-area">
         {visible.length === 0 ? (
           <div className="empty-state" style={{ gridColumn: '1 / -1' }}>

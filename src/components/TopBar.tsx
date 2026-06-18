@@ -1,18 +1,16 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faCloudArrowUp, faGift } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faCloudArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../state/GrubClubContext';
 
 interface TopBarProps {
   title: string;
   highlightLast?: boolean;
-  onOpenStore?: () => void;
 }
 
-export function TopBar({ title, highlightLast, onOpenStore }: TopBarProps) {
+export function TopBar({ title, highlightLast }: TopBarProps) {
   const { state, householdCode, syncStatus } = useGrubClub();
   const splitIndex = title.lastIndexOf(' ');
   const syncError = !!householdCode && syncStatus === 'error';
-  const pendingCount = state.pendingRewards.length;
 
   return (
     <div className="topbar">
@@ -38,17 +36,6 @@ export function TopBar({ title, highlightLast, onOpenStore }: TopBarProps) {
             </span>
           )}
         </div>
-        {onOpenStore && (
-          <button type="button" className="topbar-icon-btn" onClick={onOpenStore} aria-label="Open the Reward Store">
-            <span
-              className="nav-badge"
-              data-count={pendingCount}
-              title={pendingCount > 0 ? `${pendingCount} request${pendingCount === 1 ? '' : 's'} waiting for approval` : undefined}
-            >
-              <FontAwesomeIcon icon={faGift} />
-            </span>
-          </button>
-        )}
       </div>
     </div>
   );
