@@ -1,8 +1,8 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHouse, faGift, faMedal, faGear } from '@fortawesome/free-solid-svg-icons';
+import { faHouse, faGift, faGear } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 
-export type Tab = 'home' | 'store' | 'badges';
+export type Tab = 'home' | 'store';
 
 interface BottomNavProps {
   active: Tab;
@@ -28,9 +28,6 @@ export function BottomNav({ active, onChange, onEnterParent }: BottomNavProps) {
           <FontAwesomeIcon icon={faGift} />
         </span>
         Store
-      </button>
-      <button className={`nav-btn ${active === 'badges' ? 'active' : ''}`} onClick={() => onChange('badges')}>
-        <span className="nav-icon"><FontAwesomeIcon icon={faMedal} /></span>Badges
       </button>
       <button className="nav-btn" onClick={onEnterParent}>
         <span className="nav-icon"><FontAwesomeIcon icon={faGear} /></span>Settings

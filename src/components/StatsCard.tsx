@@ -1,13 +1,20 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFire, faUtensils, faListCheck, faStar } from '@fortawesome/free-solid-svg-icons';
+import { faFire, faUtensils, faListCheck, faStar, faMedal, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { getRank, RANKS } from '../data/ranks';
 import { FOODS } from '../data/foods';
 import { AppIcon } from './AppIcon';
 import { useGravy } from '../state/GravyContext';
+import { getEnabledBadgeCount } from '../state/badges';
 
-export function StatsCard() {
+interface StatsCardProps {
+  onOpenBadges: () => void;
+}
+
+export function StatsCard({ onOpenBadges }: StatsCardProps) {
   const { state } = useGravy();
   const { rank, index } = getRank(state.totalPoints);
+  const earnedCount = state.earnedBadges.length;
+  const totalBadgeCount = getEnabledBadgeCount(state);
   const hasLoggedToday =
     Object.keys(state.todayFoodCounts).length > 0 || state.todayGoals.length > 0 || state.todayPoints > 0;
   const streakAtRisk = state.streak > 0 && !hasLoggedToday;
@@ -71,6 +78,12 @@ export function StatsCard() {
           </div>
         )}
       </div>
+      <button className="stats-badges-bar" onClick={onOpenBadges} type="button">
+        <span className="stats-badges-bar-label">
+          <FontAwesomeIcon icon={faMedal} /> {earnedCount}/{totalBadgeCount} Badges
+        </span>
+        <FontAwesomeIcon icon={faChevronRight} />
+      </button>
     </div>
   );
 }
