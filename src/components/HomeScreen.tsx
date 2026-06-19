@@ -11,11 +11,12 @@ import { todayStr } from '../state/defaultState';
 interface HomeScreenProps {
   onEnterParent: () => void;
   onOpenCalendar: () => void;
+  onOpenBadges: () => void;
   selectedDate: string;
   onSelectDate: (date: string) => void;
 }
 
-export function HomeScreen({ onEnterParent: _onEnterParent, onOpenCalendar, selectedDate, onSelectDate }: HomeScreenProps) {
+export function HomeScreen({ onEnterParent: _onEnterParent, onOpenCalendar, onOpenBadges, selectedDate, onSelectDate }: HomeScreenProps) {
   const { state } = useGravy();
   const today = todayStr();
   const isToday = selectedDate === today;
@@ -25,7 +26,7 @@ export function HomeScreen({ onEnterParent: _onEnterParent, onOpenCalendar, sele
     <div className="screen active">
       <TopBar title="Gravy" highlightLast onOpenCalendar={onOpenCalendar} />
       <div className="scroll-area">
-        <StatsCard />
+        <StatsCard onOpenBadges={onOpenBadges} />
         <DateNav selectedDate={selectedDate} onSelectDate={onSelectDate} />
         {isToday ? (
           <>
