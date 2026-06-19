@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark, faLock, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { BADGE_MASTER } from '../data/badges';
+import { AppIcon } from './AppIcon';
 import { getBadgeDisplay } from '../state/badges';
 import { useGrubClub } from '../state/GrubClubContext';
 
@@ -27,7 +28,7 @@ export function BadgePopup({ badgeId, onClose }: BadgePopupProps) {
           <button className="badge-popup-close" onClick={onClose}>
             <FontAwesomeIcon icon={faXmark} />
           </button>
-          <span className="badge-popup-icon">{display.emoji}</span>
+          <AppIcon iconKey={display.icon} emojiFallback={display.emoji} className="badge-popup-icon" />
           <div className="badge-popup-name">{display.name}</div>
           <div className="badge-popup-desc">{master.desc}</div>
           <span className={`badge-popup-status ${earned ? 'earned' : 'locked'}`}>

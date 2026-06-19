@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoon } from '@fortawesome/free-solid-svg-icons';
 import { TopBar } from './TopBar';
+import { AppIcon } from './AppIcon';
 import { getBadgeDisplay, getBadgeProgress, getEnabledBadges } from '../state/badges';
 import { useGrubClub } from '../state/GrubClubContext';
 
@@ -38,7 +39,7 @@ export function BadgesScreen({ onShowBadge, onEnterParent: _onEnterParent }: Bad
                   <button className="badge-info-btn" onClick={() => onShowBadge(b.id)} aria-label={`Info about ${display.name} badge`} type="button">
                     ?
                   </button>
-                  <span className="badge-icon">{display.emoji}</span>
+                  <AppIcon iconKey={display.icon} emojiFallback={display.emoji} className="badge-icon" />
                   <div className="badge-name">{display.name}</div>
                   {progress && !earned && (
                     <>

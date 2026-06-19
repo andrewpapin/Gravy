@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoon, faStar, faCheck, faXmark, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { useGrubClub } from '../../state/GrubClubContext';
+import { AppIcon } from '../AppIcon';
 import { ConfirmDialog } from '../ConfirmDialog';
 
 export function ApprovalsPanel() {
@@ -38,7 +39,7 @@ export function ApprovalsPanel() {
         const insufficient = state.points < reward.cost;
         return (
           <div className="parent-item" key={pr.id}>
-            <div className="parent-item-emoji">{reward.emoji}</div>
+            <AppIcon iconKey={reward.icon} emojiFallback={reward.emoji} className="parent-item-emoji" />
             <div className="parent-item-info">
               <div className="parent-item-name">{reward.name}</div>
               <div className="parent-item-pts"><FontAwesomeIcon icon={faStar} /> {reward.cost} pts requested</div>

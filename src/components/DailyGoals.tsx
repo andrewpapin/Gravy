@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faListCheck, faMoon } from '@fortawesome/free-solid-svg-icons';
+import { AppIcon } from './AppIcon';
 import { useGrubClub } from '../state/GrubClubContext';
 
 export function DailyGoals() {
@@ -7,6 +8,7 @@ export function DailyGoals() {
   const dailyGoals = state.goals.filter((g) => g.isDaily !== false);
   const goalCounts = state.todayGoalCounts || {};
   const completedGoals = dailyGoals.filter((g) => (goalCounts[g.id] || 0) >= (g.target || 1)).length;
+  const allDone = dailyGoals.length > 0 && completedGoals === dailyGoals.length;
 
   return (
     <div className="card">
@@ -15,7 +17,7 @@ export function DailyGoals() {
           <span className="card-title-icon icon-yellow"><FontAwesomeIcon icon={faListCheck} /></span> Daily Goals
         </div>
         {dailyGoals.length > 0 && (
-          <div className="goal-progress-badge">{completedGoals}/{dailyGoals.length} done</div>
+          <div className={`goal-progress-badge ${allDone ? 'done' : ''}`}>{completedGoals}/{dailyGoals.length} done</div>
         )}
       </div>
 
@@ -46,7 +48,7 @@ export function DailyGoals() {
                   aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
                 >
                   <div className="goal-tile-top">
-                    <span className="goal-tile-emoji" aria-hidden="true">{g.emoji}</span>
+                    <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-tile-emoji" />
                     <span className="pts-badge">+{g.pts}</span>
                   </div>
                   <div className="goal-tile-name">{g.name}</div>
@@ -57,7 +59,7 @@ export function DailyGoals() {
             return (
               <div key={g.id} className={`goal-tile ${done ? 'checked' : ''}`}>
                 <div className="goal-tile-top">
-                  <span className="goal-tile-emoji" aria-hidden="true">{g.emoji}</span>
+                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-tile-emoji" />
                   <span className="pts-badge">+{g.pts}</span>
                 </div>
                 <div className="goal-tile-name">{g.name}</div>

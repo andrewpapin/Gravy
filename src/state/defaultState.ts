@@ -25,14 +25,14 @@ export const defaultState: GrubClubState = {
   },
   badgeConfig: {},
   goals: [
-    { id: 1, emoji: '🛏️', name: 'Make your bed', pts: 10, isDaily: true },
-    { id: 2, emoji: '🦷', name: 'Brush teeth', pts: 5, isDaily: true },
-    { id: 3, emoji: '🍽️', name: 'Set the table', pts: 10, isDaily: true },
+    { id: 1, emoji: '🛏️', icon: 'bed', name: 'Make your bed', pts: 10, isDaily: true },
+    { id: 2, emoji: '🦷', icon: 'tooth', name: 'Brush teeth', pts: 5, isDaily: true },
+    { id: 3, emoji: '🍽️', icon: 'plateWheat', name: 'Set the table', pts: 10, isDaily: true },
   ],
   rewards: [
-    { id: 1, emoji: '🎮', name: '30 min screen time', cost: 50 },
-    { id: 2, emoji: '🍦', name: 'Ice cream pick', cost: 75 },
-    { id: 3, emoji: '💸', name: '400 Robux', cost: 200 },
+    { id: 1, emoji: '🎮', icon: 'gamepad', name: '30 min screen time', cost: 50 },
+    { id: 2, emoji: '🍦', icon: 'iceCream', name: 'Ice cream pick', cost: 75 },
+    { id: 3, emoji: '💸', icon: 'moneyBill', name: '400 Robux', cost: 200 },
   ],
   settings: {
     foodPts: 10,
@@ -73,6 +73,11 @@ export function migrateLegacyState(state: Record<string, unknown>): void {
       if (!('isDaily' in g)) g.isDaily = true;
     }
   }
+
+  // NOTE: the `icon` field (goals/rewards/badge overrides) is additive and intentionally
+  // NOT backfilled here. Items created before the icon system keep only their `emoji`
+  // string and render via the emoji fallback (see components/AppIcon.tsx) until a parent
+  // edits them and picks an icon. This keeps the change safe for Supabase last-write-wins.
 
   // Backfill todayGoalCounts from todayGoals for saves that predate count tracking
   if (!state.todayGoalCounts && Array.isArray(state.todayGoals) && Array.isArray(state.goals)) {

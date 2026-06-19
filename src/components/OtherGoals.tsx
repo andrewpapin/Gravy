@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faListCheck } from '@fortawesome/free-solid-svg-icons';
+import { AppIcon } from './AppIcon';
 import { useGrubClub } from '../state/GrubClubContext';
 
 export function OtherGoals() {
@@ -10,6 +11,7 @@ export function OtherGoals() {
 
   const goalCounts = state.todayGoalCounts || {};
   const completed = otherGoals.filter((g) => (goalCounts[g.id] || 0) >= (g.target || 1)).length;
+  const allDone = completed === otherGoals.length;
 
   return (
     <div className="card">
@@ -17,7 +19,7 @@ export function OtherGoals() {
         <div className="goal-card-title">
           <span className="card-title-icon icon-coral"><FontAwesomeIcon icon={faListCheck} /></span> Other Goals
         </div>
-        <div className="goal-progress-badge">{completed}/{otherGoals.length} done</div>
+        <div className={`goal-progress-badge ${allDone ? 'done' : ''}`}>{completed}/{otherGoals.length} done</div>
       </div>
       <div className="goal-grid">
         {otherGoals.map((g) => {
@@ -36,7 +38,7 @@ export function OtherGoals() {
                 aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
               >
                 <div className="goal-tile-top">
-                  <span className="goal-tile-emoji" aria-hidden="true">{g.emoji}</span>
+                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-tile-emoji" />
                   <span className="pts-badge">+{g.pts}</span>
                 </div>
                 <div className="goal-tile-name">{g.name}</div>
@@ -47,7 +49,7 @@ export function OtherGoals() {
           return (
             <div key={g.id} className={`goal-tile ${done ? 'checked' : ''}`}>
               <div className="goal-tile-top">
-                <span className="goal-tile-emoji" aria-hidden="true">{g.emoji}</span>
+                <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-tile-emoji" />
                 <span className="pts-badge">+{g.pts}</span>
               </div>
               <div className="goal-tile-name">{g.name}</div>

@@ -4,6 +4,7 @@ import { faCheck } from '@fortawesome/free-solid-svg-icons';
 import { BADGE_MASTER } from '../../data/badges';
 import { getEnabledBadgeCount } from '../../state/badges';
 import { useGrubClub } from '../../state/GrubClubContext';
+import { IconPicker } from './IconPicker';
 
 export function BadgesPanel() {
   const { state, updateBadgeConfig } = useGrubClub();
@@ -18,9 +19,14 @@ export function BadgesPanel() {
     savedTimerRef.current = window.setTimeout(() => setSavedKey(null), 1400);
   };
 
-  const debouncedUpdate = (badgeId: string, key: 'enabled' | 'name' | 'emoji', value: string | boolean) => {
+  const debouncedUpdate = (badgeId: string, key: 'enabled' | 'name' | 'icon', value: string | boolean) => {
     if (key === 'enabled') {
       updateBadgeConfig(badgeId, key, value);
+      return;
+    }
+    if (key === 'icon') {
+      updateBadgeConfig(badgeId, key, value);
+      flashSaved(`${badgeId}-icon`);
       return;
     }
     const timerKey = `${badgeId}-${key}`;
@@ -41,7 +47,7 @@ export function BadgesPanel() {
         Badge Library — <span>{`${enabledCount} / ${BADGE_MASTER.length}`}</span> enabled
       </div>
       <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--muted)', marginBottom: 12, lineHeight: 1.5 }}>
-        Toggle badges on or off, rename them, or give them a new emoji. The trigger rules never change.
+        Toggle badges on or off, rename them, or give them a new icon. The trigger rules never change.
       </div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
         {groups.map((g) => (
@@ -58,7 +64,7 @@ export function BadgesPanel() {
         {filtered.map((b) => {
           const cfg = state.badgeConfig[b.id] || {};
           const enabled = cfg.enabled !== false;
-          const emoji = cfg.emoji ?? b.emoji;
+          const iconKey = cfg.icon ?? b.icon;
           const name = cfg.name ?? b.name;
           const earned = state.earnedBadges.includes(b.id);
           return (
@@ -68,16 +74,13 @@ export function BadgesPanel() {
                 title={earned ? 'Earned!' : 'Not yet earned'}
               />
               <div style={{ position: 'relative', flexShrink: 0 }}>
-                <input
-                  className="pbadge-emoji-input"
-                  type="text"
-                  maxLength={2}
-                  defaultValue={emoji}
-                  key={`${b.id}-emoji-${emoji}`}
-                  onChange={(e) => debouncedUpdate(b.id, 'emoji', e.target.value)}
-                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                <IconPicker
+                  value={iconKey}
+                  legacyEmoji={b.emoji}
+                  onChange={(key) => debouncedUpdate(b.id, 'icon', key)}
+                  ariaLabel={`Choose icon for ${name}`}
                 />
-                {savedKey === `${b.id}-emoji` && <FontAwesomeIcon icon={faCheck} className="saved-flash" />}
+                {savedKey === `${b.id}-icon` && <FontAwesomeIcon icon={faCheck} className="saved-flash" />}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <input

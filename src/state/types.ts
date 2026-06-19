@@ -1,6 +1,7 @@
 export interface Goal {
   id: number;
-  emoji: string;
+  emoji: string;       // legacy fallback; rendered only when `icon` is unset/unknown
+  icon?: string;       // registered icon key (see data/icons.ts)
   name: string;
   pts: number;
   isDaily?: boolean; // true when undefined (default behavior: daily)
@@ -9,7 +10,8 @@ export interface Goal {
 
 export interface Reward {
   id: number;
-  emoji: string;
+  emoji: string;       // legacy fallback; rendered only when `icon` is unset/unknown
+  icon?: string;       // registered icon key (see data/icons.ts)
   name: string;
   cost: number;
 }
@@ -33,6 +35,7 @@ export interface BadgeOverride {
   enabled?: boolean;
   name?: string;
   emoji?: string;
+  icon?: string;       // registered icon key (see data/icons.ts)
 }
 
 export interface Settings {

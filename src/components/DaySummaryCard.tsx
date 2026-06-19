@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarDays, faMoon } from '@fortawesome/free-solid-svg-icons';
 import { FOODS } from '../data/foods';
+import { AppIcon } from './AppIcon';
 import { useGrubClub } from '../state/GrubClubContext';
 import { getDayLog } from '../state/dayLog';
 import { todayStr } from '../state/defaultState';
@@ -51,7 +52,7 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
                 aria-label={count > 0 ? `${f.label}, logged. Tap to undo.` : `Add ${f.label}`}
               >
                 {count > 1 && <div className="food-count-badge" aria-hidden="true">{count}</div>}
-                <div className="food-emoji" aria-hidden="true">{f.emoji}</div>
+                <AppIcon iconKey={f.icon} emojiFallback={f.emoji} className="food-emoji" />
                 <div className="food-label" aria-hidden="true">{f.label}</div>
               </button>
             );
@@ -75,7 +76,7 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
                     aria-pressed={checked}
                   >
                     <div className="goal-check">{checked ? '✓' : ''}</div>
-                    <div className="goal-emoji">{g.emoji}</div>
+                    <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-emoji" />
                     <div className="goal-info">
                       <div className="goal-name">{g.name}</div>
                     </div>
@@ -135,7 +136,7 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
                   aria-label={count > 0 ? `${f.label} eaten${count > 1 ? ` ×${count}` : ''}` : `${f.label} not eaten`}
                 >
                   {count > 1 && <div className="food-count-badge" aria-hidden="true">{count}</div>}
-                  <div className="food-emoji" aria-hidden="true">{f.emoji}</div>
+                  <AppIcon iconKey={f.icon} emojiFallback={f.emoji} className="food-emoji" />
                   <div className="food-label" aria-hidden="true">{f.label}</div>
                 </div>
               );
@@ -149,7 +150,7 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
                 return (
                   <div key={id} className="goal-item checked">
                     <div className="goal-check">✓</div>
-                    <div className="goal-emoji">{goal.emoji}</div>
+                    <AppIcon iconKey={goal.icon} emojiFallback={goal.emoji} className="goal-emoji" />
                     <div className="goal-info">
                       <div className="goal-name">{goal.name}</div>
                     </div>

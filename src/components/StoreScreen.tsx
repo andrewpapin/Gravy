@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStore, faHourglassHalf, faStar, faLock } from '@fortawesome/free-solid-svg-icons';
 import { TopBar } from './TopBar';
+import { AppIcon } from './AppIcon';
 import { useGrubClub } from '../state/GrubClubContext';
 
 interface StoreScreenProps {
@@ -56,7 +57,7 @@ export function StoreScreen({ onEnterParent: _onEnterParent }: StoreScreenProps)
                       <FontAwesomeIcon icon={faLock} />
                     </span>
                   )}
-                  <span className="store-emoji" aria-hidden="true">{r.emoji}</span>
+                  <AppIcon iconKey={r.icon} emojiFallback={r.emoji} className="store-emoji" />
                   <div className="store-name">{r.name}</div>
                   <div className={`store-cost ${!affordable ? 'unaffordable' : ''}`}><FontAwesomeIcon icon={faStar} aria-hidden="true" /> {r.cost}</div>
                   {!affordable && (
@@ -83,7 +84,7 @@ export function StoreScreen({ onEnterParent: _onEnterParent }: StoreScreenProps)
                 if (!reward) return null;
                 return (
                   <div className="pending-item" key={pr.id}>
-                    <div className="pending-item-emoji" aria-hidden="true">{reward.emoji}</div>
+                    <AppIcon iconKey={reward.icon} emojiFallback={reward.emoji} className="pending-item-emoji" />
                     <div className="pending-item-info">
                       <div className="pending-item-name">{reward.name}</div>
                       <div className="pending-item-status">
