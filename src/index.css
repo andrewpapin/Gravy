@@ -80,7 +80,7 @@ body {
   top: 0;
   z-index: 100;
 }
-.topbar-title { font-family: var(--font-logo); font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; justify-self: start; }
+.topbar-title { font-family: var(--font-logo); font-size: 2.4rem; font-weight: 800; letter-spacing: -0.5px; line-height: 1; justify-self: start; }
 .topbar-title-accent { color: var(--coral); }
 .points-pill {
   background: var(--yellow);
