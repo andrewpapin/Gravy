@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faScaleBalanced, faMoon } from '@fortawesome/free-solid-svg-icons';
+import { faMoon } from '@fortawesome/free-solid-svg-icons';
+import { AppIcon } from './AppIcon';
 import { useGravy } from '../state/GravyContext';
 import { getDayLog } from '../state/dayLog';
 import { todayStr } from '../state/defaultState';
@@ -15,13 +16,16 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
   const isToday = day === today;
   const bonusItems = state.goals.filter((g) => g.isDaily === false);
   const goalCounts = isToday ? (state.todayGoalCounts || {}) : (getDayLog(state, day, today)?.bonusCounts ?? {});
+  const loggedCount = bonusItems.filter((g) => (goalCounts[g.id] || 0) > 0).length;
+  const allLogged = bonusItems.length > 0 && loggedCount === bonusItems.length;
 
   return (
     <div className="card">
       <div className="flex-between" style={{ marginBottom: 12 }}>
-        <div className="goal-card-title">
-          <span className="card-title-icon icon-coral"><FontAwesomeIcon icon={faScaleBalanced} /></span> Bonus Points
-        </div>
+        <div className="goal-card-title">Bonus Points</div>
+        {bonusItems.length > 0 && (
+          <div className={`goal-progress-badge ${allLogged ? 'done' : ''}`}>{loggedCount}/{bonusItems.length} logged</div>
+        )}
       </div>
 
       {bonusItems.length === 0 ? (
@@ -39,7 +43,8 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
             const count = goalCounts[g.id] || 0;
             return (
               <div key={g.id} className="goal-tile">
-                <div className="goal-tile-top no-icon">
+                <div className="goal-tile-top">
+                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-tile-emoji" />
                   <span className={`pts-badge ${g.pts < 0 ? 'negative' : ''}`}>
                     {g.pts < 0 ? '−' : '+'}{Math.abs(g.pts)}
                   </span>

@@ -534,8 +534,10 @@ button.calendar-day {
   font-family: var(--font-display);
   color: var(--dark);
   -webkit-tap-highlight-color: transparent;
+  box-shadow: 2px 2px 0 var(--dark);
+  transition: transform 0.08s, box-shadow 0.08s;
 }
-.stepper-btn:active { transform: scale(0.88); }
+.stepper-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--dark); }
 .stepper-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .stepper-count {
   font-size: 0.72rem;
@@ -617,6 +619,7 @@ button.calendar-day {
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
 }
+.goal-grid > *:nth-child(odd):last-child { grid-column: 1 / -1; }
 .goal-tile {
   width: 100%;
   border-radius: 14px;
@@ -640,7 +643,6 @@ button.goal-tile:active { transform: scale(0.97); }
   justify-content: space-between;
   gap: 6px;
 }
-.goal-tile-top.no-icon { justify-content: flex-end; }
 .goal-tile-emoji { font-size: 1.5rem; line-height: 1; color: var(--dark); }
 .goal-tile.checked .goal-tile-emoji { color: #fff; animation: icon-pop 0.28s ease; }
 .goal-tile-name {
