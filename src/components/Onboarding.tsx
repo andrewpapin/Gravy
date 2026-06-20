@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHandSparkles, faUtensils, faFire, faGift, faChild } from '@fortawesome/free-solid-svg-icons';
+import { faHandSparkles, faUtensils, faFire, faGift, faChild, faChevronLeft, faChevronRight, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 
 export const ONBOARDING_DONE_KEY = 'gravy_onboarded';
@@ -42,6 +42,8 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
   const onNameStep = step === 0;
   const last = step === totalSteps - 1;
   const current = onNameStep ? null : STEPS[step - 1];
+  const nameTrimmed = name.trim();
+  const canAdvance = !onNameStep || nameTrimmed.length > 0;
 
   const finish = () => {
     localStorage.setItem(ONBOARDING_DONE_KEY, 'true');
@@ -49,24 +51,36 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
   };
 
   const handleNext = () => {
-    if (onNameStep) saveSetting('childName', name);
+    if (!canAdvance) return;
+    if (onNameStep && nameTrimmed) saveSetting('childName', nameTrimmed);
     if (last) finish();
     else setStep((s) => s + 1);
   };
 
+  const handleBack = () => setStep((s) => Math.max(0, s - 1));
+
   return (
-    <div className="sync-gate-overlay">
+    <div className="sync-gate-overlay onboarding-overlay">
+      <button
+        className="onboarding-arrow onboarding-arrow-left"
+        onClick={handleBack}
+        aria-label="Back"
+        style={{ visibility: step === 0 ? 'hidden' : 'visible' }}
+      >
+        <FontAwesomeIcon icon={faChevronLeft} />
+      </button>
+
       <div className="badge-popup sync-gate-card">
         {onNameStep ? (
           <>
             <span className="badge-popup-icon"><FontAwesomeIcon icon={faChild} /></span>
-            <div className="badge-popup-name">What's Your Name?</div>
-            <div className="badge-popup-desc">We'll use it to say hi and cheer you on.</div>
+            <div className="badge-popup-name">What's your kiddo's name?</div>
+            <div className="badge-popup-desc">We'll use it to say hi and cheer them on.</div>
             <input
               type="text"
               className="onboarding-name-input"
               maxLength={20}
-              placeholder="Zack"
+              placeholder="e.g. Maya"
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleNext(); }}
@@ -85,7 +99,7 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
             <span key={i} className={`onboarding-dot ${i === step ? 'active' : ''}`} />
           ))}
         </div>
-        <button className="btn btn-primary" onClick={handleNext}>
+        <button className="btn btn-primary" onClick={handleNext} disabled={!canAdvance}>
           {last ? "Let's go!" : 'Next'}
         </button>
         {!last && (
@@ -94,6 +108,15 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
           </button>
         )}
       </div>
+
+      <button
+        className="onboarding-arrow onboarding-arrow-right"
+        onClick={handleNext}
+        disabled={!canAdvance}
+        aria-label={last ? "Finish" : 'Next'}
+      >
+        <FontAwesomeIcon icon={last ? faCheck : faChevronRight} />
+      </button>
     </div>
   );
 }
