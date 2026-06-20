@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faPen, faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../../state/GravyContext';
 import { AppIcon } from '../AppIcon';
-import { IconPicker } from './IconPicker';
+import { IconPicker } from '../IconPicker';
 import type { Reward } from '../../state/types';
 
 const DEFAULT_REWARD_ICON = 'gift';

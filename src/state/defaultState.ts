@@ -46,6 +46,9 @@ export const defaultState: GravyState = {
     recoveryQuestion: '',
     recoveryAnswer: '',
     theme: 'light',
+    avatarIcon: 'faceSmile',
+    avatarIconColor: '#2F3E46',
+    avatarBgColor: '#FFFFFF',
   },
 };
 
