@@ -1,16 +1,17 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGear, faLock, faGift } from '@fortawesome/free-solid-svg-icons';
+import { faGear, faLock, faGift, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 
 interface AccountMenuProps {
   open: boolean;
   onClose: () => void;
   onOpenStore: () => void;
+  onOpenCalendar: () => void;
   onOpenSettings: () => void;
   onOpenGrownUps: () => void;
 }
 
-export function AccountMenu({ open, onClose, onOpenStore, onOpenSettings, onOpenGrownUps }: AccountMenuProps) {
+export function AccountMenu({ open, onClose, onOpenStore, onOpenCalendar, onOpenSettings, onOpenGrownUps }: AccountMenuProps) {
   const { state } = useGravy();
   const pendingCount = state.pendingRewards.length;
 
@@ -32,6 +33,13 @@ export function AccountMenu({ open, onClose, onOpenStore, onOpenSettings, onOpen
             <span className="account-menu-option-text">
               <span className="account-menu-option-title">Reward Store</span>
               <span className="account-menu-option-sub">Spend your points</span>
+            </span>
+          </button>
+          <button type="button" className="account-menu-option" onClick={onOpenCalendar}>
+            <span className="account-menu-option-icon"><FontAwesomeIcon icon={faCalendarDays} /></span>
+            <span className="account-menu-option-text">
+              <span className="account-menu-option-title">Calendar</span>
+              <span className="account-menu-option-sub">View past days</span>
             </span>
           </button>
           <button type="button" className="account-menu-option" onClick={onOpenSettings}>

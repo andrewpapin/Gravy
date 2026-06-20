@@ -60,10 +60,8 @@ function AppShell() {
       <div id="kidApp">
         <HomeScreen
           onOpenAvatarMenu={() => setAccountMenuOpen(true)}
-          onOpenCalendar={() => setCalendarOpen(true)}
           onOpenBadges={() => setBadgesOpen(true)}
           selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
         />
         <CalendarScreen
           open={calendarOpen}
@@ -81,6 +79,7 @@ function AppShell() {
           open={accountMenuOpen}
           onClose={() => setAccountMenuOpen(false)}
           onOpenStore={() => { setAccountMenuOpen(false); setStoreOpen(true); }}
+          onOpenCalendar={() => { setAccountMenuOpen(false); setCalendarOpen(true); }}
           onOpenSettings={() => { setAccountMenuOpen(false); setSettingsOpen(true); }}
           onOpenGrownUps={() => { setAccountMenuOpen(false); setGrownUpsOpen(true); }}
         />

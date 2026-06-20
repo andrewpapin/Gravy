@@ -643,55 +643,6 @@ button.goal-tile:active { transform: scale(0.97); }
   .goal-grid { grid-template-columns: 1fr; }
 }
 
-/* ===== DATE NAV ===== */
-.date-nav-card {
-  background: var(--sage);
-  border-radius: var(--radius);
-  border: 3px solid var(--dark);
-  box-shadow: var(--shadow);
-  padding: 12px 14px;
-  margin-bottom: 14px;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.date-nav-label-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-align: center;
-  font-size: 1rem;
-  font-weight: 900;
-  color: white;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  transition: opacity var(--transition);
-}
-.date-nav-label-btn:active { opacity: 0.6; }
-.date-nav-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid white;
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  cursor: pointer;
-  font-size: 0.9rem;
-  flex-shrink: 0;
-  transition: background var(--transition), opacity var(--transition);
-}
-.date-nav-btn:hover { background: rgba(255, 255, 255, 0.4); }
-.date-nav-btn:active { transform: scale(0.93); }
-.date-nav-btn.muted { opacity: 0.4; }
 
 /* ===== TROPHY PILL ===== */
 .topbar-pills {
