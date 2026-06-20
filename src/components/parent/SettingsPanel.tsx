@@ -37,7 +37,7 @@ function SettingsMenu({ onNavigate }: { onNavigate: (sub: SettingsSub) => void }
         <span className="menu-card-icon"><FontAwesomeIcon icon={faCoins} /></span>
         <div className="menu-card-body">
           <div className="menu-card-title">Points & Rules</div>
-          <div className="menu-card-sub">How many points each food group and bonus is worth</div>
+          <div className="menu-card-sub">How many points each action earns</div>
         </div>
         <FontAwesomeIcon icon={faChevronRight} className="menu-card-chevron" />
       </button>

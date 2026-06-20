@@ -1,26 +1,33 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faListCheck, faCartShopping, faMedal, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import { GoalsPanel } from './GoalsPanel';
-import { StorePanel } from './StorePanel';
-import { BadgesPanel } from './BadgesPanel';
+import {
+  faCircleCheck, faListCheck, faCartShopping, faMedal, faGear, faChevronRight,
+} from '@fortawesome/free-solid-svg-icons';
 
-export type ManageSub = 'menu' | 'goals' | 'store' | 'badges';
+export type RootDest = 'approvals' | 'goals' | 'store' | 'badges' | 'settings';
 
-interface ManagePanelProps {
-  sub: ManageSub;
-  onNavigate: (sub: ManageSub) => void;
+interface RootMenuProps {
+  pendingCount: number;
+  onNavigate: (dest: RootDest) => void;
 }
 
-export function ManagePanel({ sub, onNavigate }: ManagePanelProps) {
-  if (sub === 'goals') return <GoalsPanel />;
-  if (sub === 'store') return <StorePanel />;
-  if (sub === 'badges') return <BadgesPanel />;
-  return <ManageMenu onNavigate={onNavigate} />;
-}
-
-function ManageMenu({ onNavigate }: { onNavigate: (sub: ManageSub) => void }) {
+export function RootMenu({ pendingCount, onNavigate }: RootMenuProps) {
   return (
     <div>
+      <button
+        className="menu-card nav-badge"
+        data-count={pendingCount}
+        onClick={() => onNavigate('approvals')}
+        type="button"
+      >
+        <span className="menu-card-icon"><FontAwesomeIcon icon={faCircleCheck} /></span>
+        <div className="menu-card-body">
+          <div className="menu-card-title">Approvals</div>
+          <div className="menu-card-sub">
+            {pendingCount > 0 ? `${pendingCount} request${pendingCount === 1 ? '' : 's'} waiting` : 'No pending requests'}
+          </div>
+        </div>
+        <FontAwesomeIcon icon={faChevronRight} className="menu-card-chevron" />
+      </button>
       <button className="menu-card" onClick={() => onNavigate('goals')} type="button">
         <span className="menu-card-icon"><FontAwesomeIcon icon={faListCheck} /></span>
         <div className="menu-card-body">
@@ -42,6 +49,14 @@ function ManageMenu({ onNavigate }: { onNavigate: (sub: ManageSub) => void }) {
         <div className="menu-card-body">
           <div className="menu-card-title">Badges</div>
           <div className="menu-card-sub">Customize the badge library</div>
+        </div>
+        <FontAwesomeIcon icon={faChevronRight} className="menu-card-chevron" />
+      </button>
+      <button className="menu-card" onClick={() => onNavigate('settings')} type="button">
+        <span className="menu-card-icon"><FontAwesomeIcon icon={faGear} /></span>
+        <div className="menu-card-body">
+          <div className="menu-card-title">Settings</div>
+          <div className="menu-card-sub">Points, PIN, sync, and reset</div>
         </div>
         <FontAwesomeIcon icon={faChevronRight} className="menu-card-chevron" />
       </button>

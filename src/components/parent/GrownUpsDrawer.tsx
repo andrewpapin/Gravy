@@ -18,7 +18,7 @@ interface GrownUpsDrawerProps {
 
 export function GrownUpsDrawer({ open, onClose }: GrownUpsDrawerProps) {
   const [stage, setStage] = useState<Stage>('pin');
-  const [header, setHeader] = useState<HeaderState>({ title: 'Overview' });
+  const [header, setHeader] = useState<HeaderState>({ title: 'Grown-Up Mode' });
   // Re-prompt the PIN on every fresh open, adjusted during render (not an effect)
   // per https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
   const [prevOpen, setPrevOpen] = useState(open);
