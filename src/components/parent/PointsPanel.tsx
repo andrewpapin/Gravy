@@ -18,7 +18,7 @@ export function PointsPanel() {
 
   return (
     <div>
-      <div className="section-label">Points</div>
+      <div className="section-label">Food Tray Points</div>
       <div className="settings-row">
         <div>
           <div className="settings-label">

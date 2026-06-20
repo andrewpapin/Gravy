@@ -1241,35 +1241,7 @@ button.goal-tile:active { transform: scale(0.97); }
 .pin-error { color: var(--coral); font-size: 0.8rem; font-weight: 800; opacity: 0; transition: opacity 0.2s; }
 .pin-error.show { opacity: 1; }
 
-.parent-tabs {
-  display: flex;
-  background: var(--card);
-  padding: 8px;
-  gap: 6px;
-  border-bottom: 3px solid var(--dark);
-}
-.parent-tab {
-  flex: 1;
-  min-height: 44px;
-  background: transparent;
-  border: none;
-  border-radius: 10px;
-  font-family: var(--font-display);
-  font-size: 0.7rem;
-  font-weight: 900;
-  padding: 8px 4px;
-  cursor: pointer;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: all 0.15s;
-}
-.parent-tab.active { background: var(--coral); color: white; }
-
-.parent-tab-panel { display: none; }
-.parent-tab-panel.active { display: block; }
-
-/* ===== PARENT DASHBOARD: MENU CARDS (Manage/Settings drill-down menus) ===== */
+/* ===== PARENT DASHBOARD: MENU CARDS (root menu + Settings drill-down) ===== */
 .menu-card {
   width: 100%;
   display: flex;
@@ -1301,103 +1273,18 @@ button.goal-tile:active { transform: scale(0.97); }
 }
 .menu-card-body { flex: 1; min-width: 0; }
 .menu-card-title { font-size: 0.9rem; font-weight: 800; color: var(--text); }
-.menu-card-sub { font-size: 0.72rem; color: var(--muted); font-weight: 600; margin-top: 2px; }
+.menu-card-sub {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 600;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .menu-card-chevron { color: var(--muted); flex-shrink: 0; }
 .menu-card--danger { border-color: var(--coral); }
 .menu-card--danger .menu-card-icon { background: var(--coral); color: white; }
-
-/* ===== PARENT DASHBOARD: OVERVIEW ===== */
-.overview-points-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: var(--space-sm);
-}
-.overview-points-cell {
-  flex: 1;
-  background: var(--card);
-  border: 2.5px solid var(--dark);
-  border-radius: var(--radius-sm);
-  box-shadow: 3px 3px 0 var(--dark);
-  padding: 12px;
-  text-align: center;
-}
-.overview-points-value {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 900;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-.overview-points-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-top: 2px;
-}
-.overview-stat-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--card);
-  border: 2.5px solid var(--dark);
-  border-radius: 14px;
-  padding: 10px var(--space-md);
-  margin-bottom: var(--space-sm);
-  box-shadow: 3px 3px 0 var(--dark);
-}
-.overview-stat-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--cream);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--dark);
-  flex-shrink: 0;
-}
-.overview-stat-name { flex: 1; font-size: 0.85rem; font-weight: 800; color: var(--text); }
-.overview-stat-value { font-family: var(--font-display); font-weight: 900; font-size: 0.95rem; color: var(--muted); }
-.overview-stat-value.done { color: var(--sage); }
-.overview-streaks {
-  display: flex;
-  gap: 8px;
-  background: var(--coral);
-  border-radius: var(--radius-sm);
-  border: 2.5px solid var(--dark);
-  padding: 10px;
-  margin-bottom: var(--space-md);
-}
-.overview-cta { justify-content: space-between; margin-bottom: var(--space-md); }
-.overview-quick-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-.overview-quick-link {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 14px 8px;
-  border-radius: 14px;
-  border: 3px solid var(--dark);
-  background: var(--cream);
-  box-shadow: 3px 3px 0 var(--dark);
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: var(--dark);
-  cursor: pointer;
-  transition: transform 0.08s;
-}
-.overview-quick-link svg { font-size: 1.3rem; }
-.overview-quick-link:active { transform: scale(0.96); }
 
 /* ===== PARENT ITEMS ===== */
 .parent-item {
@@ -1880,14 +1767,6 @@ button.goal-tile:active { transform: scale(0.97); }
   .badges-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
-  }
-  .parent-tabs {
-    padding: 10px;
-    gap: 10px;
-  }
-  .parent-tab {
-    font-size: 0.85rem;
-    padding: 12px 8px;
   }
   .input-row input.pts-input {
     width: 90px;

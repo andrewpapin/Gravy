@@ -4,6 +4,7 @@ import { faPen, faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../../state/GravyContext';
 import { AppIcon } from '../AppIcon';
 import { IconPicker } from '../IconPicker';
+import { PointsPanel } from './PointsPanel';
 import type { Goal } from '../../state/types';
 
 const DEFAULT_GOAL_ICON = 'circleCheck';
@@ -130,6 +131,7 @@ export function GoalsPanel() {
 
   return (
     <div>
+      <PointsPanel />
       <div className="section-label">Add a Goal</div>
       <form className="input-row" onSubmit={(e) => { e.preventDefault(); handleAdd(); }}>
         <IconPicker value={icon} onChange={setIcon} ariaLabel="Choose a goal icon" />
