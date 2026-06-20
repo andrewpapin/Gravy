@@ -3,10 +3,20 @@ import { faStar, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { FOODS } from '../data/foods';
 import { AppIcon } from './AppIcon';
 import { useGravy } from '../state/GravyContext';
+import { getDayLog } from '../state/dayLog';
+import { todayStr } from '../state/defaultState';
 
-export function FoodTray() {
-  const { state, logFood, removeFood } = useGravy();
-  const eatenCount = Object.values(state.todayFoodCounts).filter((v) => v > 0).length;
+interface FoodTrayProps {
+  dateStr?: string;
+}
+
+export function FoodTray({ dateStr }: FoodTrayProps = {}) {
+  const { state, logFood, removeFood, logFoodForDay, removeFoodForDay } = useGravy();
+  const today = todayStr();
+  const day = dateStr ?? today;
+  const isToday = day === today;
+  const foodCounts = getDayLog(state, day, today)?.foodCounts ?? {};
+  const eatenCount = Object.values(foodCounts).filter((v) => v > 0).length;
   const allEaten = eatenCount === FOODS.length;
 
   return (
@@ -23,14 +33,20 @@ export function FoodTray() {
 
       <div className="tray-grid">
         {FOODS.map((f) => {
-          const count = state.todayFoodCounts[f.id] || 0;
+          const count = foodCounts[f.id] || 0;
           const logged = count > 0;
           return (
             <button
               key={f.id}
               type="button"
               className={`food-tile ${logged ? 'checked' : ''}`}
-              onClick={() => (logged ? removeFood(f.id) : logFood(f.id))}
+              onClick={() => {
+                if (isToday) {
+                  if (logged) removeFood(f.id); else logFood(f.id);
+                } else {
+                  if (logged) removeFoodForDay(day, f.id); else logFoodForDay(day, f.id);
+                }
+              }}
               aria-label={logged ? `${f.label}, logged. Tap to undo.` : `${f.label}. Tap to log.`}
             >
               {logged && (

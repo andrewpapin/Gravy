@@ -1,11 +1,20 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faScaleBalanced, faMoon } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
+import { getDayLog } from '../state/dayLog';
+import { todayStr } from '../state/defaultState';
 
-export function BonusPoints() {
-  const { state, logBonusItem, undoBonusItem } = useGravy();
+interface BonusPointsProps {
+  dateStr?: string;
+}
+
+export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
+  const { state, logBonusItem, undoBonusItem, logBonusItemForDay, undoBonusItemForDay } = useGravy();
+  const today = todayStr();
+  const day = dateStr ?? today;
+  const isToday = day === today;
   const bonusItems = state.goals.filter((g) => g.isDaily === false);
-  const goalCounts = state.todayGoalCounts || {};
+  const goalCounts = isToday ? (state.todayGoalCounts || {}) : (getDayLog(state, day, today)?.bonusCounts ?? {});
 
   return (
     <div className="card">
@@ -40,7 +49,7 @@ export function BonusPoints() {
                   <button
                     type="button"
                     className="stepper-btn"
-                    onClick={() => undoBonusItem(g.id)}
+                    onClick={() => (isToday ? undoBonusItem(g.id) : undoBonusItemForDay(day, g.id))}
                     disabled={count === 0}
                     aria-label={`Undo ${g.name}`}
                   >−</button>
@@ -48,7 +57,7 @@ export function BonusPoints() {
                   <button
                     type="button"
                     className="stepper-btn"
-                    onClick={() => logBonusItem(g.id)}
+                    onClick={() => (isToday ? logBonusItem(g.id) : logBonusItemForDay(day, g.id))}
                     aria-label={`Log ${g.name}`}
                   >+</button>
                 </div>
