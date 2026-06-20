@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight, faCalendarDays, faXmark } from '@fortawesome/free-solid-svg-icons';
-import { DaySummaryCard } from './DaySummaryCard';
 import { useGravy } from '../state/GravyContext';
 import { todayStr } from '../state/defaultState';
 import { getDayLog, hasAnyLog } from '../state/dayLog';
@@ -108,7 +107,7 @@ export function CalendarScreen({ open, onClose, selectedDate, onSelectDate }: Ca
                     key={i}
                     type="button"
                     className={`calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`}
-                    onClick={() => onSelectDate(dateStr)}
+                    onClick={() => { onSelectDate(dateStr); onClose(); }}
                     aria-label={`${day} ${MONTH_NAMES[viewMonth]}${isToday ? ', today' : ''}${hasLog ? ', has activity' : ''}`}
                     aria-pressed={isSelected}
                   >
@@ -120,8 +119,6 @@ export function CalendarScreen({ open, onClose, selectedDate, onSelectDate }: Ca
               })}
             </div>
           </div>
-
-          <DaySummaryCard dateStr={selectedDate} />
         </div>
       </div>
     </div>

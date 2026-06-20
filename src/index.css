@@ -635,13 +635,23 @@ button.goal-tile:active { transform: scale(0.97); }
   justify-content: space-between;
   gap: 10px;
 }
-.date-nav-label {
+.date-nav-label-btn {
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   text-align: center;
   font-size: 1rem;
   font-weight: 900;
   color: white;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity var(--transition);
 }
+.date-nav-label-btn:active { opacity: 0.6; }
 .date-nav-btn {
   background: rgba(255, 255, 255, 0.2);
   border: 2px solid white;

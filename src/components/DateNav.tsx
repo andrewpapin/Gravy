@@ -6,6 +6,7 @@ import { useGravy } from '../state/GravyContext';
 interface DateNavProps {
   selectedDate: string;
   onSelectDate: (dateStr: string) => void;
+  onOpenCalendar: () => void;
 }
 
 function shiftDateStr(dateStr: string, deltaDays: number): string {
@@ -14,7 +15,7 @@ function shiftDateStr(dateStr: string, deltaDays: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-export function DateNav({ selectedDate, onSelectDate }: DateNavProps) {
+export function DateNav({ selectedDate, onSelectDate, onOpenCalendar }: DateNavProps) {
   const { showToast } = useGravy();
   const today = todayStr();
   const isToday = selectedDate === today;
@@ -37,7 +38,10 @@ export function DateNav({ selectedDate, onSelectDate }: DateNavProps) {
       <button className="date-nav-btn" onClick={() => onSelectDate(shiftDateStr(selectedDate, -1))} aria-label="Previous day" type="button">
         <FontAwesomeIcon icon={faChevronLeft} />
       </button>
-      <span className="date-nav-label">{label}</span>
+      <button className="date-nav-label-btn" onClick={onOpenCalendar} aria-label="Open calendar" type="button">
+        <FontAwesomeIcon icon={faCalendarDays} />
+        <span>{label}</span>
+      </button>
       <button
         className={`date-nav-btn ${isToday ? 'muted' : ''}`}
         onClick={goNext}
