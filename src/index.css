@@ -601,6 +601,7 @@ button.goal-tile:active { transform: scale(0.97); }
   justify-content: space-between;
   gap: 6px;
 }
+.goal-tile-top.no-icon { justify-content: flex-end; }
 .goal-tile-emoji { font-size: 1.5rem; line-height: 1; color: var(--dark); }
 .goal-tile.checked .goal-tile-emoji { color: #fff; animation: icon-pop 0.28s ease; }
 .goal-tile-name {
