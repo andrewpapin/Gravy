@@ -4,7 +4,7 @@ import { faCheck } from '@fortawesome/free-solid-svg-icons';
 import { BADGE_MASTER } from '../../data/badges';
 import { getEnabledBadgeCount } from '../../state/badges';
 import { useGravy } from '../../state/GravyContext';
-import { IconPicker } from './IconPicker';
+import { IconPicker } from '../IconPicker';
 
 export function BadgesPanel() {
   const { state, updateBadgeConfig } = useGravy();

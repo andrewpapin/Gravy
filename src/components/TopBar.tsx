@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faCloudArrowUp, faFaceSmile, faGift } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faCloudArrowUp, faGift } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
+import { AppIcon } from './AppIcon';
 
 interface TopBarProps {
   title: string;
@@ -51,8 +52,14 @@ export function TopBar({ title, highlightLast, onOpenStore, onOpenAvatarMenu }: 
           )}
         </div>
         {onOpenAvatarMenu && (
-          <button className="topbar-icon-btn" onClick={onOpenAvatarMenu} aria-label="Open account menu" type="button">
-            <FontAwesomeIcon icon={faFaceSmile} />
+          <button
+            className="topbar-icon-btn"
+            onClick={onOpenAvatarMenu}
+            aria-label="Open account menu"
+            type="button"
+            style={{ background: state.settings.avatarBgColor, color: state.settings.avatarIconColor }}
+          >
+            <AppIcon iconKey={state.settings.avatarIcon} emojiFallback="😊" />
           </button>
         )}
       </div>

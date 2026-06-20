@@ -23,6 +23,9 @@ import {
   faSatellite, faBrain, faWandMagicSparkles, faHandPeace, faVolcano,
   faDove, faWind, faMountain, faWater, faBullseye, faSeedling, faUtensils,
   faShieldHalved, faTent, faTicket,
+  // Avatar / faces / characters
+  faFaceSmile, faFaceLaughBeam, faFaceGrinStars, faGhost, faHatWizard,
+  faUserNinja, faUserAstronaut, faMask,
 } from '@fortawesome/free-solid-svg-icons';
 
 /**
@@ -124,6 +127,15 @@ export const ICONS = {
   shieldHalved: faShieldHalved,
   tent: faTent,
   ticket: faTicket,
+  // Avatar / faces / characters
+  faceSmile: faFaceSmile,
+  faceLaughBeam: faFaceLaughBeam,
+  faceGrinStars: faFaceGrinStars,
+  ghost: faGhost,
+  hatWizard: faHatWizard,
+  userNinja: faUserNinja,
+  userAstronaut: faUserAstronaut,
+  mask: faMask,
 } satisfies Record<string, IconDefinition>;
 
 export type IconKey = keyof typeof ICONS;
@@ -199,4 +211,37 @@ export const PICKER_ICONS: PickerIcon[] = [
   { key: 'moneyBill', label: 'Money' },
   { key: 'thumbsUp', label: 'Thumbs up' },
   { key: 'circleCheck', label: 'Done' },
+];
+
+/** Curated, fun/personality-themed grid shown when customizing the avatar icon. */
+export const AVATAR_ICONS: PickerIcon[] = [
+  // Faces / characters
+  { key: 'faceSmile', label: 'Smile' },
+  { key: 'faceLaughBeam', label: 'Laugh' },
+  { key: 'faceGrinStars', label: 'Star-struck' },
+  { key: 'ghost', label: 'Ghost' },
+  { key: 'hatWizard', label: 'Wizard' },
+  { key: 'userNinja', label: 'Ninja' },
+  { key: 'userAstronaut', label: 'Astronaut' },
+  { key: 'mask', label: 'Hero' },
+  // Animals
+  { key: 'robot', label: 'Robot' },
+  { key: 'dog', label: 'Dog' },
+  { key: 'cat', label: 'Cat' },
+  { key: 'paw', label: 'Paw' },
+  { key: 'dove', label: 'Dove' },
+  // Status / personality
+  { key: 'crown', label: 'Crown' },
+  { key: 'star', label: 'Star' },
+  { key: 'trophy', label: 'Trophy' },
+  { key: 'medal', label: 'Medal' },
+  { key: 'gem', label: 'Gem' },
+  { key: 'heart', label: 'Heart' },
+  // Effects / nature
+  { key: 'rocket', label: 'Rocket' },
+  { key: 'fire', label: 'Fire' },
+  { key: 'rainbow', label: 'Rainbow' },
+  { key: 'wandMagicSparkles', label: 'Magic' },
+  { key: 'sun', label: 'Sun' },
+  { key: 'moon', label: 'Moon' },
 ];

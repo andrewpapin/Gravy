@@ -627,6 +627,10 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         if (val === 'light' || val === 'dark' || val === 'rainbow' || val === 'gold') {
           next.settings.theme = val;
         }
+      } else if (key === 'avatarIcon') {
+        next.settings.avatarIcon = val;
+      } else if (key === 'avatarIconColor' || key === 'avatarBgColor') {
+        next.settings[key] = val;
       } else {
         (next.settings[key] as number) = Math.max(0, parseInt(val) || 0);
       }

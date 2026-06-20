@@ -48,6 +48,9 @@ export interface Settings {
   recoveryQuestion: string;
   recoveryAnswer: string;
   theme: Theme;
+  avatarIcon: string;       // registered icon key (see data/icons.ts)
+  avatarIconColor: string;  // hex color for the avatar icon glyph
+  avatarBgColor: string;    // hex color for the avatar circle background
 }
 
 export interface DayLog {

@@ -3,12 +3,31 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import type { Theme } from '../state/types';
+import { AppIcon } from './AppIcon';
+import { IconPicker } from './IconPicker';
+import { ColorPicker, type ColorOption } from './ColorPicker';
+import { AVATAR_ICONS } from '../data/icons';
 
 const THEME_OPTIONS: { id: Theme; label: string }[] = [
   { id: 'light', label: 'Light' },
   { id: 'dark', label: 'Dark' },
   { id: 'rainbow', label: 'Rainbow' },
   { id: 'gold', label: 'Gold' },
+];
+
+const AVATAR_COLORS: ColorOption[] = [
+  { hex: '#2F3E46', label: 'Charcoal' },
+  { hex: '#FFFFFF', label: 'White' },
+  { hex: '#F28482', label: 'Coral' },
+  { hex: '#F6BD60', label: 'Yellow' },
+  { hex: '#84A59D', label: 'Sage' },
+  { hex: '#D4AF37', label: 'Gold' },
+  { hex: '#8EC5F6', label: 'Sky blue' },
+  { hex: '#B388EB', label: 'Lavender' },
+  { hex: '#F4A6C6', label: 'Pink' },
+  { hex: '#FF8C42', label: 'Orange' },
+  { hex: '#6FCF97', label: 'Green' },
+  { hex: '#161B1F', label: 'Black' },
 ];
 
 interface SettingsScreenProps {
@@ -66,6 +85,43 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
                   <span className="theme-swatch-label">{opt.label}</span>
                 </button>
               ))}
+            </div>
+          </div>
+          <div className="section-label">Avatar</div>
+          <div className="settings-row settings-row--col">
+            <div>
+              <div className="settings-label">
+                Icon &amp; colors
+                {savedField === 'avatar' && <FontAwesomeIcon icon={faCheck} className="saved-flash" />}
+              </div>
+              <div className="settings-sub">Shows in the top bar</div>
+            </div>
+            <div className="avatar-settings-row">
+              <span
+                className="avatar-preview-circle"
+                style={{ background: state.settings.avatarBgColor, color: state.settings.avatarIconColor }}
+                aria-hidden="true"
+              >
+                <AppIcon iconKey={state.settings.avatarIcon} emojiFallback="😊" />
+              </span>
+              <IconPicker
+                value={state.settings.avatarIcon}
+                icons={AVATAR_ICONS}
+                onChange={(key) => { saveSetting('avatarIcon', key); flashSaved('avatar'); }}
+                ariaLabel="Choose your avatar icon"
+              />
+              <ColorPicker
+                value={state.settings.avatarIconColor}
+                colors={AVATAR_COLORS}
+                onChange={(hex) => { saveSetting('avatarIconColor', hex); flashSaved('avatar'); }}
+                ariaLabel="Choose your icon color"
+              />
+              <ColorPicker
+                value={state.settings.avatarBgColor}
+                colors={AVATAR_COLORS}
+                onChange={(hex) => { saveSetting('avatarBgColor', hex); flashSaved('avatar'); }}
+                ariaLabel="Choose your circle color"
+              />
             </div>
           </div>
           <div className="section-label">Profile</div>
