@@ -634,7 +634,7 @@ button.calendar-day {
   text-align: left;
   font-family: var(--font-display);
 }
-button.goal-tile { cursor: pointer; }
+button.goal-tile { cursor: pointer; color: inherit; }
 button.goal-tile:active { transform: scale(0.97); }
 .goal-tile.checked { background: var(--sage); }
 .goal-tile-top {
