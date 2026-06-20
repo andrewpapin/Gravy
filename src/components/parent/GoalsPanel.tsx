@@ -26,11 +26,12 @@ export function GoalsPanel() {
   const saveEdit = (id: number) => {
     const trimmedName = editGoal.name.trim();
     if (!trimmedName) return;
+    const isDailyGoal = state.goals.find((g) => g.id === id)?.isDaily !== false;
     updateGoal(id, {
       icon: editGoal.icon || DEFAULT_GOAL_ICON,
       name: trimmedName,
       pts: parseInt(editGoal.pts) || 10,
-      target: Math.max(1, parseInt(editGoal.target) || 1),
+      target: isDailyGoal ? Math.max(1, parseInt(editGoal.target) || 1) : undefined,
     });
     setEditingId(null);
   };
@@ -43,14 +44,13 @@ export function GoalsPanel() {
       icon: icon || DEFAULT_GOAL_ICON,
       name: trimmedName,
       pts: parseInt(pts) || 10,
-      target: Math.max(1, parseInt(target) || 1),
+      target: isDaily ? Math.max(1, parseInt(target) || 1) : undefined,
       isDaily,
     });
     setIcon(DEFAULT_GOAL_ICON);
     setName('');
     setPts('');
     setTarget('1');
-    setIsDaily(true);
   };
 
   return (
@@ -62,33 +62,41 @@ export function GoalsPanel() {
         <input
           type="number"
           className="pts-input"
-          placeholder="pts"
-          min={1}
+          placeholder={isDaily ? 'pts' : '± pts'}
+          min={isDaily ? 1 : -999}
           max={999}
           value={pts}
           onChange={(e) => setPts(e.target.value)}
         />
-        <input
-          type="number"
-          className="pts-input"
-          placeholder="×"
-          title="Times to complete"
-          min={1}
-          max={99}
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-        />
+        {isDaily && (
+          <input
+            type="number"
+            className="pts-input"
+            placeholder="×"
+            title="Times to complete"
+            min={1}
+            max={99}
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+          />
+        )}
         <button type="submit" className="btn btn-sm btn-purple">
           Add
         </button>
       </form>
       <div style={{ fontSize: '0.68rem', color: 'var(--muted)', fontWeight: 700, marginTop: -8, marginBottom: 'var(--space-md)' }}>
-        The × field sets how many times a goal must be done per day (e.g. "Drink water" ×3)
+        {isDaily
+          ? 'The × field sets how many times a goal must be done per day (e.g. "Drink water" ×3)'
+          : 'Use a negative number to subtract points (e.g. "Was rude" −15)'}
       </div>
       <div className="flex-between" style={{ marginBottom: 'var(--space-md)' }}>
         <div>
-          <div className="settings-label">Daily Goal</div>
-          <div className="settings-sub">Resets each day and appears in "Today's Goals"</div>
+          <div className="settings-label">{isDaily ? 'Daily Goal' : 'Bonus Points'}</div>
+          <div className="settings-sub">
+            {isDaily
+              ? 'Resets each day and appears in "Today\'s Goals"'
+              : 'Repeats anytime, can add or subtract points'}
+          </div>
         </div>
         <label className="pbadge-toggle">
           <input type="checkbox" checked={isDaily} onChange={(e) => setIsDaily(e.target.checked)} />
@@ -102,8 +110,9 @@ export function GoalsPanel() {
           No goals added yet
         </div>
       ) : (
-        state.goals.map((g) =>
-          editingId === g.id ? (
+        state.goals.map((g) => {
+          const isDailyGoal = g.isDaily !== false;
+          return editingId === g.id ? (
             <form
               className="input-row"
               key={g.id}
@@ -123,19 +132,21 @@ export function GoalsPanel() {
               <input
                 type="number"
                 className="pts-input"
-                min={1}
+                min={isDailyGoal ? 1 : -999}
                 max={999}
                 value={editGoal.pts}
                 onChange={(e) => setEditGoal({ ...editGoal, pts: e.target.value })}
               />
-              <input
-                type="number"
-                className="pts-input"
-                min={1}
-                max={99}
-                value={editGoal.target}
-                onChange={(e) => setEditGoal({ ...editGoal, target: e.target.value })}
-              />
+              {isDailyGoal && (
+                <input
+                  type="number"
+                  className="pts-input"
+                  min={1}
+                  max={99}
+                  value={editGoal.target}
+                  onChange={(e) => setEditGoal({ ...editGoal, target: e.target.value })}
+                />
+              )}
               <button type="submit" className="btn btn-sm btn-purple" title="Save">
                 <FontAwesomeIcon icon={faCheck} />
               </button>
@@ -149,14 +160,14 @@ export function GoalsPanel() {
               <div className="parent-item-info">
                 <div className="parent-item-name">{g.name}</div>
                 <div className="parent-item-pts">
-                  +{g.pts} pts · {g.isDaily !== false ? 'Daily' : 'One-time'}
-                  {(g.target || 1) > 1 ? ` · ×${g.target}` : ''}
+                  {g.pts < 0 ? '−' : '+'}{Math.abs(g.pts)} pts · {isDailyGoal ? 'Daily' : 'Bonus'}
+                  {isDailyGoal && (g.target || 1) > 1 ? ` · ×${g.target}` : ''}
                 </div>
               </div>
-              <label className="pbadge-toggle" title="Toggle daily / one-time">
+              <label className="pbadge-toggle" title="Toggle Daily Goal / Bonus Points">
                 <input
                   type="checkbox"
-                  checked={g.isDaily !== false}
+                  checked={isDailyGoal}
                   onChange={(e) => updateGoal(g.id, { isDaily: e.target.checked })}
                 />
                 <span className="pbadge-toggle-track" />
@@ -168,8 +179,8 @@ export function GoalsPanel() {
                 Remove
               </button>
             </div>
-          )
-        )
+          );
+        })
       )}
     </div>
   );

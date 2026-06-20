@@ -4,8 +4,11 @@ export interface Goal {
   icon?: string;       // registered icon key (see data/icons.ts)
   name: string;
   pts: number;
-  isDaily?: boolean; // true when undefined (default behavior: daily)
-  target?: number;  // how many times to complete (default 1)
+  // true (or undefined) = Daily Goal: resets each day, shown in "Daily Goals".
+  // false = Bonus Points item: repeatable any number of times per day, resets daily,
+  // `pts` may be negative (deduction). `target` is unused for Bonus items.
+  isDaily?: boolean;
+  target?: number;  // how many times to complete (Daily goals only; default 1)
 }
 
 export interface Reward {
@@ -57,6 +60,7 @@ export interface DayLog {
   foodCounts: Record<string, number>;
   goalIds: number[];
   points: number;
+  bonusCounts?: Record<number, number>; // tap counts for Bonus Points items, keyed by goal id
 }
 
 export interface GravyState {

@@ -572,7 +572,7 @@ button.calendar-day {
 .goal-name { font-size: 0.95rem; font-weight: 800; }
 .goal-item.checked .goal-name { color: var(--muted); }
 
-/* ===== GOAL TILES (Daily Goals / Other Goals grid) ===== */
+/* ===== GOAL TILES (Daily Goals / Bonus Points grid) ===== */
 .goal-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -701,6 +701,10 @@ button.goal-tile:active { transform: scale(0.97); }
   border-radius: 50px;
   flex-shrink: 0;
   border: 2px solid var(--dark);
+}
+.pts-badge.negative {
+  background: var(--coral);
+  color: white;
 }
 
 /* ===== STORE SCREEN ===== */

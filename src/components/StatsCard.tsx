@@ -16,7 +16,10 @@ export function StatsCard({ onOpenBadges }: StatsCardProps) {
   const earnedCount = state.earnedBadges.length;
   const totalBadgeCount = getEnabledBadgeCount(state);
   const hasLoggedToday =
-    Object.keys(state.todayFoodCounts).length > 0 || state.todayGoals.length > 0 || state.todayPoints > 0;
+    Object.keys(state.todayFoodCounts).length > 0 ||
+    state.todayGoals.length > 0 ||
+    state.todayPoints > 0 ||
+    Object.values(state.todayGoalCounts || {}).some((c) => c > 0);
   const streakAtRisk = state.streak > 0 && !hasLoggedToday;
 
   // At-a-glance "today" snapshot, tying the food + goal cards back into the rank banner.

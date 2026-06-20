@@ -69,9 +69,13 @@ interface GravyContextValue {
   removeFood: (id: string) => void;
   incrementGoal: (id: number) => void;
   decrementGoal: (id: number) => void;
+  logBonusItem: (id: number) => void;
+  undoBonusItem: (id: number) => void;
   logFoodForDay: (dateStr: string, foodId: string) => void;
   removeFoodForDay: (dateStr: string, foodId: string) => void;
   toggleGoalForDay: (dateStr: string, goalId: number) => void;
+  logBonusItemForDay: (dateStr: string, goalId: number) => void;
+  undoBonusItemForDay: (dateStr: string, goalId: number) => void;
   requestReward: (id: number) => void;
   approveReward: (prId: string) => void;
   declineReward: (prId: string) => void;
@@ -185,17 +189,18 @@ export function GravyProvider({ children }: { children: ReactNode }) {
 
   const fireConfetti = useCallback(() => setConfettiTrigger((n) => n + 1), []);
 
-  // Awards points and mutates the given draft state in place
+  // Awards (or deducts, for negative pts) points and mutates the given draft state in place
   const awardPoints = useCallback(
     (next: GravyState, pts: number, reason: string, opts?: { silent?: boolean; action?: ToastAction }) => {
-      next.points += pts;
-      next.totalPoints += pts;
+      next.points = Math.max(0, next.points + pts);
+      next.totalPoints = Math.max(0, next.totalPoints + pts);
       next.todayPoints += pts;
       if (next.todayPoints > (next.counters.maxDayPoints || 0)) {
         next.counters.maxDayPoints = next.todayPoints;
       }
       if (!opts?.silent) {
-        showToast(faStar, `+${pts} ${reason}`.trim(), opts?.action);
+        const sign = pts < 0 ? '−' : '+';
+        showToast(faStar, `${sign}${Math.abs(pts)} ${reason}`.trim(), opts?.action);
       }
     },
     [showToast],
@@ -367,6 +372,33 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const logBonusItem = useCallback((id: number) => {
+    setState((prev) => {
+      const goal = prev.goals.find((g) => g.id === id);
+      if (!goal) return prev;
+      const next = clone(prev);
+      if (!next.todayGoalCounts) next.todayGoalCounts = {};
+      next.todayGoalCounts[id] = (next.todayGoalCounts[id] || 0) + 1;
+      awardPoints(next, goal.pts, goal.name);
+      maybeCelebrateRankUp(prev.totalPoints, next);
+      return next;
+    });
+  }, [awardPoints, maybeCelebrateRankUp]);
+
+  const undoBonusItem = useCallback((id: number) => {
+    setState((prev) => {
+      const goal = prev.goals.find((g) => g.id === id);
+      if (!goal) return prev;
+      const currentCount = (prev.todayGoalCounts || {})[id] || 0;
+      if (currentCount <= 0) return prev;
+      const next = clone(prev);
+      if (!next.todayGoalCounts) next.todayGoalCounts = {};
+      next.todayGoalCounts[id] = currentCount - 1;
+      awardPoints(next, -goal.pts, '', { silent: true });
+      return next;
+    });
+  }, [awardPoints]);
+
   const logFoodForDay = useCallback((dateStr: string, foodId: string) => {
     setState((prev) => {
       if ((prev.dayLogs[dateStr]?.foodCounts[foodId] || 0) >= 1) return prev;
@@ -495,6 +527,51 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       return next;
     });
   }, [showToast, checkBadges, maybeCelebrateRankUp]);
+
+  const logBonusItemForDay = useCallback((dateStr: string, goalId: number) => {
+    setState((prev) => {
+      const goal = prev.goals.find((g) => g.id === goalId);
+      if (!goal) return prev;
+      const next = clone(prev);
+      if (!next.dayLogs[dateStr]) {
+        next.dayLogs[dateStr] = { foodCounts: {}, goalIds: [], points: 0, bonusCounts: {} };
+      }
+      const log = next.dayLogs[dateStr];
+      if (!log.bonusCounts) log.bonusCounts = {};
+      log.bonusCounts[goalId] = (log.bonusCounts[goalId] || 0) + 1;
+
+      next.points = Math.max(0, next.points + goal.pts);
+      next.totalPoints = Math.max(0, next.totalPoints + goal.pts);
+      log.points = Math.max(0, log.points + goal.pts);
+      if (log.points > (next.counters.maxDayPoints || 0)) {
+        next.counters.maxDayPoints = log.points;
+      }
+
+      const sign = goal.pts < 0 ? '−' : '+';
+      showToast(resolveToastIcon(goal.icon, goal.emoji), `${sign}${Math.abs(goal.pts)} ${goal.name}`);
+      maybeCelebrateRankUp(prev.totalPoints, next);
+      return next;
+    });
+  }, [showToast, maybeCelebrateRankUp]);
+
+  const undoBonusItemForDay = useCallback((dateStr: string, goalId: number) => {
+    setState((prev) => {
+      const goal = prev.goals.find((g) => g.id === goalId);
+      const log = prev.dayLogs[dateStr];
+      if (!goal || !log) return prev;
+      const currentCount = (log.bonusCounts || {})[goalId] || 0;
+      if (currentCount <= 0) return prev;
+      const next = clone(prev);
+      const nextLog = next.dayLogs[dateStr];
+      if (!nextLog.bonusCounts) nextLog.bonusCounts = {};
+      nextLog.bonusCounts[goalId] = currentCount - 1;
+
+      next.points = Math.max(0, next.points - goal.pts);
+      next.totalPoints = Math.max(0, next.totalPoints - goal.pts);
+      nextLog.points = Math.max(0, nextLog.points - goal.pts);
+      return next;
+    });
+  }, []);
 
   const requestReward = useCallback((id: number) => {
     setState((prev) => {
@@ -754,9 +831,13 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     removeFood,
     incrementGoal,
     decrementGoal,
+    logBonusItem,
+    undoBonusItem,
     logFoodForDay,
     removeFoodForDay,
     toggleGoalForDay,
+    logBonusItemForDay,
+    undoBonusItemForDay,
     requestReward,
     approveReward,
     declineReward,

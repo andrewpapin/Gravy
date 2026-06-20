@@ -12,7 +12,7 @@ export function FoodTray() {
   return (
     <div className="card">
       <div className="flex-between" style={{ marginBottom: 12 }}>
-        <div className="goal-card-title">Today's Food</div>
+        <div className="goal-card-title">Food Goals</div>
         <div className={`goal-progress-badge ${allEaten ? 'done' : ''}`}>{eatenCount}/{FOODS.length} done</div>
       </div>
       {allEaten && (

@@ -203,7 +203,8 @@ export function applyDayRollover(state: GravyState): GravyState {
     const hadActivity =
       Object.keys(state.todayFoodCounts).length > 0 ||
       state.todayGoals.length > 0 ||
-      state.todayPoints > 0;
+      state.todayPoints > 0 ||
+      Object.values(state.todayGoalCounts || {}).some((c) => c > 0);
     // The streak only extends if the day being closed out had real activity logged —
     // just having the app open isn't enough, otherwise the streak couldn't ever be "at risk".
     if (state.lastActiveDate === yStr && hadActivity) {
@@ -219,23 +220,29 @@ export function applyDayRollover(state: GravyState): GravyState {
     state.goalStreak = closedOutYesterday && allGoalsDone ? state.goalStreak + 1 : 0;
     state.megaStreak = closedOutYesterday && fullTray && allGoalsDone ? state.megaStreak + 1 : 0;
     if (hadActivity) {
+      const bonusIds = new Set(
+        (state.goals || []).filter((g) => g.isDaily === false).map((g) => g.id)
+      );
+      const bonusCounts: Record<number, number> = {};
+      for (const [id, count] of Object.entries(state.todayGoalCounts || {})) {
+        if (bonusIds.has(Number(id))) bonusCounts[Number(id)] = count;
+      }
       state.dayLogs[state.lastActiveDate] = {
         foodCounts: { ...state.todayFoodCounts },
         goalIds: [...state.todayGoals],
         points: state.todayPoints,
+        bonusCounts,
       };
     }
     state.todayFoodCounts = {};
     state.todayPoints = 0;
-    // Only clear daily goal completions; non-daily completions persist until explicitly cleared.
+    // Daily goals and Bonus Points items both reset daily — keep only ids of
+    // current Daily goals (also self-heals any stale legacy one-time-goal ids).
     const dailyIds = new Set(
       (state.goals || []).filter((g) => g.isDaily !== false).map((g) => g.id)
     );
-    state.todayGoals = (state.todayGoals || []).filter((id) => !dailyIds.has(id));
-    if (!state.todayGoalCounts) state.todayGoalCounts = {};
-    for (const id of dailyIds) {
-      delete state.todayGoalCounts[id];
-    }
+    state.todayGoals = (state.todayGoals || []).filter((id) => dailyIds.has(id));
+    state.todayGoalCounts = {};
   }
   state.lastActiveDate = today;
   return state;

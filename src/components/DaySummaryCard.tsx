@@ -11,7 +11,7 @@ interface DaySummaryCardProps {
 }
 
 export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
-  const { state, logFoodForDay, removeFoodForDay, toggleGoalForDay } = useGravy();
+  const { state, logFoodForDay, removeFoodForDay, toggleGoalForDay, logBonusItemForDay, undoBonusItemForDay } = useGravy();
   const today = todayStr();
   const log = getDayLog(state, dateStr, today);
   const isEditable = dateStr < today;
@@ -23,6 +23,9 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
     const foodCounts = log?.foodCounts ?? {};
     const goalIds = log?.goalIds ?? [];
     const points = log?.points ?? 0;
+    const bonusCounts = log?.bonusCounts ?? {};
+    const dailyGoals = state.goals.filter((g) => g.isDaily !== false);
+    const bonusGoals = state.goals.filter((g) => g.isDaily === false);
 
     return (
       <div className="card">
@@ -30,10 +33,12 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
           <FontAwesomeIcon icon={faCalendarDays} /> {label}
         </div>
 
-        {points > 0 && (
+        {points !== 0 && (
           <div className="flex-between" style={{ marginBottom: 12 }}>
             <div className="settings-label">Points earned</div>
-            <div className="pts-badge">+{points}</div>
+            <div className={`pts-badge ${points < 0 ? 'negative' : ''}`}>
+              {points < 0 ? '−' : '+'}{Math.abs(points)}
+            </div>
           </div>
         )}
 
@@ -59,13 +64,13 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
           })}
         </div>
 
-        {state.goals.length > 0 && (
+        {dailyGoals.length > 0 && (
           <>
             <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--dark)', marginBottom: 8 }}>
               Goals
             </div>
             <div>
-              {state.goals.map((g) => {
+              {dailyGoals.map((g) => {
                 const checked = goalIds.includes(g.id);
                 return (
                   <button
@@ -88,7 +93,47 @@ export function DaySummaryCard({ dateStr }: DaySummaryCardProps) {
           </>
         )}
 
-        {state.goals.length === 0 && Object.values(foodCounts).every((c) => c === 0) && (
+        {bonusGoals.length > 0 && (
+          <>
+            <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--dark)', marginBottom: 8, marginTop: dailyGoals.length > 0 ? 16 : 0 }}>
+              Bonus Points
+            </div>
+            <div>
+              {bonusGoals.map((g) => {
+                const count = bonusCounts[g.id] || 0;
+                return (
+                  <div key={g.id} className="goal-item">
+                    <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-emoji" />
+                    <div className="goal-info">
+                      <div className="goal-name">{g.name}</div>
+                    </div>
+                    <span className={`pts-badge ${g.pts < 0 ? 'negative' : ''}`}>
+                      {g.pts < 0 ? '−' : '+'}{Math.abs(g.pts)}
+                    </span>
+                    <div className="goal-stepper">
+                      <button
+                        type="button"
+                        className="stepper-btn"
+                        onClick={() => undoBonusItemForDay(dateStr, g.id)}
+                        disabled={count === 0}
+                        aria-label={`Undo ${g.name}`}
+                      >−</button>
+                      <span className="stepper-count">{count}</span>
+                      <button
+                        type="button"
+                        className="stepper-btn"
+                        onClick={() => logBonusItemForDay(dateStr, g.id)}
+                        aria-label={`Log ${g.name}`}
+                      >+</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {dailyGoals.length === 0 && bonusGoals.length === 0 && Object.values(foodCounts).every((c) => c === 0) && (
           <div className="empty-state" style={{ marginTop: 8 }}>
             <span className="empty-state-emoji"><FontAwesomeIcon icon={faMoon} /></span>
             <div className="empty-state-text">Tap a food to log it!</div>

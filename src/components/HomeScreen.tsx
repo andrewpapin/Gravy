@@ -3,9 +3,8 @@ import { StatsCard } from './StatsCard';
 import { DateNav } from './DateNav';
 import { FoodTray } from './FoodTray';
 import { DailyGoals } from './DailyGoals';
-import { OtherGoals } from './OtherGoals';
+import { BonusPoints } from './BonusPoints';
 import { DaySummaryCard } from './DaySummaryCard';
-import { useGravy } from '../state/GravyContext';
 import { todayStr } from '../state/defaultState';
 
 interface HomeScreenProps {
@@ -18,10 +17,8 @@ interface HomeScreenProps {
 }
 
 export function HomeScreen({ onOpenAvatarMenu, onOpenCalendar, onOpenStore, onOpenBadges, selectedDate, onSelectDate }: HomeScreenProps) {
-  const { state } = useGravy();
   const today = todayStr();
   const isToday = selectedDate === today;
-  const hasOtherGoals = state.goals.some((g) => g.isDaily === false);
 
   return (
     <div className="screen active">
@@ -33,7 +30,7 @@ export function HomeScreen({ onOpenAvatarMenu, onOpenCalendar, onOpenStore, onOp
           <>
             <FoodTray />
             <DailyGoals />
-            {hasOtherGoals && <OtherGoals />}
+            <BonusPoints />
           </>
         ) : (
           <DaySummaryCard dateStr={selectedDate} />
