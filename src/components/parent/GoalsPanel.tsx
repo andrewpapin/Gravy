@@ -53,6 +53,81 @@ export function GoalsPanel() {
     setTarget('1');
   };
 
+  const renderGoalRow = (g: Goal) => {
+    const isDailyGoal = g.isDaily !== false;
+    return editingId === g.id ? (
+      <form
+        className="input-row"
+        key={g.id}
+        onSubmit={(e) => { e.preventDefault(); saveEdit(g.id); }}
+      >
+        <IconPicker
+          value={editGoal.icon}
+          legacyEmoji={editGoal.emoji}
+          onChange={(key) => setEditGoal({ ...editGoal, icon: key })}
+          ariaLabel="Choose a goal icon"
+        />
+        <input
+          type="text"
+          value={editGoal.name}
+          onChange={(e) => setEditGoal({ ...editGoal, name: e.target.value })}
+        />
+        <input
+          type="number"
+          className="pts-input"
+          min={isDailyGoal ? 1 : -999}
+          max={999}
+          value={editGoal.pts}
+          onChange={(e) => setEditGoal({ ...editGoal, pts: e.target.value })}
+        />
+        {isDailyGoal && (
+          <input
+            type="number"
+            className="pts-input"
+            min={1}
+            max={99}
+            value={editGoal.target}
+            onChange={(e) => setEditGoal({ ...editGoal, target: e.target.value })}
+          />
+        )}
+        <button type="submit" className="btn btn-sm btn-purple" title="Save">
+          <FontAwesomeIcon icon={faCheck} />
+        </button>
+        <button type="button" className="btn btn-sm btn-pink" title="Cancel" onClick={() => setEditingId(null)}>
+          <FontAwesomeIcon icon={faXmark} />
+        </button>
+      </form>
+    ) : (
+      <div className="parent-item" key={g.id}>
+        <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="parent-item-emoji" />
+        <div className="parent-item-info">
+          <div className="parent-item-name">{g.name}</div>
+          <div className="parent-item-pts">
+            {g.pts < 0 ? '−' : '+'}{Math.abs(g.pts)} pts · {isDailyGoal ? 'Daily' : 'Bonus'}
+            {isDailyGoal && (g.target || 1) > 1 ? ` · ×${g.target}` : ''}
+          </div>
+        </div>
+        <label className="pbadge-toggle" title="Toggle Daily Goal / Bonus Points">
+          <input
+            type="checkbox"
+            checked={isDailyGoal}
+            onChange={(e) => updateGoal(g.id, { isDaily: e.target.checked })}
+          />
+          <span className="pbadge-toggle-track" />
+        </label>
+        <button className="btn btn-sm btn-purple" title="Edit" onClick={() => startEdit(g)}>
+          <FontAwesomeIcon icon={faPen} />
+        </button>
+        <button className="btn btn-sm btn-pink" onClick={() => removeGoal(g.id)}>
+          Remove
+        </button>
+      </div>
+    );
+  };
+
+  const dailyGoals = state.goals.filter((g) => g.isDaily !== false);
+  const bonusItems = state.goals.filter((g) => g.isDaily === false);
+
   return (
     <div>
       <div className="section-label">Add a Goal</div>
@@ -104,83 +179,22 @@ export function GoalsPanel() {
         </label>
       </div>
 
-      <div className="section-label">Current Goals</div>
-      {state.goals.length === 0 ? (
+      <div className="section-label">Daily Goals</div>
+      {dailyGoals.length === 0 ? (
         <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontWeight: 700, padding: '12px 0' }}>
-          No goals added yet
+          No daily goals added yet
         </div>
       ) : (
-        state.goals.map((g) => {
-          const isDailyGoal = g.isDaily !== false;
-          return editingId === g.id ? (
-            <form
-              className="input-row"
-              key={g.id}
-              onSubmit={(e) => { e.preventDefault(); saveEdit(g.id); }}
-            >
-              <IconPicker
-                value={editGoal.icon}
-                legacyEmoji={editGoal.emoji}
-                onChange={(key) => setEditGoal({ ...editGoal, icon: key })}
-                ariaLabel="Choose a goal icon"
-              />
-              <input
-                type="text"
-                value={editGoal.name}
-                onChange={(e) => setEditGoal({ ...editGoal, name: e.target.value })}
-              />
-              <input
-                type="number"
-                className="pts-input"
-                min={isDailyGoal ? 1 : -999}
-                max={999}
-                value={editGoal.pts}
-                onChange={(e) => setEditGoal({ ...editGoal, pts: e.target.value })}
-              />
-              {isDailyGoal && (
-                <input
-                  type="number"
-                  className="pts-input"
-                  min={1}
-                  max={99}
-                  value={editGoal.target}
-                  onChange={(e) => setEditGoal({ ...editGoal, target: e.target.value })}
-                />
-              )}
-              <button type="submit" className="btn btn-sm btn-purple" title="Save">
-                <FontAwesomeIcon icon={faCheck} />
-              </button>
-              <button type="button" className="btn btn-sm btn-pink" title="Cancel" onClick={() => setEditingId(null)}>
-                <FontAwesomeIcon icon={faXmark} />
-              </button>
-            </form>
-          ) : (
-            <div className="parent-item" key={g.id}>
-              <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="parent-item-emoji" />
-              <div className="parent-item-info">
-                <div className="parent-item-name">{g.name}</div>
-                <div className="parent-item-pts">
-                  {g.pts < 0 ? '−' : '+'}{Math.abs(g.pts)} pts · {isDailyGoal ? 'Daily' : 'Bonus'}
-                  {isDailyGoal && (g.target || 1) > 1 ? ` · ×${g.target}` : ''}
-                </div>
-              </div>
-              <label className="pbadge-toggle" title="Toggle Daily Goal / Bonus Points">
-                <input
-                  type="checkbox"
-                  checked={isDailyGoal}
-                  onChange={(e) => updateGoal(g.id, { isDaily: e.target.checked })}
-                />
-                <span className="pbadge-toggle-track" />
-              </label>
-              <button className="btn btn-sm btn-purple" title="Edit" onClick={() => startEdit(g)}>
-                <FontAwesomeIcon icon={faPen} />
-              </button>
-              <button className="btn btn-sm btn-pink" onClick={() => removeGoal(g.id)}>
-                Remove
-              </button>
-            </div>
-          );
-        })
+        dailyGoals.map(renderGoalRow)
+      )}
+
+      <div className="section-label">Bonus Points</div>
+      {bonusItems.length === 0 ? (
+        <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontWeight: 700, padding: '12px 0' }}>
+          No bonus items added yet
+        </div>
+      ) : (
+        bonusItems.map(renderGoalRow)
       )}
     </div>
   );
