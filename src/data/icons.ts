@@ -26,6 +26,8 @@ import {
   // Avatar / faces / characters
   faFaceSmile, faFaceLaughBeam, faFaceGrinStars, faGhost, faHatWizard,
   faUserNinja, faUserAstronaut, faMask,
+  // Mood / behavior
+  faFaceAngry, faCommentSlash,
 } from '@fortawesome/free-solid-svg-icons';
 
 /**
@@ -136,6 +138,9 @@ export const ICONS = {
   userNinja: faUserNinja,
   userAstronaut: faUserAstronaut,
   mask: faMask,
+  // Mood / behavior
+  faceAngry: faFaceAngry,
+  commentSlash: faCommentSlash,
 } satisfies Record<string, IconDefinition>;
 
 export type IconKey = keyof typeof ICONS;
@@ -211,6 +216,10 @@ export const PICKER_ICONS: PickerIcon[] = [
   { key: 'moneyBill', label: 'Money' },
   { key: 'thumbsUp', label: 'Thumbs up' },
   { key: 'circleCheck', label: 'Done' },
+  // Mood / behavior
+  { key: 'handPeace', label: 'Peace' },
+  { key: 'faceAngry', label: 'Angry' },
+  { key: 'commentSlash', label: 'Quiet' },
 ];
 
 /** Curated, fun/personality-themed grid shown when customizing the avatar icon. */
