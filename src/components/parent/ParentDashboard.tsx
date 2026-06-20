@@ -14,7 +14,6 @@ import { GoalsPanel } from './GoalsPanel';
 import { StorePanel } from './StorePanel';
 import { BadgesPanel } from './BadgesPanel';
 import { SettingsPanel } from './SettingsPanel';
-import { ParentTopBar } from './ParentTopBar';
 
 type ParentTab = 'approvals' | 'goals' | 'store' | 'badges' | 'settings';
 
@@ -26,16 +25,11 @@ const TABS: { id: ParentTab; label: string; icon: IconDefinition }[] = [
   { id: 'settings', label: 'Settings', icon: faGear },
 ];
 
-interface ParentDashboardProps {
-  onExit: () => void;
-}
-
-export function ParentDashboard({ onExit }: ParentDashboardProps) {
+export function ParentDashboard() {
   const [tab, setTab] = useState<ParentTab>('approvals');
 
   return (
-    <div className="parent-screen-inner active">
-      <ParentTopBar onExit={onExit} />
+    <>
       <div className="parent-tabs" role="tablist" aria-label="Parent dashboard">
         {TABS.map((t) => (
           <button
@@ -49,13 +43,13 @@ export function ParentDashboard({ onExit }: ParentDashboardProps) {
           </button>
         ))}
       </div>
-      <div className="scroll-area" style={{ background: 'var(--cream)' }}>
+      <div>
         {tab === 'approvals' && <ApprovalsPanel />}
         {tab === 'goals' && <GoalsPanel />}
         {tab === 'store' && <StorePanel />}
         {tab === 'badges' && <BadgesPanel />}
         {tab === 'settings' && <SettingsPanel />}
       </div>
-    </div>
+    </>
   );
 }

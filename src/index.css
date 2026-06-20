@@ -63,12 +63,11 @@
   --coral: #A6453F;
   --sage: #4F6B64;
 }
-/* These 4 rules use --dark as a literal fill paired with hardcoded white text;
+/* These 3 rules use --dark as a literal fill paired with hardcoded white text;
    since --dark flips light in dark mode, white-on-light-fill would be unreadable. */
 :root[data-theme="dark"] .btn-purple,
 :root[data-theme="dark"] .btn-dark,
-:root[data-theme="dark"] .badge-info-btn:active,
-:root[data-theme="dark"] .parent-topbar {
+:root[data-theme="dark"] .badge-info-btn:active {
   color: #161B1F;
 }
 
@@ -98,7 +97,6 @@
    toasts, celebration overlay, confetti, and modals — which are siblings of
    these roots, not descendants — keep positioning against the real viewport. */
 [data-theme="rainbow"] #kidApp,
-[data-theme="rainbow"] .parent-screen-inner,
 [data-theme="rainbow"] .pin-screen {
   animation: rainbowHue 12s linear infinite;
 }
@@ -1198,10 +1196,6 @@ button.goal-tile:active { transform: scale(0.97); }
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 100dvh;
-  background: var(--cream);
-  padding: 24px;
   gap: 24px;
 }
 .pin-title { color: var(--dark); font-size: 1.4rem; font-weight: 900; text-align: center; }
@@ -1248,34 +1242,6 @@ button.goal-tile:active { transform: scale(0.97); }
 .pin-key.empty { background: transparent; box-shadow: none; border: none; pointer-events: none; }
 .pin-error { color: var(--coral); font-size: 0.8rem; font-weight: 800; opacity: 0; transition: opacity 0.2s; }
 .pin-error.show { opacity: 1; }
-
-.parent-screen-inner {
-  background: var(--cream);
-  min-height: 100dvh;
-  display: none;
-  flex-direction: column;
-}
-.parent-screen-inner.active { display: flex; }
-.parent-topbar {
-  background: var(--dark);
-  color: white;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 3px solid var(--dark);
-}
-.parent-topbar-title { font-size: 1.1rem; font-weight: 900; }
-.parent-topbar-exit-btn {
-  background: var(--yellow);
-  color: var(--dark);
-  padding: 6px 12px;
-  font-size: 0.75rem;
-  font-weight: 900;
-  border: 2px solid var(--dark);
-  border-radius: 6px;
-  cursor: pointer;
-}
 
 .parent-tabs {
   display: flex;

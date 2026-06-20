@@ -5,12 +5,11 @@ import { useGravy } from '../state/GravyContext';
 
 interface PinScreenProps {
   onSuccess: () => void;
-  onBack: () => void;
 }
 
 type RecoverStep = 'none' | 'question' | 'newPin';
 
-export function PinScreen({ onSuccess, onBack }: PinScreenProps) {
+export function PinScreen({ onSuccess }: PinScreenProps) {
   const { state, saveSetting, showToast } = useGravy();
   const [pin, setPin] = useState('');
   const [showError, setShowError] = useState(false);
@@ -179,7 +178,6 @@ export function PinScreen({ onSuccess, onBack }: PinScreenProps) {
   return (
     <div className="pin-screen">
       <div style={{ fontSize: '3rem' }}><FontAwesomeIcon icon={faLock} /></div>
-      <div className="pin-title">Grown-Up Mode</div>
       <div className="pin-sub">Enter the 4-digit PIN</div>
       <div className={`pin-dots ${shake ? 'shake' : ''}`} onAnimationEnd={() => setShake(false)}>
         {[0, 1, 2, 3].map((i) => (
@@ -210,13 +208,6 @@ export function PinScreen({ onSuccess, onBack }: PinScreenProps) {
           Forgot PIN?
         </button>
       )}
-      <button
-        className="btn btn-sm btn-ghost"
-        onClick={onBack}
-        style={{ marginTop: 8 }}
-      >
-        ← Back to {state.settings.childName}
-      </button>
     </div>
   );
 }

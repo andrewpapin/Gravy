@@ -5,8 +5,7 @@ import { StoreScreen } from './components/StoreScreen';
 import { BadgesScreen } from './components/BadgesScreen';
 import { CalendarScreen } from './components/CalendarScreen';
 import { BottomNav, type Tab } from './components/BottomNav';
-import { PinScreen } from './components/PinScreen';
-import { ParentDashboard } from './components/parent/ParentDashboard';
+import { GrownUpsDrawer } from './components/parent/GrownUpsDrawer';
 import { AccountMenu } from './components/AccountMenu';
 import { SettingsScreen } from './components/SettingsScreen';
 import { ToastContainer } from './components/ToastContainer';
@@ -16,8 +15,6 @@ import { BadgePopup } from './components/BadgePopup';
 import { SyncGateModal } from './components/SyncGateModal';
 import { Onboarding, ONBOARDING_DONE_KEY } from './components/Onboarding';
 import { todayStr, STORAGE_KEY } from './state/defaultState';
-
-type View = 'kid' | 'pin' | 'parent' | 'settings';
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -45,12 +42,13 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 }
 
 function AppShell() {
-  const [view, setView] = useState<View>('kid');
   const [tab, setTab] = useState<Tab>('home');
   const [activeBadge, setActiveBadge] = useState<string | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [badgesOpen, setBadgesOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [grownUpsOpen, setGrownUpsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(todayStr());
   // Returning users who already had saved progress before this feature shipped
   // shouldn't suddenly see the walkthrough — only brand-new installs get it.
@@ -60,44 +58,38 @@ function AppShell() {
 
   return (
     <>
-      {view === 'kid' && (
-        <div id="kidApp">
-          {tab === 'home' && (
-            <HomeScreen
-              onOpenAvatarMenu={() => setAccountMenuOpen(true)}
-              onOpenCalendar={() => setCalendarOpen(true)}
-              onOpenBadges={() => setBadgesOpen(true)}
-              selectedDate={selectedDate}
-              onSelectDate={setSelectedDate}
-            />
-          )}
-          {tab === 'store' && <StoreScreen onOpenAvatarMenu={() => setAccountMenuOpen(true)} />}
-          <BottomNav active={tab} onChange={setTab} />
-          <CalendarScreen
-            open={calendarOpen}
-            onClose={() => setCalendarOpen(false)}
+      <div id="kidApp">
+        {tab === 'home' && (
+          <HomeScreen
+            onOpenAvatarMenu={() => setAccountMenuOpen(true)}
+            onOpenCalendar={() => setCalendarOpen(true)}
+            onOpenBadges={() => setBadgesOpen(true)}
             selectedDate={selectedDate}
             onSelectDate={setSelectedDate}
           />
-          <BadgesScreen
-            open={badgesOpen}
-            onClose={() => setBadgesOpen(false)}
-            onShowBadge={setActiveBadge}
-          />
-          <AccountMenu
-            open={accountMenuOpen}
-            onClose={() => setAccountMenuOpen(false)}
-            onOpenSettings={() => { setAccountMenuOpen(false); setView('settings'); }}
-            onOpenGrownUps={() => { setAccountMenuOpen(false); setView('pin'); }}
-          />
-        </div>
-      )}
-
-      {view === 'pin' && <PinScreen onSuccess={() => setView('parent')} onBack={() => setView('kid')} />}
-
-      {view === 'parent' && <ParentDashboard onExit={() => setView('kid')} />}
-
-      {view === 'settings' && <SettingsScreen onExit={() => setView('kid')} />}
+        )}
+        {tab === 'store' && <StoreScreen onOpenAvatarMenu={() => setAccountMenuOpen(true)} />}
+        <BottomNav active={tab} onChange={setTab} />
+        <CalendarScreen
+          open={calendarOpen}
+          onClose={() => setCalendarOpen(false)}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
+        <BadgesScreen
+          open={badgesOpen}
+          onClose={() => setBadgesOpen(false)}
+          onShowBadge={setActiveBadge}
+        />
+        <AccountMenu
+          open={accountMenuOpen}
+          onClose={() => setAccountMenuOpen(false)}
+          onOpenSettings={() => { setAccountMenuOpen(false); setSettingsOpen(true); }}
+          onOpenGrownUps={() => { setAccountMenuOpen(false); setGrownUpsOpen(true); }}
+        />
+        <SettingsScreen open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        <GrownUpsDrawer open={grownUpsOpen} onClose={() => setGrownUpsOpen(false)} />
+      </div>
 
       <BadgePopup badgeId={activeBadge} onClose={() => setActiveBadge(null)} />
       <Celebration />
