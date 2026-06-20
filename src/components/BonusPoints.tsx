@@ -1,6 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faScaleBalanced, faMoon } from '@fortawesome/free-solid-svg-icons';
-import { AppIcon } from './AppIcon';
 import { useGravy } from '../state/GravyContext';
 
 export function BonusPoints() {
@@ -31,8 +30,7 @@ export function BonusPoints() {
             const count = goalCounts[g.id] || 0;
             return (
               <div key={g.id} className="goal-tile">
-                <div className="goal-tile-top">
-                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-tile-emoji" />
+                <div className="goal-tile-top no-icon">
                   <span className={`pts-badge ${g.pts < 0 ? 'negative' : ''}`}>
                     {g.pts < 0 ? '−' : '+'}{Math.abs(g.pts)}
                   </span>
