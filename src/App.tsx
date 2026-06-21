@@ -5,7 +5,6 @@ import { StoreScreen } from './components/StoreScreen';
 import { BadgesScreen } from './components/BadgesScreen';
 import { GrownUpsDrawer } from './components/parent/GrownUpsDrawer';
 import { AccountMenu } from './components/AccountMenu';
-import { SettingsScreen } from './components/SettingsScreen';
 import { ProfileSwitcher } from './components/ProfileSwitcher';
 import { ProfilesManager } from './components/ProfilesManager';
 import { ToastContainer } from './components/ToastContainer';
@@ -46,7 +45,6 @@ function AppShell() {
   const [storeOpen, setStoreOpen] = useState(false);
   const [badgesOpen, setBadgesOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [grownUpsOpen, setGrownUpsOpen] = useState(false);
   const [switchProfileOpen, setSwitchProfileOpen] = useState(false);
   const [profilesOpen, setProfilesOpen] = useState(false);
@@ -73,12 +71,10 @@ function AppShell() {
           open={accountMenuOpen}
           onClose={() => setAccountMenuOpen(false)}
           onOpenStore={() => { setAccountMenuOpen(false); setStoreOpen(true); }}
-          onOpenSettings={() => { setAccountMenuOpen(false); setSettingsOpen(true); }}
           onOpenGrownUps={() => { setAccountMenuOpen(false); setGrownUpsOpen(true); }}
           onOpenSwitchProfile={() => { setAccountMenuOpen(false); setSwitchProfileOpen(true); }}
           onOpenProfiles={() => { setAccountMenuOpen(false); setProfilesOpen(true); }}
         />
-        <SettingsScreen open={settingsOpen} onClose={() => setSettingsOpen(false)} />
         <GrownUpsDrawer open={grownUpsOpen} onClose={() => setGrownUpsOpen(false)} />
         <ProfileSwitcher open={switchProfileOpen} onClose={() => setSwitchProfileOpen(false)} />
         <ProfilesManager open={profilesOpen} onClose={() => setProfilesOpen(false)} />

@@ -19,7 +19,7 @@ interface ColorPickerProps {
 /**
  * Tap-to-pick grid of curated hex colors, mirroring IconPicker's popover interaction.
  * Uses a fixed palette rather than a native color input to match the app's kid-friendly
- * curated-swatch aesthetic (see the theme-swatch-grid in SettingsScreen).
+ * curated-swatch aesthetic (see the theme-swatch-grid in ProfilesManager).
  */
 export function ColorPicker({ value, colors, onChange, ariaLabel = 'Choose a color', disabledHex }: ColorPickerProps) {
   const [open, setOpen] = useState(false);

@@ -1,12 +1,11 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGear, faLock, faGift, faRightLeft, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faGift, faRightLeft, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 
 interface AccountMenuProps {
   open: boolean;
   onClose: () => void;
   onOpenStore: () => void;
-  onOpenSettings: () => void;
   onOpenGrownUps: () => void;
   onOpenSwitchProfile: () => void;
   onOpenProfiles: () => void;
@@ -16,7 +15,6 @@ export function AccountMenu({
   open,
   onClose,
   onOpenStore,
-  onOpenSettings,
   onOpenGrownUps,
   onOpenSwitchProfile,
   onOpenProfiles,
@@ -53,13 +51,6 @@ export function AccountMenu({
               </span>
             </button>
           )}
-          <button type="button" className="account-menu-option" onClick={onOpenSettings}>
-            <span className="account-menu-option-icon"><FontAwesomeIcon icon={faGear} /></span>
-            <span className="account-menu-option-text">
-              <span className="account-menu-option-title">Settings</span>
-              <span className="account-menu-option-sub">No PIN needed</span>
-            </span>
-          </button>
           <button type="button" className="account-menu-option" onClick={onOpenGrownUps}>
             <span className="account-menu-option-icon"><FontAwesomeIcon icon={faLock} /></span>
             <span className="account-menu-option-text">
