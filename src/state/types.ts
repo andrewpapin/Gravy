@@ -89,3 +89,18 @@ export interface GravyState {
   rewards: Reward[];
   settings: Settings;
 }
+
+// One kid. Holds a complete GravyState; the shared fields (goals, rewards, badgeConfig and the
+// shared settings — see SHARED_SETTING_KEYS in defaultState.ts) are mirrored across every profile
+// so the active profile's GravyState can flow through the app unchanged.
+export interface ProfileEntry {
+  id: string;
+  state: GravyState;
+}
+
+// Top-level persisted shape (localStorage + the Supabase household `state` column).
+export interface GravyRoot {
+  version: 2;
+  activeProfileId: string;
+  profiles: ProfileEntry[];
+}

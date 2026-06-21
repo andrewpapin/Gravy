@@ -12,9 +12,19 @@ import {
   faTrashCan,
   faStar,
   faListCheck,
+  faUserPlus,
 } from '@fortawesome/free-solid-svg-icons';
-import type { DayLog, Goal, GravyState, Reward, Settings, Theme } from './types';
-import { applyDayRollover, loadState, saveState, cloneDefaultState, migrateLegacyState, backfillStreaksFromLogs } from './defaultState';
+import type { DayLog, Goal, GravyRoot, GravyState, ProfileEntry, Reward, Settings, Theme } from './types';
+import {
+  applyDayRollover,
+  cloneDefaultState,
+  backfillStreaksFromLogs,
+  loadRoot,
+  saveRoot,
+  hydrateState,
+  mirrorSharedFields,
+  makeNewProfile,
+} from './defaultState';
 import { FOODS } from '../data/foods';
 import { resolveToastIcon } from '../data/icons';
 import { findNewlyEarnedBadges, getBadgeDisplay } from './badges';
@@ -58,8 +68,29 @@ export interface CelebrationData {
   sub: string;
 }
 
+export interface ProfileSummary {
+  id: string;
+  name: string;
+  avatarIcon: string;
+  avatarIconColor: string;
+  avatarBgColor: string;
+  theme: Theme;
+  points: number;
+}
+
+// Per-kid identity fields a parent can edit for any profile.
+export type ProfilePatch = Partial<
+  Pick<Settings, 'childName' | 'avatarIcon' | 'avatarIconColor' | 'avatarBgColor' | 'theme'>
+>;
+
 interface GravyContextValue {
   state: GravyState;
+  profiles: ProfileSummary[];
+  activeProfileId: string;
+  switchProfile: (id: string) => void;
+  addProfile: (name: string, opts?: ProfilePatch & { switchTo?: boolean }) => void;
+  updateProfile: (id: string, patch: ProfilePatch) => void;
+  deleteProfile: (id: string) => void;
   toasts: ToastItem[];
   celebration: CelebrationData | null;
   confettiTrigger: number;
@@ -103,10 +134,36 @@ function clone(state: GravyState): GravyState {
   return JSON.parse(JSON.stringify(state));
 }
 
+// Folds the live active-profile state back into the root and re-mirrors the shared config across
+// every profile. The single source of truth for the active kid is the `state` useState; the rest
+// of the root carries the other profiles. This is the canonical shape we persist and sync.
+function buildMergedRoot(root: GravyRoot, activeState: GravyState): GravyRoot {
+  const merged: GravyRoot = {
+    version: 2,
+    activeProfileId: root.activeProfileId,
+    profiles: root.profiles.map((p) =>
+      p.id === root.activeProfileId ? { id: p.id, state: activeState } : p,
+    ),
+  };
+  mirrorSharedFields(merged);
+  return merged;
+}
+
+function activeStateOf(root: GravyRoot): GravyState {
+  const entry = root.profiles.find((p) => p.id === root.activeProfileId) || root.profiles[0];
+  return entry.state;
+}
+
 let toastIdCounter = 0;
 
 export function GravyProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<GravyState>(() => loadState());
+  const [root, setRoot] = useState<GravyRoot>(() => loadRoot());
+  const [state, setState] = useState<GravyState>(() => activeStateOf(root));
+  // Latest values read by the imperative profile actions without stale closures.
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const rootRef = useRef(root);
+  rootRef.current = root;
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [celebration, setCelebration] = useState<CelebrationData | null>(null);
   const [confettiTrigger, setConfettiTrigger] = useState(0);
@@ -118,8 +175,8 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   const pendingTimersRef = useRef<number[]>([]);
 
   useEffect(() => {
-    saveState(state);
-  }, [state]);
+    saveRoot(buildMergedRoot(root, state));
+  }, [state, root]);
 
   // Applies the parent-selected theme to the whole app. useLayoutEffect (rather than
   // useEffect) so the attribute is set before paint, avoiding a flash of the light theme.
@@ -128,14 +185,16 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLORS[state.settings.theme]);
   }, [state.settings.theme]);
 
-  // Push local changes to Supabase when in a synced household
+  // Push local changes to Supabase when in a synced household. The whole root (all profiles +
+  // shared config) is the synced payload, so every device shares every kid.
   useEffect(() => {
     if (!householdCode) return;
-    const json = JSON.stringify(state);
+    const merged = buildMergedRoot(root, state);
+    const json = JSON.stringify(merged);
     if (json === lastSyncedRef.current) return;
     setSyncStatus('syncing');
     const timeout = setTimeout(() => {
-      pushHouseholdState(householdCode, state)
+      pushHouseholdState(householdCode, merged)
         .then(() => {
           lastSyncedRef.current = json;
           setSyncStatus('idle');
@@ -143,33 +202,50 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         .catch(() => setSyncStatus('error'));
     }, 800);
     return () => clearTimeout(timeout);
-  }, [state, householdCode]);
+  }, [state, root, householdCode]);
 
   // Receive remote changes from other devices in the household
   useEffect(() => {
     if (!householdCode) return;
-    return subscribeToHousehold(householdCode, (remoteState) => {
+    return subscribeToHousehold(householdCode, (remoteRoot) => {
       try {
-        const incomingJson = JSON.stringify(remoteState);
+        const incomingJson = JSON.stringify(remoteRoot);
         if (incomingJson === lastSyncedRef.current) return;
-        const migrated = clone(remoteState);
-        migrateLegacyState(migrated as unknown as Record<string, unknown>);
-        const finalState = applyDayRollover(migrated);
+        const profiles: ProfileEntry[] = (remoteRoot.profiles || [])
+          .filter((p) => p && p.state)
+          .map((p) => ({ id: p.id, state: hydrateState(p.state) }));
+        if (profiles.length === 0) return;
+        const finalRoot: GravyRoot = {
+          version: 2,
+          activeProfileId: profiles.some((p) => p.id === remoteRoot.activeProfileId)
+            ? remoteRoot.activeProfileId
+            : profiles[0].id,
+          profiles,
+        };
+        mirrorSharedFields(finalRoot);
         // Record the snapshot we're actually storing (post migration + rollover) so the
         // outgoing-push effect treats it as already-synced and doesn't echo it straight back.
-        lastSyncedRef.current = JSON.stringify(finalState);
-        setState(finalState);
+        lastSyncedRef.current = JSON.stringify(finalRoot);
+        setRoot(finalRoot);
+        setState(activeStateOf(finalRoot));
       } catch {
         // Ignore malformed realtime payloads rather than crashing the whole app.
       }
     });
   }, [householdCode]);
 
-  // Re-check the day rollover whenever the tab regains focus
+  // Re-check the day rollover whenever the tab regains focus — for every profile, not just the
+  // active one, so a kid not opened in days still has correct streaks/cleared "today" when picked.
   useEffect(() => {
     const onVisible = () => {
       if (document.visibilityState === 'visible') {
         setState((s) => applyDayRollover(clone(s)));
+        setRoot((r) => ({
+          ...r,
+          profiles: r.profiles.map((p) =>
+            p.id === r.activeProfileId ? p : { id: p.id, state: applyDayRollover(clone(p.state)) },
+          ),
+        }));
       }
     };
     document.addEventListener('visibilitychange', onVisible);
@@ -852,6 +928,80 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const switchProfile = useCallback((id: string) => {
+    const prevRoot = rootRef.current;
+    if (id === prevRoot.activeProfileId || !prevRoot.profiles.some((p) => p.id === id)) return;
+    const merged = buildMergedRoot(prevRoot, stateRef.current);
+    const target = merged.profiles.find((p) => p.id === id)!;
+    const rolled = applyDayRollover(clone(target.state));
+    setRoot({
+      ...merged,
+      activeProfileId: id,
+      profiles: merged.profiles.map((p) => (p.id === id ? { id, state: rolled } : p)),
+    });
+    setState(rolled);
+  }, []);
+
+  const addProfile = useCallback(
+    (name: string, opts?: ProfilePatch & { switchTo?: boolean }) => {
+      const merged = buildMergedRoot(rootRef.current, stateRef.current);
+      const entry = makeNewProfile(name, stateRef.current, {
+        avatarIcon: opts?.avatarIcon,
+        avatarIconColor: opts?.avatarIconColor,
+        avatarBgColor: opts?.avatarBgColor,
+        theme: opts?.theme,
+      });
+      const switchTo = opts?.switchTo ?? false;
+      setRoot({
+        ...merged,
+        profiles: [...merged.profiles, entry],
+        activeProfileId: switchTo ? entry.id : merged.activeProfileId,
+      });
+      if (switchTo) setState(entry.state);
+      showToast(faUserPlus, `Added ${entry.state.settings.childName}`);
+    },
+    [showToast],
+  );
+
+  const updateProfile = useCallback((id: string, patch: ProfilePatch) => {
+    if (id === rootRef.current.activeProfileId) {
+      setState((prev) => ({ ...prev, settings: { ...prev.settings, ...patch } }));
+    } else {
+      setRoot((r) => ({
+        ...r,
+        profiles: r.profiles.map((p) =>
+          p.id === id
+            ? { id: p.id, state: { ...p.state, settings: { ...p.state.settings, ...patch } } }
+            : p,
+        ),
+      }));
+    }
+  }, []);
+
+  const deleteProfile = useCallback(
+    (id: string) => {
+      const prevRoot = rootRef.current;
+      if (prevRoot.profiles.length <= 1) return; // never delete the last profile
+      const merged = buildMergedRoot(prevRoot, stateRef.current);
+      const removed = merged.profiles.find((p) => p.id === id);
+      const remaining = merged.profiles.filter((p) => p.id !== id);
+      const wasActive = id === merged.activeProfileId;
+      let nextState = stateRef.current;
+      if (wasActive) {
+        nextState = applyDayRollover(clone(remaining[0].state));
+        remaining[0] = { id: remaining[0].id, state: nextState };
+      }
+      setRoot({
+        ...merged,
+        profiles: remaining,
+        activeProfileId: wasActive ? remaining[0].id : merged.activeProfileId,
+      });
+      if (wasActive) setState(nextState);
+      if (removed) showToast(faTrashCan, `Deleted ${removed.state.settings.childName}`);
+    },
+    [showToast],
+  );
+
   const createHousehold = useCallback(async () => {
     setSyncStatus('syncing');
     // Codes are random, but on the off chance one already exists the insert hits the
@@ -860,8 +1010,9 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     for (let attempt = 0; attempt < 5; attempt++) {
       const code = generateHouseholdCode();
       try {
-        await createHouseholdRow(code, state);
-        lastSyncedRef.current = JSON.stringify(state);
+        const merged = buildMergedRoot(rootRef.current, stateRef.current);
+        await createHouseholdRow(code, merged);
+        lastSyncedRef.current = JSON.stringify(merged);
         localStorage.setItem(HOUSEHOLD_CODE_KEY, code);
         setHouseholdCode(code);
         setSyncStatus('idle');
@@ -878,23 +1029,37 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       }
     }
     return null;
-  }, [state, showToast]);
+  }, [showToast]);
 
   const joinHousehold = useCallback(async (code: string) => {
     const normalized = code.trim().toUpperCase();
     setSyncStatus('syncing');
     try {
-      const remoteState = await fetchHousehold(normalized);
-      if (!remoteState) {
+      const remoteRoot = await fetchHousehold(normalized);
+      if (!remoteRoot) {
         setSyncStatus('error');
         showToast(faCircleXmark, 'Household code not found');
         return false;
       }
-      const migrated = clone(remoteState);
-      migrateLegacyState(migrated as unknown as Record<string, unknown>);
-      const finalState = applyDayRollover(migrated);
-      lastSyncedRef.current = JSON.stringify(finalState);
-      setState(finalState);
+      const profiles: ProfileEntry[] = (remoteRoot.profiles || [])
+        .filter((p) => p && p.state)
+        .map((p) => ({ id: p.id, state: hydrateState(p.state) }));
+      if (profiles.length === 0) {
+        setSyncStatus('error');
+        showToast(faCircleXmark, 'Household code not found');
+        return false;
+      }
+      const finalRoot: GravyRoot = {
+        version: 2,
+        activeProfileId: profiles.some((p) => p.id === remoteRoot.activeProfileId)
+          ? remoteRoot.activeProfileId
+          : profiles[0].id,
+        profiles,
+      };
+      mirrorSharedFields(finalRoot);
+      lastSyncedRef.current = JSON.stringify(finalRoot);
+      setRoot(finalRoot);
+      setState(activeStateOf(finalRoot));
       localStorage.setItem(HOUSEHOLD_CODE_KEY, normalized);
       setHouseholdCode(normalized);
       setSyncStatus('idle');
@@ -918,8 +1083,28 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     showToast(faCloud, 'Cloud sync turned off');
   }, [showToast]);
 
+  // The active kid's identity comes from the live `state`; the others from the root.
+  const profiles: ProfileSummary[] = root.profiles.map((p) => {
+    const s = p.id === root.activeProfileId ? state : p.state;
+    return {
+      id: p.id,
+      name: s.settings.childName,
+      avatarIcon: s.settings.avatarIcon,
+      avatarIconColor: s.settings.avatarIconColor,
+      avatarBgColor: s.settings.avatarBgColor,
+      theme: s.settings.theme,
+      points: s.points,
+    };
+  });
+
   const value: GravyContextValue = {
     state,
+    profiles,
+    activeProfileId: root.activeProfileId,
+    switchProfile,
+    addProfile,
+    updateProfile,
+    deleteProfile,
     toasts,
     celebration,
     confettiTrigger,

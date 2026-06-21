@@ -6,6 +6,8 @@ import { BadgesScreen } from './components/BadgesScreen';
 import { GrownUpsDrawer } from './components/parent/GrownUpsDrawer';
 import { AccountMenu } from './components/AccountMenu';
 import { SettingsScreen } from './components/SettingsScreen';
+import { ProfileSwitcher } from './components/ProfileSwitcher';
+import { ProfilesManager } from './components/ProfilesManager';
 import { ToastContainer } from './components/ToastContainer';
 import { Celebration } from './components/Celebration';
 import { Confetti } from './components/Confetti';
@@ -46,6 +48,8 @@ function AppShell() {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [grownUpsOpen, setGrownUpsOpen] = useState(false);
+  const [switchProfileOpen, setSwitchProfileOpen] = useState(false);
+  const [profilesOpen, setProfilesOpen] = useState(false);
   // Returning users who already had saved progress before this feature shipped
   // shouldn't suddenly see the walkthrough — only brand-new installs get it.
   const [onboarded, setOnboarded] = useState(
@@ -71,9 +75,13 @@ function AppShell() {
           onOpenStore={() => { setAccountMenuOpen(false); setStoreOpen(true); }}
           onOpenSettings={() => { setAccountMenuOpen(false); setSettingsOpen(true); }}
           onOpenGrownUps={() => { setAccountMenuOpen(false); setGrownUpsOpen(true); }}
+          onOpenSwitchProfile={() => { setAccountMenuOpen(false); setSwitchProfileOpen(true); }}
+          onOpenProfiles={() => { setAccountMenuOpen(false); setProfilesOpen(true); }}
         />
         <SettingsScreen open={settingsOpen} onClose={() => setSettingsOpen(false)} />
         <GrownUpsDrawer open={grownUpsOpen} onClose={() => setGrownUpsOpen(false)} />
+        <ProfileSwitcher open={switchProfileOpen} onClose={() => setSwitchProfileOpen(false)} />
+        <ProfilesManager open={profilesOpen} onClose={() => setProfilesOpen(false)} />
       </div>
 
       <BadgePopup badgeId={activeBadge} onClose={() => setActiveBadge(null)} />

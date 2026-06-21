@@ -1,4 +1,4 @@
-import type { GravyState } from './types';
+import type { GravyState, GravyRoot, ProfileEntry, Settings, Theme } from './types';
 import { FOODS } from '../data/foods';
 
 export const STORAGE_KEY = 'gravy_v1';
@@ -172,46 +172,142 @@ export function backfillStreaksFromLogs(state: GravyState): void {
   state.megaStreak = megaStreak;
 }
 
-export function loadState(): GravyState {
+// Takes a raw parsed flat GravyState (or null/garbage), runs the legacy migration, backfills any
+// missing top-level/settings/counter fields and streaks, then applies the day rollover. Shared by
+// every code path that hydrates a single profile's state (initial load + incoming Supabase rows).
+export function hydrateState(raw: unknown): GravyState {
   let state: GravyState;
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    const raw = saved ? JSON.parse(saved) : null;
-    if (raw) {
-      migrateLegacyState(raw as Record<string, unknown>);
-      state = raw as GravyState;
-    } else {
-      state = cloneDefaultState();
-    }
-    const stateRecord = state as unknown as Record<string, unknown>;
-    const hadStreakFields =
-      'foodStreak' in stateRecord || 'goalStreak' in stateRecord || 'megaStreak' in stateRecord;
-    for (const k of Object.keys(defaultState) as (keyof GravyState)[]) {
-      if (!(k in state)) {
-        stateRecord[k] = JSON.parse(JSON.stringify(defaultState[k]));
-      }
-    }
-    if (!hadStreakFields) backfillStreaksFromLogs(state);
-    if (!state.settings) state.settings = { ...defaultState.settings };
-    const settingsRecord = state.settings as unknown as Record<string, unknown>;
-    for (const k of Object.keys(defaultState.settings) as (keyof GravyState['settings'])[]) {
-      if (!(k in state.settings)) settingsRecord[k] = defaultState.settings[k];
-    }
-    if (!state.counters) state.counters = JSON.parse(JSON.stringify(defaultState.counters));
-    const countersRecord = state.counters as unknown as Record<string, unknown>;
-    for (const k of Object.keys(defaultState.counters) as (keyof GravyState['counters'])[]) {
-      if (!(k in state.counters)) countersRecord[k] = defaultState.counters[k];
-    }
-    if (!state.counters.foodLogs) state.counters.foodLogs = {};
-    if (!state.badgeConfig) state.badgeConfig = {};
-  } catch {
+  if (raw && typeof raw === 'object') {
+    migrateLegacyState(raw as Record<string, unknown>);
+    state = raw as GravyState;
+  } else {
     state = cloneDefaultState();
   }
+  const stateRecord = state as unknown as Record<string, unknown>;
+  const hadStreakFields =
+    'foodStreak' in stateRecord || 'goalStreak' in stateRecord || 'megaStreak' in stateRecord;
+  for (const k of Object.keys(defaultState) as (keyof GravyState)[]) {
+    if (!(k in state)) {
+      stateRecord[k] = JSON.parse(JSON.stringify(defaultState[k]));
+    }
+  }
+  if (!hadStreakFields) backfillStreaksFromLogs(state);
+  if (!state.settings) state.settings = { ...defaultState.settings };
+  const settingsRecord = state.settings as unknown as Record<string, unknown>;
+  for (const k of Object.keys(defaultState.settings) as (keyof GravyState['settings'])[]) {
+    if (!(k in state.settings)) settingsRecord[k] = defaultState.settings[k];
+  }
+  if (!state.counters) state.counters = JSON.parse(JSON.stringify(defaultState.counters));
+  const countersRecord = state.counters as unknown as Record<string, unknown>;
+  for (const k of Object.keys(defaultState.counters) as (keyof GravyState['counters'])[]) {
+    if (!(k in state.counters)) countersRecord[k] = defaultState.counters[k];
+  }
+  if (!state.counters.foodLogs) state.counters.foodLogs = {};
+  if (!state.badgeConfig) state.badgeConfig = {};
   return applyDayRollover(state);
+}
+
+export function loadState(): GravyState {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return hydrateState(saved ? JSON.parse(saved) : null);
+  } catch {
+    return applyDayRollover(cloneDefaultState());
+  }
 }
 
 export function saveState(state: GravyState) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// ---- Profiles (multi-kid) ----------------------------------------------------------------
+
+// Settings shared by every kid in the household. The rest of Settings (childName, the three
+// avatar fields, theme) is per-kid. Goals, rewards and badgeConfig are also shared (mirrored
+// across profiles by mirrorSharedFields).
+export const SHARED_SETTING_KEYS: (keyof Settings)[] = [
+  'foodPts',
+  'bonusPts',
+  'pin',
+  'recoveryQuestion',
+  'recoveryAnswer',
+];
+
+function genProfileId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return `p-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function copySharedInto(dest: GravyState, src: GravyState): void {
+  dest.goals = JSON.parse(JSON.stringify(src.goals));
+  dest.rewards = JSON.parse(JSON.stringify(src.rewards));
+  dest.badgeConfig = JSON.parse(JSON.stringify(src.badgeConfig));
+  const destSettings = dest.settings as unknown as Record<string, unknown>;
+  for (const k of SHARED_SETTING_KEYS) destSettings[k] = src.settings[k];
+}
+
+// Pushes the shared fields from the active profile (where all parent config edits happen) into
+// every other profile, so goals/rewards/points-config/PIN/recovery stay identical across kids.
+// Per-kid fields (progress, name, avatar, theme) are left untouched.
+export function mirrorSharedFields(root: GravyRoot): void {
+  const active = root.profiles.find((p) => p.id === root.activeProfileId);
+  if (!active) return;
+  for (const entry of root.profiles) {
+    if (entry.id === active.id) continue;
+    copySharedInto(entry.state, active.state);
+  }
+}
+
+// Builds a fresh profile that inherits the shared config from an existing setup but starts with
+// zeroed progress and its own identity (name / avatar / theme).
+export function makeNewProfile(
+  name: string,
+  sharedFrom: GravyState,
+  opts?: { avatarIcon?: string; avatarIconColor?: string; avatarBgColor?: string; theme?: Theme },
+): ProfileEntry {
+  const state = cloneDefaultState();
+  copySharedInto(state, sharedFrom);
+  state.settings.childName = name.trim() || 'Kid';
+  if (opts?.avatarIcon) state.settings.avatarIcon = opts.avatarIcon;
+  if (opts?.avatarIconColor) state.settings.avatarIconColor = opts.avatarIconColor;
+  if (opts?.avatarBgColor) state.settings.avatarBgColor = opts.avatarBgColor;
+  if (opts?.theme) state.settings.theme = opts.theme;
+  state.lastActiveDate = null;
+  return { id: genProfileId(), state };
+}
+
+export function loadRoot(): GravyRoot {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const raw = saved ? JSON.parse(saved) : null;
+    if (raw && Array.isArray(raw.profiles)) {
+      const root = raw as GravyRoot;
+      root.version = 2;
+      root.profiles = root.profiles
+        .filter((p) => p && p.state)
+        .map((p) => ({ id: p.id || genProfileId(), state: hydrateState(p.state) }));
+      if (root.profiles.length === 0) {
+        const entry = makeNewProfile(defaultState.settings.childName, defaultState);
+        root.profiles = [entry];
+        root.activeProfileId = entry.id;
+      }
+      if (!root.profiles.some((p) => p.id === root.activeProfileId)) {
+        root.activeProfileId = root.profiles[0].id;
+      }
+      mirrorSharedFields(root);
+      return root;
+    }
+    // Legacy flat GravyState (or empty) → wrap as a single profile.
+    const entry: ProfileEntry = { id: genProfileId(), state: hydrateState(raw) };
+    return { version: 2, activeProfileId: entry.id, profiles: [entry] };
+  } catch {
+    const entry: ProfileEntry = { id: genProfileId(), state: applyDayRollover(cloneDefaultState()) };
+    return { version: 2, activeProfileId: entry.id, profiles: [entry] };
+  }
+}
+
+export function saveRoot(root: GravyRoot): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(root));
 }
 
 export function applyDayRollover(state: GravyState): GravyState {
