@@ -14,6 +14,8 @@ export function TopBar({ title, highlightLast, onOpenAvatarMenu }: TopBarProps) 
   const splitIndex = title.lastIndexOf(' ');
   const syncError = !!householdCode && syncStatus === 'error';
   const pendingCount = state.pendingRewards.length;
+  // The internal balance can dip below zero after a large deduction; never show negative.
+  const displayPoints = Math.max(0, state.points);
 
   return (
     <div className="topbar">
@@ -26,8 +28,8 @@ export function TopBar({ title, highlightLast, onOpenAvatarMenu }: TopBarProps) 
         <span className="topbar-title">{title}</span>
       )}
       <div className="topbar-pills">
-        <div className="points-pill" aria-label={`${state.points} points`}>
-          <FontAwesomeIcon icon={faStar} /> <span>{state.points}</span>
+        <div className="points-pill" aria-label={`${displayPoints} points`}>
+          <FontAwesomeIcon icon={faStar} /> <span>{displayPoints}</span>
           {syncError && (
             <span
               className="sync-warning-icon"

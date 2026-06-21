@@ -14,7 +14,7 @@ import {
   faListCheck,
 } from '@fortawesome/free-solid-svg-icons';
 import type { Goal, GravyState, Reward, Settings, Theme } from './types';
-import { applyDayRollover, loadState, saveState, cloneDefaultState, migrateLegacyState } from './defaultState';
+import { applyDayRollover, loadState, saveState, cloneDefaultState, migrateLegacyState, backfillStreaksFromLogs } from './defaultState';
 import { FOODS } from '../data/foods';
 import { resolveToastIcon } from '../data/icons';
 import { findNewlyEarnedBadges, getBadgeDisplay } from './badges';
@@ -148,12 +148,19 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!householdCode) return;
     return subscribeToHousehold(householdCode, (remoteState) => {
-      const json = JSON.stringify(remoteState);
-      if (json === lastSyncedRef.current) return;
-      lastSyncedRef.current = json;
-      const migrated = clone(remoteState);
-      migrateLegacyState(migrated as unknown as Record<string, unknown>);
-      setState(applyDayRollover(migrated));
+      try {
+        const incomingJson = JSON.stringify(remoteState);
+        if (incomingJson === lastSyncedRef.current) return;
+        const migrated = clone(remoteState);
+        migrateLegacyState(migrated as unknown as Record<string, unknown>);
+        const finalState = applyDayRollover(migrated);
+        // Record the snapshot we're actually storing (post migration + rollover) so the
+        // outgoing-push effect treats it as already-synced and doesn't echo it straight back.
+        lastSyncedRef.current = JSON.stringify(finalState);
+        setState(finalState);
+      } catch {
+        // Ignore malformed realtime payloads rather than crashing the whole app.
+      }
     });
   }, [householdCode]);
 
@@ -189,11 +196,16 @@ export function GravyProvider({ children }: { children: ReactNode }) {
 
   const fireConfetti = useCallback(() => setConfettiTrigger((n) => n + 1), []);
 
-  // Awards (or deducts, for negative pts) points and mutates the given draft state in place
+  // Awards (or deducts, for negative pts) points and mutates the given draft state in place.
+  // Balances are NOT floored at zero here: doing so used to make a deduction saturate (lose
+  // less than `pts`) while its paired undo always added back the full `pts`, letting a kid
+  // mint points by deducting at a zero balance and immediately undoing. Keeping the running
+  // balance exact makes every award/undo an exact inverse. Negative balances are floored only
+  // where they're displayed (TopBar / rank) and where they're spent (approveReward).
   const awardPoints = useCallback(
     (next: GravyState, pts: number, reason: string, opts?: { silent?: boolean; action?: ToastAction }) => {
-      next.points = Math.max(0, next.points + pts);
-      next.totalPoints = Math.max(0, next.totalPoints + pts);
+      next.points = next.points + pts;
+      next.totalPoints = next.totalPoints + pts;
       next.todayPoints += pts;
       if (next.todayPoints > (next.counters.maxDayPoints || 0)) {
         next.counters.maxDayPoints = next.todayPoints;
@@ -262,6 +274,8 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       next.counters.foodLogs[id] = (next.counters.foodLogs[id] || 0) + 1;
       const food = FOODS.find((f) => f.id === id);
 
+      // Undo restores the full pre-tap snapshot. If another action happens before the toast
+      // expires, tapping Undo reverts to this moment (standard single-step undo, not a stack).
       const undo = () => {
         pendingTimersRef.current.forEach((t) => clearTimeout(t));
         pendingTimersRef.current = [];
@@ -300,16 +314,17 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const wasFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
       next.todayFoodCounts[id] = currentCount - 1;
       next.counters.foodLogs[id] = Math.max(0, (next.counters.foodLogs[id] || 0) - 1);
-      next.points = Math.max(0, next.points - next.settings.foodPts);
-      next.totalPoints = Math.max(0, next.totalPoints - next.settings.foodPts);
-      next.todayPoints = Math.max(0, next.todayPoints - next.settings.foodPts);
+      // Exact inverse of logFood's award (see awardPoints note) — no zero-floor here.
+      next.points -= next.settings.foodPts;
+      next.totalPoints -= next.settings.foodPts;
+      next.todayPoints -= next.settings.foodPts;
       const isFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
       if (wasFull && !isFull) {
         next.counters.fullTrayDays = Math.max(0, next.counters.fullTrayDays - 1);
         if (next.settings.bonusPts > 0) {
-          next.points = Math.max(0, next.points - next.settings.bonusPts);
-          next.totalPoints = Math.max(0, next.totalPoints - next.settings.bonusPts);
-          next.todayPoints = Math.max(0, next.todayPoints - next.settings.bonusPts);
+          next.points -= next.settings.bonusPts;
+          next.totalPoints -= next.settings.bonusPts;
+          next.todayPoints -= next.settings.bonusPts;
         }
         const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
         const allGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => next.todayGoals.includes(g.id));
@@ -364,9 +379,10 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       if (newCount < target && next.todayGoals.includes(id)) {
         next.todayGoals = next.todayGoals.filter((g) => g !== id);
         next.counters.totalGoals = Math.max(0, next.counters.totalGoals - 1);
-        next.points = Math.max(0, next.points - goal.pts);
-        next.totalPoints = Math.max(0, next.totalPoints - goal.pts);
-        next.todayPoints = Math.max(0, next.todayPoints - goal.pts);
+        // Exact inverse of incrementGoal's award (see awardPoints note) — no zero-floor here.
+        next.points -= goal.pts;
+        next.totalPoints -= goal.pts;
+        next.todayPoints -= goal.pts;
       }
       return next;
     });
@@ -412,9 +428,10 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       log.foodCounts[foodId] = (log.foodCounts[foodId] || 0) + 1;
       next.counters.foodLogs[foodId] = (next.counters.foodLogs[foodId] || 0) + 1;
 
+      // Editing a past day updates that day's stored total and lifetime counters/streaks,
+      // but never the live spendable balance or rank — otherwise the calendar (reachable
+      // without a PIN) would let a kid retroactively mint current points.
       const foodPts = next.settings.foodPts;
-      next.points += foodPts;
-      next.totalPoints += foodPts;
       log.points += foodPts;
 
       const isFullTray = FOODS.every((f) => (log.foodCounts[f.id] || 0) > 0);
@@ -422,8 +439,6 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         next.counters.fullTrayDays++;
         const bonus = next.settings.bonusPts;
         if (bonus > 0) {
-          next.points += bonus;
-          next.totalPoints += bonus;
           log.points += bonus;
         }
         const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
@@ -438,11 +453,11 @@ export function GravyProvider({ children }: { children: ReactNode }) {
 
       const food = FOODS.find((f) => f.id === foodId);
       showToast(food ? resolveToastIcon(food.icon, food.emoji) : faUtensils, `${food?.label ?? ''} added!`);
-      maybeCelebrateRankUp(prev.totalPoints, next);
+      backfillStreaksFromLogs(next);
       checkBadges(next);
       return next;
     });
-  }, [showToast, checkBadges, maybeCelebrateRankUp]);
+  }, [showToast, checkBadges]);
 
   const removeFoodForDay = useCallback((dateStr: string, foodId: string) => {
     setState((prev) => {
@@ -458,9 +473,8 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       nextLog.foodCounts[foodId] = Math.max(0, (nextLog.foodCounts[foodId] || 0) - 1);
       next.counters.foodLogs[foodId] = Math.max(0, (next.counters.foodLogs[foodId] || 0) - 1);
 
+      // Past-day edits touch only that day's stored total + counters, never the live balance.
       const foodPts = next.settings.foodPts;
-      next.points = Math.max(0, next.points - foodPts);
-      next.totalPoints = Math.max(0, next.totalPoints - foodPts);
       nextLog.points = Math.max(0, nextLog.points - foodPts);
 
       const isFullTray = FOODS.every((f) => (nextLog.foodCounts[f.id] || 0) > 0);
@@ -468,8 +482,6 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         next.counters.fullTrayDays = Math.max(0, next.counters.fullTrayDays - 1);
         const bonus = next.settings.bonusPts;
         if (bonus > 0) {
-          next.points = Math.max(0, next.points - bonus);
-          next.totalPoints = Math.max(0, next.totalPoints - bonus);
           nextLog.points = Math.max(0, nextLog.points - bonus);
         }
         if (wasAllGoalsDone) {
@@ -477,6 +489,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      backfillStreaksFromLogs(next);
       return next;
     });
   }, []);
@@ -498,8 +511,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         const wasAllGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => log.goalIds.includes(g.id));
         log.goalIds = log.goalIds.filter((id) => id !== goalId);
         next.counters.totalGoals = Math.max(0, next.counters.totalGoals - 1);
-        next.points = Math.max(0, next.points - goal.pts);
-        next.totalPoints = Math.max(0, next.totalPoints - goal.pts);
+        // Past-day edits touch only that day's stored total + counters, never the live balance.
         log.points = Math.max(0, log.points - goal.pts);
         if (wasAllGoalsDone) {
           next.counters.allGoalsDays = Math.max(0, next.counters.allGoalsDays - 1);
@@ -508,8 +520,6 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       } else {
         log.goalIds.push(goalId);
         next.counters.totalGoals++;
-        next.points += goal.pts;
-        next.totalPoints += goal.pts;
         log.points += goal.pts;
         if (log.points > (next.counters.maxDayPoints || 0)) {
           next.counters.maxDayPoints = log.points;
@@ -520,13 +530,13 @@ export function GravyProvider({ children }: { children: ReactNode }) {
           if (fullTray) next.counters.comboDays++;
         }
         showToast(resolveToastIcon(goal.icon, goal.emoji), `${goal.name} logged!`);
-        maybeCelebrateRankUp(prev.totalPoints, next);
         checkBadges(next);
       }
 
+      backfillStreaksFromLogs(next);
       return next;
     });
-  }, [showToast, checkBadges, maybeCelebrateRankUp]);
+  }, [showToast, checkBadges]);
 
   const logBonusItemForDay = useCallback((dateStr: string, goalId: number) => {
     setState((prev) => {
@@ -540,8 +550,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       if (!log.bonusCounts) log.bonusCounts = {};
       log.bonusCounts[goalId] = (log.bonusCounts[goalId] || 0) + 1;
 
-      next.points = Math.max(0, next.points + goal.pts);
-      next.totalPoints = Math.max(0, next.totalPoints + goal.pts);
+      // Past-day edits touch only that day's stored total, never the live balance.
       log.points = Math.max(0, log.points + goal.pts);
       if (log.points > (next.counters.maxDayPoints || 0)) {
         next.counters.maxDayPoints = log.points;
@@ -549,10 +558,9 @@ export function GravyProvider({ children }: { children: ReactNode }) {
 
       const sign = goal.pts < 0 ? '−' : '+';
       showToast(resolveToastIcon(goal.icon, goal.emoji), `${sign}${Math.abs(goal.pts)} ${goal.name}`);
-      maybeCelebrateRankUp(prev.totalPoints, next);
       return next;
     });
-  }, [showToast, maybeCelebrateRankUp]);
+  }, [showToast]);
 
   const undoBonusItemForDay = useCallback((dateStr: string, goalId: number) => {
     setState((prev) => {
@@ -566,8 +574,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       if (!nextLog.bonusCounts) nextLog.bonusCounts = {};
       nextLog.bonusCounts[goalId] = currentCount - 1;
 
-      next.points = Math.max(0, next.points - goal.pts);
-      next.totalPoints = Math.max(0, next.totalPoints - goal.pts);
+      // Past-day edits touch only that day's stored total, never the live balance.
       nextLog.points = Math.max(0, nextLog.points - goal.pts);
       return next;
     });
@@ -578,8 +585,15 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const reward = prev.rewards.find((r) => r.id === id);
       if (!reward) return prev;
       if (prev.pendingRewards.some((p) => p.rewardId === id)) return prev;
-      if (prev.points < reward.cost) {
-        showToast(faCircleXmark, `Need ${reward.cost - prev.points} more points!`);
+      // Reserve points already promised to other pending requests so a kid can't queue
+      // several requests that together exceed their balance.
+      const reserved = prev.pendingRewards.reduce((sum, p) => {
+        const r = prev.rewards.find((rw) => rw.id === p.rewardId);
+        return sum + (r?.cost ?? 0);
+      }, 0);
+      const spendable = prev.points - reserved;
+      if (spendable < reward.cost) {
+        showToast(faCircleXmark, `Need ${reward.cost - spendable} more points!`);
         return prev;
       }
       const next = clone(prev);
@@ -646,7 +660,15 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const next = clone(prev);
       const goal = next.goals.find((g) => g.id === id);
       if (!goal) return prev;
+      const isDailyChanged = 'isDaily' in patch && (patch.isDaily !== false) !== (goal.isDaily !== false);
       Object.assign(goal, patch);
+      // Flipping a goal between Daily and Bonus changes how its today-state is interpreted,
+      // so drop any in-progress completion/step counts to avoid a phantom carried-over state.
+      if (isDailyChanged) {
+        next.todayGoals = next.todayGoals.filter((g) => g !== id);
+        if (next.todayGoalCounts) delete next.todayGoalCounts[id];
+        if (goal.isDaily === false) goal.target = undefined;
+      }
       return next;
     });
   }, []);
@@ -738,14 +760,18 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     lastSyncedRef.current = null;
     setSyncStatus('idle');
     setState((prev) => {
-      const pin = prev.settings.pin;
-      const recoveryQuestion = prev.settings.recoveryQuestion;
-      const recoveryAnswer = prev.settings.recoveryAnswer;
       const badgeConfig = prev.badgeConfig;
       const next = cloneDefaultState();
-      next.settings.pin = pin;
-      next.settings.recoveryQuestion = recoveryQuestion;
-      next.settings.recoveryAnswer = recoveryAnswer;
+      // "Reset Everything" wipes progress (points, badges, history, goals, rewards) but
+      // keeps account + personalization settings — security and the kid's name/look.
+      next.settings.pin = prev.settings.pin;
+      next.settings.recoveryQuestion = prev.settings.recoveryQuestion;
+      next.settings.recoveryAnswer = prev.settings.recoveryAnswer;
+      next.settings.childName = prev.settings.childName;
+      next.settings.theme = prev.settings.theme;
+      next.settings.avatarIcon = prev.settings.avatarIcon;
+      next.settings.avatarIconColor = prev.settings.avatarIconColor;
+      next.settings.avatarBgColor = prev.settings.avatarBgColor;
       next.badgeConfig = badgeConfig;
       showToast(faTriangleExclamation, 'Everything reset');
       return applyDayRollover(next);
@@ -763,23 +789,30 @@ export function GravyProvider({ children }: { children: ReactNode }) {
 
   const createHousehold = useCallback(async () => {
     setSyncStatus('syncing');
-    const code = generateHouseholdCode();
-    try {
-      await createHouseholdRow(code, state);
-      lastSyncedRef.current = JSON.stringify(state);
-      localStorage.setItem(HOUSEHOLD_CODE_KEY, code);
-      setHouseholdCode(code);
-      setSyncStatus('idle');
-      showToast(faCloud, `Cloud sync enabled! Code: ${code}`);
-      return code;
-    } catch {
-      setSyncStatus('error');
-      showToast(
-        faCircleXmark,
-        navigator.onLine ? 'Server error — please try again' : 'No internet connection — try again when back online',
-      );
-      return null;
+    // Codes are random, but on the off chance one already exists the insert hits the
+    // primary-key constraint (Postgres 23505) — regenerate and retry a few times rather
+    // than failing the whole sync setup.
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = generateHouseholdCode();
+      try {
+        await createHouseholdRow(code, state);
+        lastSyncedRef.current = JSON.stringify(state);
+        localStorage.setItem(HOUSEHOLD_CODE_KEY, code);
+        setHouseholdCode(code);
+        setSyncStatus('idle');
+        showToast(faCloud, `Cloud sync enabled! Code: ${code}`);
+        return code;
+      } catch (err) {
+        if ((err as { code?: string }).code === '23505' && attempt < 4) continue;
+        setSyncStatus('error');
+        showToast(
+          faCircleXmark,
+          navigator.onLine ? 'Server error — please try again' : 'No internet connection — try again when back online',
+        );
+        return null;
+      }
     }
+    return null;
   }, [state, showToast]);
 
   const joinHousehold = useCallback(async (code: string) => {
@@ -794,8 +827,9 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       }
       const migrated = clone(remoteState);
       migrateLegacyState(migrated as unknown as Record<string, unknown>);
-      lastSyncedRef.current = JSON.stringify(migrated);
-      setState(applyDayRollover(migrated));
+      const finalState = applyDayRollover(migrated);
+      lastSyncedRef.current = JSON.stringify(finalState);
+      setState(finalState);
       localStorage.setItem(HOUSEHOLD_CODE_KEY, normalized);
       setHouseholdCode(normalized);
       setSyncStatus('idle');

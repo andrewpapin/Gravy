@@ -22,14 +22,18 @@ export function useTodaySnapshot() {
   const foodDone = eatenCount === FOODS.length;
   const goalsAllDone = dailyGoals.length > 0 && goalsDone === dailyGoals.length;
 
+  // The internal lifetime total can momentarily dip below zero after a big deduction;
+  // clamp for the rank/XP display so the progress bar never shows negative.
+  const displayTotal = Math.max(0, state.totalPoints);
+
   let xpText: string;
   let pct: number;
   if (index < RANKS.length - 1) {
     const next = RANKS[index + 1];
-    const progress = state.totalPoints - rank.min;
+    const progress = displayTotal - rank.min;
     const needed = next.min - rank.min;
-    pct = Math.min(100, Math.round((progress / needed) * 100));
-    xpText = `${state.totalPoints - rank.min}/${needed} pts`;
+    pct = Math.min(100, Math.max(0, Math.round((progress / needed) * 100)));
+    xpText = `${displayTotal - rank.min}/${needed} pts`;
   } else {
     pct = 100;
     xpText = 'MAX RANK! 👑';

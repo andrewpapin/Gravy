@@ -55,7 +55,7 @@ export function getBadgeProgress(state: GravyState, badge: BadgeDef): BadgeProgr
     case 'all_chores':
       return { current: c.allGoalsDays, target: thresh };
     case 'pts':
-      return { current: state.totalPoints, target: thresh };
+      return { current: Math.max(0, state.totalPoints), target: thresh };
     case 'pts_day':
       return { current: c.maxDayPoints, target: thresh };
     case 'streak':

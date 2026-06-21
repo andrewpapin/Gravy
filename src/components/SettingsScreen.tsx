@@ -113,12 +113,14 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
               <ColorPicker
                 value={state.settings.avatarIconColor}
                 colors={AVATAR_COLORS}
+                disabledHex={state.settings.avatarBgColor}
                 onChange={(hex) => { saveSetting('avatarIconColor', hex); flashSaved('avatar'); }}
                 ariaLabel="Choose your icon color"
               />
               <ColorPicker
                 value={state.settings.avatarBgColor}
                 colors={AVATAR_COLORS}
+                disabledHex={state.settings.avatarIconColor}
                 onChange={(hex) => { saveSetting('avatarBgColor', hex); flashSaved('avatar'); }}
                 ariaLabel="Choose your circle color"
               />
@@ -140,7 +142,11 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
               value={childName}
               onChange={(e) => setChildName(e.target.value)}
               onBlur={(e) => {
-                saveSetting('childName', e.target.value);
+                // saveSetting trims and falls back to a default for empty input — mirror that
+                // here so the field never shows blank while state holds the fallback name.
+                const effective = e.target.value.trim() || 'Zack';
+                saveSetting('childName', effective);
+                setChildName(effective);
                 flashSaved('childName');
               }}
             />

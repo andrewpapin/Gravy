@@ -9,6 +9,8 @@ export function ApprovalsPanel() {
   const { state, approveReward, declineReward } = useGravy();
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [declineId, setDeclineId] = useState<string | null>(null);
+  // Never surface a negative internal balance to the parent.
+  const availablePoints = Math.max(0, state.points);
 
   const handleApprove = (prId: string, insufficient: boolean) => {
     if (insufficient) {
@@ -45,7 +47,7 @@ export function ApprovalsPanel() {
               <div className="parent-item-pts"><FontAwesomeIcon icon={faStar} /> {reward.cost} pts requested</div>
               {insufficient && (
                 <div className="parent-item-warning">
-                  <FontAwesomeIcon icon={faTriangleExclamation} /> Only {state.points} pts available — approving will use all of them
+                  <FontAwesomeIcon icon={faTriangleExclamation} /> Only {availablePoints} pts available — approving will use all of them
                 </div>
               )}
             </div>
@@ -64,7 +66,7 @@ export function ApprovalsPanel() {
         open={confirmId !== null}
         icon={faTriangleExclamation}
         title="Not enough points"
-        message={`Only ${state.points} pts available. Approving this reward will spend all of them. Continue?`}
+        message={`Only ${availablePoints} pts available. Approving this reward will spend all of them. Continue?`}
         confirmLabel="Approve anyway"
         danger
         onConfirm={() => { if (confirmId) { approveReward(confirmId); } setConfirmId(null); }}

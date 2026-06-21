@@ -12,6 +12,12 @@ export function StoreScreen({ open, onClose }: StoreScreenProps) {
   const { state, requestReward } = useGravy();
   const pendingIds = state.pendingRewards.map((r) => r.rewardId);
   const available = state.rewards.filter((r) => !pendingIds.includes(r.id));
+  // Points already promised to pending requests aren't spendable on new ones.
+  const reserved = state.pendingRewards.reduce((sum, pr) => {
+    const r = state.rewards.find((rw) => rw.id === pr.rewardId);
+    return sum + (r?.cost ?? 0);
+  }, 0);
+  const spendable = Math.max(0, state.points - reserved);
 
   return (
     <div
@@ -51,14 +57,14 @@ export function StoreScreen({ open, onClose }: StoreScreenProps) {
           ) : (
             <div className="store-grid">
               {available.map((r) => {
-                const affordable = state.points >= r.cost;
+                const affordable = spendable >= r.cost;
                 return (
                   <button
                     key={r.id}
                     type="button"
                     className={`store-item ${!affordable ? 'unaffordable' : ''}`}
                     onClick={() => requestReward(r.id)}
-                    aria-label={`${r.name}, ${r.cost} points${!affordable ? `, need ${r.cost - state.points} more` : ''}`}
+                    aria-label={`${r.name}, ${r.cost} points${!affordable ? `, need ${r.cost - spendable} more` : ''}`}
                     aria-disabled={!affordable}
                   >
                     {!affordable && (
@@ -70,7 +76,7 @@ export function StoreScreen({ open, onClose }: StoreScreenProps) {
                     <div className="store-name">{r.name}</div>
                     <div className={`store-cost ${!affordable ? 'unaffordable' : ''}`}><FontAwesomeIcon icon={faStar} aria-hidden="true" /> {r.cost}</div>
                     {!affordable && (
-                      <div className="store-need-more">Need {r.cost - state.points} more</div>
+                      <div className="store-need-more">Need {r.cost - spendable} more</div>
                     )}
                   </button>
                 );

@@ -1,8 +1,13 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { PinScreen } from '../PinScreen';
-import { ParentDashboard } from './ParentDashboard';
+
+// Loaded on demand (after the PIN unlocks) so the parent dashboard's weight stays out of
+// the initial bundle the kid-facing app ships.
+const ParentDashboard = lazy(() =>
+  import('./ParentDashboard').then((m) => ({ default: m.ParentDashboard })),
+);
 
 type Stage = 'pin' | 'dashboard';
 
@@ -50,7 +55,9 @@ export function GrownUpsDrawer({ open, onClose }: GrownUpsDrawerProps) {
           {stage === 'pin' ? (
             <PinScreen onSuccess={() => setStage('dashboard')} />
           ) : (
-            <ParentDashboard onHeaderChange={setHeader} />
+            <Suspense fallback={<div className="pin-screen"><div className="pin-sub">Loading…</div></div>}>
+              <ParentDashboard onHeaderChange={setHeader} />
+            </Suspense>
           )}
         </div>
       </div>

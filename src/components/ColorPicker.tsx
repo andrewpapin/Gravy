@@ -12,6 +12,8 @@ interface ColorPickerProps {
   colors: ColorOption[];
   onChange: (hex: string) => void;
   ariaLabel?: string;
+  /** A hex that can't be picked (e.g. the paired color) so the two never collide. */
+  disabledHex?: string;
 }
 
 /**
@@ -19,8 +21,9 @@ interface ColorPickerProps {
  * Uses a fixed palette rather than a native color input to match the app's kid-friendly
  * curated-swatch aesthetic (see the theme-swatch-grid in SettingsScreen).
  */
-export function ColorPicker({ value, colors, onChange, ariaLabel = 'Choose a color' }: ColorPickerProps) {
+export function ColorPicker({ value, colors, onChange, ariaLabel = 'Choose a color', disabledHex }: ColorPickerProps) {
   const [open, setOpen] = useState(false);
+  const norm = (h: string) => h.toLowerCase();
 
   return (
     <div className="color-picker">
@@ -38,22 +41,28 @@ export function ColorPicker({ value, colors, onChange, ariaLabel = 'Choose a col
           <div className="icon-picker-backdrop" onClick={() => setOpen(false)} />
           <div className="color-picker-pop" role="listbox" aria-label={ariaLabel}>
             <div className="color-picker-grid">
-              {colors.map((c) => (
-                <button
-                  type="button"
-                  key={c.hex}
-                  className={`color-picker-cell ${value === c.hex ? 'active' : ''}`}
-                  style={{ background: c.hex }}
-                  onClick={() => {
-                    onChange(c.hex);
-                    setOpen(false);
-                  }}
-                  title={c.label}
-                  aria-label={c.label}
-                  aria-selected={value === c.hex}
-                  role="option"
-                />
-              ))}
+              {colors.map((c) => {
+                const disabled = disabledHex !== undefined && norm(c.hex) === norm(disabledHex);
+                return (
+                  <button
+                    type="button"
+                    key={c.hex}
+                    className={`color-picker-cell ${value === c.hex ? 'active' : ''}`}
+                    style={{ background: c.hex, opacity: disabled ? 0.3 : undefined, cursor: disabled ? 'not-allowed' : undefined }}
+                    onClick={() => {
+                      if (disabled) return;
+                      onChange(c.hex);
+                      setOpen(false);
+                    }}
+                    disabled={disabled}
+                    title={disabled ? `${c.label} (already used)` : c.label}
+                    aria-label={c.label}
+                    aria-selected={value === c.hex}
+                    aria-disabled={disabled}
+                    role="option"
+                  />
+                );
+              })}
             </div>
           </div>
         </>
