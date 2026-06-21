@@ -13,7 +13,7 @@ import {
   faStar,
   faListCheck,
 } from '@fortawesome/free-solid-svg-icons';
-import type { Goal, GravyState, Reward, Settings, Theme } from './types';
+import type { DayLog, Goal, GravyState, Reward, Settings, Theme } from './types';
 import { applyDayRollover, loadState, saveState, cloneDefaultState, migrateLegacyState, backfillStreaksFromLogs } from './defaultState';
 import { FOODS } from '../data/foods';
 import { resolveToastIcon } from '../data/icons';
@@ -215,6 +215,25 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       if (!opts?.silent) {
         const sign = pts < 0 ? '−' : '+';
         showToast(faStar, `${sign}${Math.abs(pts)} ${reason}`.trim(), opts?.action);
+      }
+    },
+    [showToast],
+  );
+
+  // Same as awardPoints, but for editing a past day from the Calendar (parent dashboard,
+  // PIN-gated): targets that day's own log.points instead of todayPoints, while still
+  // moving the live balance/lifetime total exactly like editing today does.
+  const awardPointsForDay = useCallback(
+    (next: GravyState, log: DayLog, pts: number, reason: string, opts?: { silent?: boolean }) => {
+      next.points = next.points + pts;
+      next.totalPoints = next.totalPoints + pts;
+      log.points += pts;
+      if (log.points > (next.counters.maxDayPoints || 0)) {
+        next.counters.maxDayPoints = log.points;
+      }
+      if (!opts?.silent) {
+        const sign = pts < 0 ? '−' : '+';
+        showToast(faStar, `${sign}${Math.abs(pts)} ${reason}`.trim());
       }
     },
     [showToast],
@@ -456,18 +475,16 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       log.foodCounts[foodId] = (log.foodCounts[foodId] || 0) + 1;
       next.counters.foodLogs[foodId] = (next.counters.foodLogs[foodId] || 0) + 1;
 
-      // Editing a past day updates that day's stored total and lifetime counters/streaks,
-      // but never the live spendable balance or rank — otherwise the calendar (reachable
-      // without a PIN) would let a kid retroactively mint current points.
-      const foodPts = next.settings.foodPts;
-      log.points += foodPts;
+      // Editing a past day from the Calendar (now PIN-gated under Grown-Ups) flows into
+      // the live balance/lifetime total exactly like logging the same item today does.
+      const food = FOODS.find((f) => f.id === foodId);
+      awardPointsForDay(next, log, next.settings.foodPts, `${food?.label ?? ''} added!`);
 
       const isFullTray = FOODS.every((f) => (log.foodCounts[f.id] || 0) > 0);
       if (!wasFullTray && isFullTray) {
         next.counters.fullTrayDays++;
-        const bonus = next.settings.bonusPts;
-        if (bonus > 0) {
-          log.points += bonus;
+        if (next.settings.bonusPts > 0) {
+          awardPointsForDay(next, log, next.settings.bonusPts, 'Full Tray Bonus!', { silent: true });
         }
         const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
         if (dailyGoals.length > 0 && dailyGoals.every((g) => log.goalIds.includes(g.id))) {
@@ -475,17 +492,12 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      if (log.points > (next.counters.maxDayPoints || 0)) {
-        next.counters.maxDayPoints = log.points;
-      }
-
-      const food = FOODS.find((f) => f.id === foodId);
-      showToast(food ? resolveToastIcon(food.icon, food.emoji) : faUtensils, `${food?.label ?? ''} added!`);
       backfillStreaksFromLogs(next);
+      maybeCelebrateRankUp(prev.totalPoints, next);
       checkBadges(next);
       return next;
     });
-  }, [showToast, checkBadges]);
+  }, [awardPointsForDay, checkBadges, maybeCelebrateRankUp]);
 
   const removeFoodForDay = useCallback((dateStr: string, foodId: string) => {
     setState((prev) => {
@@ -501,16 +513,21 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       nextLog.foodCounts[foodId] = Math.max(0, (nextLog.foodCounts[foodId] || 0) - 1);
       next.counters.foodLogs[foodId] = Math.max(0, (next.counters.foodLogs[foodId] || 0) - 1);
 
-      // Past-day edits touch only that day's stored total + counters, never the live balance.
+      // Exact inverse of logFoodForDay's award (see awardPoints note) — no zero-floor here,
+      // so re-adding the same item afterward lands back exactly where the balance was.
       const foodPts = next.settings.foodPts;
-      nextLog.points = Math.max(0, nextLog.points - foodPts);
+      next.points -= foodPts;
+      next.totalPoints -= foodPts;
+      nextLog.points -= foodPts;
 
       const isFullTray = FOODS.every((f) => (nextLog.foodCounts[f.id] || 0) > 0);
       if (wasFullTray && !isFullTray) {
         next.counters.fullTrayDays = Math.max(0, next.counters.fullTrayDays - 1);
         const bonus = next.settings.bonusPts;
         if (bonus > 0) {
-          nextLog.points = Math.max(0, nextLog.points - bonus);
+          next.points -= bonus;
+          next.totalPoints -= bonus;
+          nextLog.points -= bonus;
         }
         if (wasAllGoalsDone) {
           next.counters.comboDays = Math.max(0, next.counters.comboDays - 1);
@@ -539,8 +556,11 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         const wasAllGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => log.goalIds.includes(g.id));
         log.goalIds = log.goalIds.filter((id) => id !== goalId);
         next.counters.totalGoals = Math.max(0, next.counters.totalGoals - 1);
-        // Past-day edits touch only that day's stored total + counters, never the live balance.
-        log.points = Math.max(0, log.points - goal.pts);
+        // Exact inverse of the "complete" branch's award below (see awardPoints note) —
+        // no zero-floor here, so toggling back off lands back exactly where it started.
+        next.points -= goal.pts;
+        next.totalPoints -= goal.pts;
+        log.points -= goal.pts;
         if (wasAllGoalsDone) {
           next.counters.allGoalsDays = Math.max(0, next.counters.allGoalsDays - 1);
           if (fullTray) next.counters.comboDays = Math.max(0, next.counters.comboDays - 1);
@@ -548,23 +568,22 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       } else {
         log.goalIds.push(goalId);
         next.counters.totalGoals++;
-        log.points += goal.pts;
-        if (log.points > (next.counters.maxDayPoints || 0)) {
-          next.counters.maxDayPoints = log.points;
-        }
+        // Editing a past day from the Calendar (now PIN-gated under Grown-Ups) flows into
+        // the live balance/lifetime total exactly like completing the goal today does.
+        awardPointsForDay(next, log, goal.pts, `${goal.name} logged!`);
         const isAllGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => log.goalIds.includes(g.id));
         if (isAllGoalsDone) {
           next.counters.allGoalsDays++;
           if (fullTray) next.counters.comboDays++;
         }
-        showToast(resolveToastIcon(goal.icon, goal.emoji), `${goal.name} logged!`);
+        maybeCelebrateRankUp(prev.totalPoints, next);
         checkBadges(next);
       }
 
       backfillStreaksFromLogs(next);
       return next;
     });
-  }, [showToast, checkBadges]);
+  }, [awardPointsForDay, checkBadges, maybeCelebrateRankUp]);
 
   const logBonusItemForDay = useCallback((dateStr: string, goalId: number) => {
     setState((prev) => {
@@ -572,23 +591,31 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       if (!goal) return prev;
       const next = clone(prev);
       if (!next.dayLogs[dateStr]) {
-        next.dayLogs[dateStr] = { foodCounts: {}, goalIds: [], points: 0, bonusCounts: {} };
+        next.dayLogs[dateStr] = { foodCounts: {}, goalIds: [], points: 0, bonusCounts: {}, bonusApplied: {} };
       }
       const log = next.dayLogs[dateStr];
       if (!log.bonusCounts) log.bonusCounts = {};
+      if (!log.bonusApplied) log.bonusApplied = {};
       log.bonusCounts[goalId] = (log.bonusCounts[goalId] || 0) + 1;
 
-      // Past-day edits touch only that day's stored total, never the live balance.
-      log.points = Math.max(0, log.points + goal.pts);
+      // A penalty (negative pts) is forgiven once the kid is broke: never deduct more than
+      // the current balance. Record what was actually applied so the matching undo gives
+      // back exactly that — handing back the full nominal amount would mint points.
+      const applied = goal.pts >= 0 ? goal.pts : -Math.min(-goal.pts, Math.max(0, next.points));
+      next.points += applied;
+      next.totalPoints += applied;
+      log.points += applied;
+      log.bonusApplied[goalId] = (log.bonusApplied[goalId] || 0) + applied;
       if (log.points > (next.counters.maxDayPoints || 0)) {
         next.counters.maxDayPoints = log.points;
       }
 
       const sign = goal.pts < 0 ? '−' : '+';
       showToast(resolveToastIcon(goal.icon, goal.emoji), `${sign}${Math.abs(goal.pts)} ${goal.name}`);
+      maybeCelebrateRankUp(prev.totalPoints, next);
       return next;
     });
-  }, [showToast]);
+  }, [showToast, maybeCelebrateRankUp]);
 
   const undoBonusItemForDay = useCallback((dateStr: string, goalId: number) => {
     setState((prev) => {
@@ -600,10 +627,19 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const next = clone(prev);
       const nextLog = next.dayLogs[dateStr];
       if (!nextLog.bonusCounts) nextLog.bonusCounts = {};
+      if (!nextLog.bonusApplied) nextLog.bonusApplied = {};
       nextLog.bonusCounts[goalId] = currentCount - 1;
 
-      // Past-day edits touch only that day's stored total, never the live balance.
-      nextLog.points = Math.max(0, nextLog.points - goal.pts);
+      // Reverse only what this item actually applied (tracked above), bounded by a single
+      // tap's nominal value — so undoing a forgiven penalty returns nothing extra.
+      const net = nextLog.bonusApplied[goalId] || 0;
+      const reverse = goal.pts >= 0
+        ? -Math.min(goal.pts, Math.max(0, net))
+        : Math.min(-goal.pts, Math.max(0, -net));
+      next.points += reverse;
+      next.totalPoints += reverse;
+      nextLog.points += reverse;
+      nextLog.bonusApplied[goalId] = net + reverse;
       return next;
     });
   }, []);

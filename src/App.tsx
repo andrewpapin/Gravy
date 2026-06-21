@@ -3,7 +3,6 @@ import { GravyProvider } from './state/GravyContext';
 import { HomeScreen } from './components/HomeScreen';
 import { StoreScreen } from './components/StoreScreen';
 import { BadgesScreen } from './components/BadgesScreen';
-import { CalendarScreen } from './components/CalendarScreen';
 import { GrownUpsDrawer } from './components/parent/GrownUpsDrawer';
 import { AccountMenu } from './components/AccountMenu';
 import { SettingsScreen } from './components/SettingsScreen';
@@ -13,7 +12,7 @@ import { Confetti } from './components/Confetti';
 import { BadgePopup } from './components/BadgePopup';
 import { SyncGateModal } from './components/SyncGateModal';
 import { Onboarding, ONBOARDING_DONE_KEY } from './components/Onboarding';
-import { todayStr, STORAGE_KEY } from './state/defaultState';
+import { STORAGE_KEY } from './state/defaultState';
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -42,13 +41,11 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 
 function AppShell() {
   const [activeBadge, setActiveBadge] = useState<string | null>(null);
-  const [calendarOpen, setCalendarOpen] = useState(false);
   const [storeOpen, setStoreOpen] = useState(false);
   const [badgesOpen, setBadgesOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [grownUpsOpen, setGrownUpsOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(todayStr());
   // Returning users who already had saved progress before this feature shipped
   // shouldn't suddenly see the walkthrough — only brand-new installs get it.
   const [onboarded, setOnboarded] = useState(
@@ -61,13 +58,6 @@ function AppShell() {
         <HomeScreen
           onOpenAvatarMenu={() => setAccountMenuOpen(true)}
           onOpenBadges={() => setBadgesOpen(true)}
-          selectedDate={selectedDate}
-        />
-        <CalendarScreen
-          open={calendarOpen}
-          onClose={() => setCalendarOpen(false)}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
         />
         <StoreScreen open={storeOpen} onClose={() => setStoreOpen(false)} />
         <BadgesScreen
@@ -79,7 +69,6 @@ function AppShell() {
           open={accountMenuOpen}
           onClose={() => setAccountMenuOpen(false)}
           onOpenStore={() => { setAccountMenuOpen(false); setStoreOpen(true); }}
-          onOpenCalendar={() => { setAccountMenuOpen(false); setCalendarOpen(true); }}
           onOpenSettings={() => { setAccountMenuOpen(false); setSettingsOpen(true); }}
           onOpenGrownUps={() => { setAccountMenuOpen(false); setGrownUpsOpen(true); }}
         />

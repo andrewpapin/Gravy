@@ -61,6 +61,7 @@ export interface DayLog {
   goalIds: number[];
   points: number;
   bonusCounts?: Record<number, number>; // tap counts for Bonus Points items, keyed by goal id
+  bonusApplied?: Record<number, number>; // points actually applied per Bonus item this day (signed, forgiveness-aware) — mirrors GravyState.todayBonusApplied
 }
 
 export interface GravyState {

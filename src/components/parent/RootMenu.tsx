@@ -1,9 +1,9 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faCircleCheck, faListCheck, faCartShopping, faMedal, faGear, faChevronRight,
+  faCircleCheck, faListCheck, faCartShopping, faMedal, faGear, faChevronRight, faCalendarDays,
 } from '@fortawesome/free-solid-svg-icons';
 
-export type RootDest = 'approvals' | 'goals' | 'store' | 'badges' | 'settings';
+export type RootDest = 'approvals' | 'goals' | 'calendar' | 'store' | 'badges' | 'settings';
 
 interface RootMenuProps {
   pendingCount: number;
@@ -33,6 +33,14 @@ export function RootMenu({ pendingCount, onNavigate }: RootMenuProps) {
         <div className="menu-card-body">
           <div className="menu-card-title">Goals</div>
           <div className="menu-card-sub">Daily goals, bonus items, and food points</div>
+        </div>
+        <FontAwesomeIcon icon={faChevronRight} className="menu-card-chevron" />
+      </button>
+      <button className="menu-card" onClick={() => onNavigate('calendar')} type="button">
+        <span className="menu-card-icon"><FontAwesomeIcon icon={faCalendarDays} /></span>
+        <div className="menu-card-body">
+          <div className="menu-card-title">Calendar</div>
+          <div className="menu-card-sub">View and edit past days</div>
         </div>
         <FontAwesomeIcon icon={faChevronRight} className="menu-card-chevron" />
       </button>
