@@ -30,7 +30,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
           <div style={{ fontWeight: 900, fontSize: '1.1rem', color: '#2F3E46' }}>Something went wrong</div>
           <button
             onClick={() => window.location.reload()}
-            style={{ background: '#F6BD60', border: '3px solid #2F3E46', borderRadius: 14, padding: '12px 24px', fontWeight: 900, fontSize: '1rem', cursor: 'pointer', boxShadow: '4px 4px 0 #2F3E46' }}
+            style={{ background: '#F6BD60', border: '2px solid #2F3E46', borderRadius: 14, padding: '12px 24px', fontWeight: 900, fontSize: '1rem', cursor: 'pointer', boxShadow: '4px 4px 0 #2F3E46' }}
           >
             Tap to reload
           </button>
