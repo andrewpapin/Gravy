@@ -26,10 +26,10 @@ export function SyncGateModal() {
 
   return (
     <div className="sync-gate-overlay">
-      <div className="badge-popup sync-gate-card">
-        <span className="badge-popup-icon"><FontAwesomeIcon icon={faCloud} /></span>
-        <div className="badge-popup-name">Set Up Cloud Sync</div>
-        <div className="badge-popup-desc">
+      <div className="onb-modal-card">
+        <span className="onb-icon-badge"><FontAwesomeIcon icon={faCloud} /></span>
+        <div className="onb-title">Set Up Cloud Sync</div>
+        <div className="onb-desc">
           Keep this device in sync with the rest of the family. Create a new
           household code, or enter an existing one to join.
         </div>
@@ -39,6 +39,7 @@ export function SyncGateModal() {
         <div className="flex-row-full sync-gate-join">
           <input
             type="text"
+            className="onb-input"
             placeholder="Enter household code"
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
