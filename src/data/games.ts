@@ -6,6 +6,9 @@ export interface GameDef {
   icon: IconKey;
   name: string;
   description: string;
+  // Per-game point override; unset falls back to settings.gamePts so all games can
+  // share one parent-configurable value until a future game needs its own.
+  pts?: number;
 }
 
 // The Games hub catalog — add new entries here to add a new game to the hub grid.

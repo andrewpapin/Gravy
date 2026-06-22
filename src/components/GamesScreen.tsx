@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { AppIcon } from './AppIcon';
 import { GAMES } from '../data/games';
+import { useGravy, DAILY_GAME_WIN_CAP } from '../state/GravyContext';
 import { HangmanGame } from './games/HangmanGame';
 import { MathFactsGame } from './games/MathFactsGame';
 import { WordScrambleGame } from './games/WordScrambleGame';
@@ -14,7 +15,9 @@ interface GamesScreenProps {
 }
 
 export function GamesScreen({ open, onClose }: GamesScreenProps) {
+  const { state } = useGravy();
   const [activeGame, setActiveGame] = useState<string | null>(null);
+  const winsMaxed = state.todayGameWins >= DAILY_GAME_WIN_CAP;
 
   const handleClose = () => {
     onClose();
@@ -52,15 +55,26 @@ export function GamesScreen({ open, onClose }: GamesScreenProps) {
           ) : activeGame === 'memory' ? (
             <MemoryMatchGame onExit={() => setActiveGame(null)} />
           ) : (
-            <div className="games-grid">
-              {GAMES.map((g) => (
-                <button key={g.id} className="game-tile" onClick={() => setActiveGame(g.id)} type="button">
-                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="game-tile-icon" />
-                  <div className="game-tile-name">{g.name}</div>
-                  <div className="game-tile-desc">{g.description}</div>
-                </button>
-              ))}
-            </div>
+            <>
+              <div className={`games-cap-banner ${winsMaxed ? 'maxed' : ''}`}>
+                <AppIcon iconKey="gamepad" emojiFallback="🎮" />
+                <span>
+                  {winsMaxed
+                    ? "Today's game points are maxed — keep playing for fun!"
+                    : `${state.todayGameWins}/${DAILY_GAME_WIN_CAP} wins earn points today`}
+                </span>
+              </div>
+              <div className="games-grid">
+                {GAMES.map((g) => (
+                  <button key={g.id} className="game-tile" onClick={() => setActiveGame(g.id)} type="button">
+                    <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="game-tile-icon" />
+                    <div className="game-tile-name">{g.name}</div>
+                    <div className="game-tile-desc">{g.description}</div>
+                    <span className="pts-badge game-tile-pts">+{g.pts ?? state.settings.gamePts} pts</span>
+                  </button>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>

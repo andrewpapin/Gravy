@@ -1116,7 +1116,7 @@ button.goal-tile:active { transform: scale(0.97); }
   position: relative;
 }
 .badge-tile.locked { opacity: 0.45; filter: grayscale(0.6); }
-.badge-icon { font-size: 2rem; display: block; margin-bottom: 6px; color: var(--coral); }
+.badge-icon { font-size: 2rem; display: block; margin: 0 auto 6px; color: var(--coral); }
 .badge-tile.locked .badge-icon { color: var(--muted); }
 .badge-name { font-size: var(--text-xs); font-weight: 800; color: var(--text); }
 .badge-tile.unlocked { border-color: var(--yellow); }
@@ -1242,6 +1242,25 @@ button.goal-tile:active { transform: scale(0.97); }
 }
 
 /* ===== GAMES HUB ===== */
+.games-cap-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--cream);
+  color: var(--dark);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-align: center;
+  padding: 8px 14px;
+  border-radius: 50px;
+  border: var(--border-width-md) solid var(--dark);
+  margin-bottom: 14px;
+}
+.games-cap-banner.maxed {
+  background: var(--sage);
+  color: #fff;
+}
 .games-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1257,9 +1276,10 @@ button.goal-tile:active { transform: scale(0.97); }
   cursor: pointer;
 }
 .game-tile:active { transform: scale(0.96); }
-.game-tile-icon { font-size: 2rem; display: block; margin-bottom: 8px; color: var(--coral); }
+.game-tile-icon { font-size: 2rem; display: block; margin: 0 auto 8px; color: var(--coral); }
 .game-tile-name { font-size: 0.85rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
 .game-tile-desc { font-size: var(--text-xs); font-weight: 600; color: var(--muted); }
+.game-tile-pts { display: inline-block; margin-top: 8px; }
 
 /* ===== GAME SHARED (lives, clue label, result panel) ===== */
 .game-clue-label {

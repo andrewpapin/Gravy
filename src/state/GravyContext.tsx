@@ -47,7 +47,7 @@ const HOUSEHOLD_CODE_KEY = 'gravy_household_code';
 export const SYNC_SKIPPED_KEY = 'gravy_sync_skipped';
 // Caps how many game wins count toward points per day, so a kid can't farm an easy
 // round on repeat — beyond this, wins still feel celebratory but stop paying out.
-const DAILY_GAME_WIN_CAP = 3;
+export const DAILY_GAME_WIN_CAP = 3;
 
 const THEME_COLORS: Record<Theme, string> = {
   classic: '#f4ece4',
