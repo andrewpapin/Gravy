@@ -33,7 +33,9 @@ import {
   createHousehold as createHouseholdRow,
   fetchHousehold,
   generateHouseholdCode,
+  isValidHouseholdCode,
   pushHouseholdState,
+  renameHousehold as renameHouseholdRow,
   subscribeToHousehold,
 } from './sync';
 
@@ -123,9 +125,10 @@ interface GravyContextValue {
   updateBadgeConfig: (id: string, key: 'enabled' | 'name' | 'emoji' | 'icon', value: string | boolean) => void;
   householdCode: string | null;
   syncStatus: SyncStatus;
-  createHousehold: () => Promise<string | null>;
+  createHousehold: (customCode?: string) => Promise<string | null>;
   joinHousehold: (code: string) => Promise<boolean>;
   leaveHousehold: () => void;
+  changeHouseholdCode: (newCode: string) => Promise<boolean>;
 }
 
 const GravyContext = createContext<GravyContextValue | null>(null);
@@ -1002,7 +1005,36 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     [showToast],
   );
 
-  const createHousehold = useCallback(async () => {
+  const createHousehold = useCallback(async (customCode?: string) => {
+    if (customCode) {
+      const normalized = customCode.trim().toUpperCase();
+      if (!isValidHouseholdCode(normalized)) {
+        showToast(faCircleXmark, 'Code must be 6 letters/numbers (no 0, O, 1, or I)');
+        return null;
+      }
+      setSyncStatus('syncing');
+      try {
+        const merged = buildMergedRoot(rootRef.current, stateRef.current);
+        await createHouseholdRow(normalized, merged);
+        lastSyncedRef.current = JSON.stringify(merged);
+        localStorage.setItem(HOUSEHOLD_CODE_KEY, normalized);
+        setHouseholdCode(normalized);
+        setSyncStatus('idle');
+        showToast(faCloud, `Cloud sync enabled! Code: ${normalized}`);
+        return normalized;
+      } catch (err) {
+        setSyncStatus('error');
+        if ((err as { code?: string }).code === '23505') {
+          showToast(faCircleXmark, 'That code is already taken — try another');
+        } else {
+          showToast(
+            faCircleXmark,
+            navigator.onLine ? 'Server error — please try again' : 'No internet connection — try again when back online',
+          );
+        }
+        return null;
+      }
+    }
     setSyncStatus('syncing');
     // Codes are random, but on the off chance one already exists the insert hits the
     // primary-key constraint (Postgres 23505) — regenerate and retry a few times rather
@@ -1083,6 +1115,35 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     showToast(faCloud, 'Cloud sync turned off');
   }, [showToast]);
 
+  const changeHouseholdCode = useCallback(async (newCode: string) => {
+    const normalized = newCode.trim().toUpperCase();
+    if (!isValidHouseholdCode(normalized)) {
+      showToast(faCircleXmark, 'Code must be 6 letters/numbers (no 0, O, 1, or I)');
+      return false;
+    }
+    if (!householdCode || normalized === householdCode) return true;
+    setSyncStatus('syncing');
+    try {
+      await renameHouseholdRow(householdCode, normalized);
+      localStorage.setItem(HOUSEHOLD_CODE_KEY, normalized);
+      setHouseholdCode(normalized);
+      setSyncStatus('idle');
+      showToast(faCloud, `Sync code changed to ${normalized}`);
+      return true;
+    } catch (err) {
+      setSyncStatus('error');
+      if ((err as { code?: string }).code === '23505') {
+        showToast(faCircleXmark, 'That code is already taken — try another');
+      } else {
+        showToast(
+          faCircleXmark,
+          navigator.onLine ? 'Server error — please try again' : 'No internet connection — try again when back online',
+        );
+      }
+      return false;
+    }
+  }, [householdCode, showToast]);
+
   // The active kid's identity comes from the live `state`; the others from the root.
   const profiles: ProfileSummary[] = root.profiles.map((p) => {
     const s = p.id === root.activeProfileId ? state : p.state;
@@ -1140,6 +1201,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     createHousehold,
     joinHousehold,
     leaveHousehold,
+    changeHouseholdCode,
   };
 
   return <GravyContext.Provider value={value}>{children}</GravyContext.Provider>;

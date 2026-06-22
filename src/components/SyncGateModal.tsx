@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCloud, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { useGravy, SYNC_SKIPPED_KEY } from '../state/GravyContext';
+import { isValidHouseholdCode } from '../state/sync';
 
 export function SyncGateModal() {
   const { householdCode, syncStatus, createHousehold, joinHousehold } = useGravy();
   const [joinCode, setJoinCode] = useState('');
+  const [customCode, setCustomCode] = useState('');
   const [dismissed, setDismissed] = useState(() => localStorage.getItem(SYNC_SKIPPED_KEY) === 'true');
 
   if (householdCode || dismissed) return null;
@@ -24,6 +26,13 @@ export function SyncGateModal() {
     });
   };
 
+  const handleCreateCustom = () => {
+    if (!isValidHouseholdCode(customCode)) return;
+    createHousehold(customCode).then((code) => {
+      if (code) setCustomCode('');
+    });
+  };
+
   return (
     <div className="sync-gate-overlay">
       <div className="onb-modal-card">
@@ -36,6 +45,20 @@ export function SyncGateModal() {
         <button className="btn btn-primary" onClick={() => createHousehold()} disabled={syncing}>
           <FontAwesomeIcon icon={faCloud} /> Create New Household
         </button>
+        <div className="flex-row-full sync-gate-join">
+          <input
+            type="text"
+            className="onb-input"
+            placeholder="Or pick your own code"
+            maxLength={6}
+            value={customCode}
+            onChange={(e) => setCustomCode(e.target.value.toUpperCase())}
+          />
+          <button className="btn btn-primary" onClick={handleCreateCustom} disabled={syncing || !isValidHouseholdCode(customCode)}>
+            Create
+          </button>
+        </div>
+        <div className="settings-sub">6 characters — no 0, O, 1, or I</div>
         <div className="flex-row-full sync-gate-join">
           <input
             type="text"

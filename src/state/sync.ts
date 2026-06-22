@@ -12,8 +12,19 @@ export function generateHouseholdCode(): string {
   return code;
 }
 
+const HOUSEHOLD_CODE_PATTERN = new RegExp(`^[${CODE_CHARS}]{6}$`);
+
+export function isValidHouseholdCode(code: string): boolean {
+  return HOUSEHOLD_CODE_PATTERN.test(code);
+}
+
 export async function createHousehold(code: string, state: GravyRoot): Promise<void> {
   const { error } = await supabase.from('households').insert({ code, state });
+  if (error) throw error;
+}
+
+export async function renameHousehold(oldCode: string, newCode: string): Promise<void> {
+  const { error } = await supabase.from('households').update({ code: newCode }).eq('code', oldCode);
   if (error) throw error;
 }
 

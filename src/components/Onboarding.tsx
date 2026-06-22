@@ -11,6 +11,7 @@ import {
   faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons';
 import { useGravy, SYNC_SKIPPED_KEY } from '../state/GravyContext';
+import { isValidHouseholdCode } from '../state/sync';
 
 export const ONBOARDING_DONE_KEY = 'gravy_onboarded';
 
@@ -53,6 +54,8 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
   const [walkStep, setWalkStep] = useState(0);
   const [name, setName] = useState('');
   const [joinCode, setJoinCode] = useState('');
+  const [customCode, setCustomCode] = useState('');
+  const [pendingCode, setPendingCode] = useState<string | undefined>(undefined);
   const [revealCode, setRevealCode] = useState<string | null>(null);
   const [revealFailed, setRevealFailed] = useState(false);
 
@@ -64,11 +67,12 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
     onComplete();
   };
 
-  const startCreate = () => {
+  const startCreate = (code?: string) => {
     setPhase('creating');
     setRevealFailed(false);
-    createHousehold().then((code) => {
-      if (code) setRevealCode(code);
+    setPendingCode(code);
+    createHousehold(code).then((result) => {
+      if (result) setRevealCode(result);
       else setRevealFailed(true);
     });
   };
@@ -268,9 +272,23 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
         )}
         {phase === 'sync' && (
           <div className="onb-actions">
-            <button className="btn btn-primary" onClick={startCreate}>
+            <button className="btn btn-primary" onClick={() => startCreate()}>
               <FontAwesomeIcon icon={faCloud} /> Create Household
             </button>
+            <div className="flex-row-full sync-gate-join">
+              <input
+                type="text"
+                className="onb-input"
+                placeholder="Or pick your own code"
+                maxLength={6}
+                value={customCode}
+                onChange={(e) => setCustomCode(e.target.value.toUpperCase())}
+              />
+              <button className="btn btn-primary" onClick={() => startCreate(customCode)} disabled={!isValidHouseholdCode(customCode)}>
+                Create
+              </button>
+            </div>
+            <div className="settings-sub">6 characters — no 0, O, 1, or I</div>
             <button className="onb-link" onClick={() => goJoin('sync')}>
               Have a code already? Join instead
             </button>
@@ -288,7 +306,7 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
         )}
         {phase === 'creating' && revealFailed && (
           <div className="onb-actions">
-            <button className="btn btn-primary" onClick={startCreate}>
+            <button className="btn btn-primary" onClick={() => startCreate(pendingCode)}>
               Try Again
             </button>
             <button className="btn btn-sm btn-ghost" onClick={handleSkipForNow}>
