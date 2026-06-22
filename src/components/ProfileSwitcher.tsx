@@ -17,9 +17,16 @@ export function ProfileSwitcher({ open, onClose }: ProfileSwitcherProps) {
   const [stage, setStage] = useState<Stage>('pin');
   // Re-prompt the PIN on every fresh open, adjusted during render (not an effect).
   const [prevOpen, setPrevOpen] = useState(open);
+  // Bumped on every fresh open so <PinScreen key={pinNonce}> remounts — this switcher stays
+  // mounted at all times (visibility is CSS-only), so a stale instance would otherwise hold
+  // its own lockout state from whenever it last mounted instead of the latest shared lockout.
+  const [pinNonce, setPinNonce] = useState(0);
   if (open !== prevOpen) {
     setPrevOpen(open);
-    if (open) setStage('pin');
+    if (open) {
+      setStage('pin');
+      setPinNonce((n) => n + 1);
+    }
   }
 
   const pick = (id: string) => {
@@ -41,7 +48,7 @@ export function ProfileSwitcher({ open, onClose }: ProfileSwitcherProps) {
         </div>
         <div className="calendar-modal-body">
           {stage === 'pin' ? (
-            <PinScreen onSuccess={() => setStage('list')} />
+            <PinScreen key={pinNonce} onSuccess={() => setStage('list')} />
           ) : (
             <div className="profile-list">
               {profiles.map((p) => (

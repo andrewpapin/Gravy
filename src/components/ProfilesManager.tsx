@@ -48,12 +48,17 @@ export function ProfilesManager({ open, onClose }: ProfilesManagerProps) {
 
   // Re-prompt the PIN on every fresh open, adjusted during render (not an effect).
   const [prevOpen, setPrevOpen] = useState(open);
+  // Bumped on every fresh open so <PinScreen key={pinNonce}> remounts — this manager stays
+  // mounted at all times (visibility is CSS-only), so a stale instance would otherwise hold
+  // its own lockout state from whenever it last mounted instead of the latest shared lockout.
+  const [pinNonce, setPinNonce] = useState(0);
   if (open !== prevOpen) {
     setPrevOpen(open);
     if (open) {
       setStage('pin');
       setEditingId(null);
       setConfirmDeleteId(null);
+      setPinNonce((n) => n + 1);
     }
   }
 
@@ -78,7 +83,7 @@ export function ProfilesManager({ open, onClose }: ProfilesManagerProps) {
         </div>
         <div className="calendar-modal-body">
           {stage === 'pin' ? (
-            <PinScreen onSuccess={() => setStage('manage')} />
+            <PinScreen key={pinNonce} onSuccess={() => setStage('manage')} />
           ) : (
             <>
               <div className="section-label">Kids</div>
