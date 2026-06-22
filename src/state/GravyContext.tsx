@@ -29,6 +29,7 @@ import { FOODS } from '../data/foods';
 import { resolveToastIcon } from '../data/icons';
 import { findNewlyEarnedBadges, getBadgeDisplay } from './badges';
 import { getRank, RANKS } from '../data/ranks';
+import { hashWithSalt, randomSaltHex } from './hash';
 import {
   createHousehold as createHouseholdRow,
   fetchHousehold,
@@ -85,6 +86,10 @@ export type ProfilePatch = Partial<
   Pick<Settings, 'childName' | 'avatarIcon' | 'avatarIconColor' | 'avatarBgColor' | 'theme'>
 >;
 
+// pinHash/pinSalt/recoveryAnswerHash/recoveryAnswerSalt are internal-only — callers set the PIN
+// or recovery answer via the virtual 'pin'/'recoveryAnswer' keys, never the hash/salt fields directly.
+type SettableSettingKey = Exclude<keyof Settings, 'pinHash' | 'pinSalt' | 'recoveryAnswerHash' | 'recoveryAnswerSalt'> | 'pin' | 'recoveryAnswer';
+
 interface GravyContextValue {
   state: GravyState;
   profiles: ProfileSummary[];
@@ -119,7 +124,7 @@ interface GravyContextValue {
   addReward: (reward: Omit<Reward, 'id'>) => void;
   removeReward: (id: number) => void;
   updateReward: (id: number, patch: Partial<Omit<Reward, 'id'>>) => void;
-  saveSetting: (key: keyof Settings, val: string) => void;
+  saveSetting: (key: SettableSettingKey, val: string) => void;
   resetToday: () => void;
   resetAll: () => void;
   updateBadgeConfig: (id: string, key: 'enabled' | 'name' | 'emoji' | 'icon', value: string | boolean) => void;
@@ -851,20 +856,32 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     });
   }, [showToast]);
 
-  const saveSetting = useCallback((key: keyof Settings, val: string) => {
+  const saveSetting = useCallback((key: SettableSettingKey, val: string) => {
     setState((prev) => {
       const next = clone(prev);
       if (key === 'pin') {
-        const p = String(val).slice(0, 4);
-        next.settings.pin = p || '1234';
+        const p = String(val).slice(0, 4) || '1234';
+        const salt = randomSaltHex();
+        next.settings.pinHash = hashWithSalt(p, salt);
+        next.settings.pinSalt = salt;
+      } else if (key === 'recoveryAnswer') {
+        const answer = val.trim().toLowerCase();
+        if (answer) {
+          const salt = randomSaltHex();
+          next.settings.recoveryAnswerHash = hashWithSalt(answer, salt);
+          next.settings.recoveryAnswerSalt = salt;
+        } else {
+          next.settings.recoveryAnswerHash = '';
+          next.settings.recoveryAnswerSalt = '';
+        }
       } else if (key === 'childName') {
         next.settings.childName = val.trim() || 'Zack';
       } else if (key === 'foodPts') {
         next.settings.foodPts = Math.max(1, parseInt(val) || 1);
       } else if (key === 'bonusPts') {
         next.settings.bonusPts = Math.max(0, parseInt(val) || 0);
-      } else if (key === 'recoveryQuestion' || key === 'recoveryAnswer') {
-        next.settings[key] = val.trim();
+      } else if (key === 'recoveryQuestion') {
+        next.settings.recoveryQuestion = val.trim();
       } else if (key === 'theme') {
         if (val === 'classic' || val === 'midnight' || val === 'ocean' || val === 'bubblegum' || val === 'cyberpunk') {
           next.settings.theme = val;
@@ -908,9 +925,11 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const next = cloneDefaultState();
       // "Reset Everything" wipes progress (points, badges, history, goals, rewards) but
       // keeps account + personalization settings — security and the kid's name/look.
-      next.settings.pin = prev.settings.pin;
+      next.settings.pinHash = prev.settings.pinHash;
+      next.settings.pinSalt = prev.settings.pinSalt;
       next.settings.recoveryQuestion = prev.settings.recoveryQuestion;
-      next.settings.recoveryAnswer = prev.settings.recoveryAnswer;
+      next.settings.recoveryAnswerHash = prev.settings.recoveryAnswerHash;
+      next.settings.recoveryAnswerSalt = prev.settings.recoveryAnswerSalt;
       next.settings.childName = prev.settings.childName;
       next.settings.theme = prev.settings.theme;
       next.settings.avatarIcon = prev.settings.avatarIcon;

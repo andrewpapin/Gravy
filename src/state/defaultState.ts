@@ -1,7 +1,14 @@
 import type { GravyState, GravyRoot, ProfileEntry, Settings, Theme } from './types';
 import { FOODS } from '../data/foods';
+import { hashWithSalt, randomSaltHex } from './hash';
 
 export const STORAGE_KEY = 'gravy_v1';
+
+// Fixed salt for the shipped default PIN only — the value '1234' is already public
+// (documented as the default), so there's nothing to protect by randomizing it. Any
+// PIN a parent actually sets gets a fresh random salt (see saveSetting/migration below).
+const DEFAULT_PIN_SALT = 'gravy-default-pin-salt-v1';
+const DEFAULT_PIN_HASH = hashWithSalt('1234', DEFAULT_PIN_SALT);
 
 export const defaultState: GravyState = {
   points: 0,
@@ -51,10 +58,12 @@ export const defaultState: GravyState = {
   settings: {
     foodPts: 10,
     bonusPts: 25,
-    pin: '1234',
+    pinHash: DEFAULT_PIN_HASH,
+    pinSalt: DEFAULT_PIN_SALT,
     childName: 'Zack',
     recoveryQuestion: '',
-    recoveryAnswer: '',
+    recoveryAnswerHash: '',
+    recoveryAnswerSalt: '',
     theme: 'classic',
     avatarIcon: 'faceSmile',
     avatarIconColor: '#2F3E46',
@@ -139,6 +148,31 @@ export function migrateLegacyState(state: Record<string, unknown>): void {
     if (!validThemes.includes(settings.theme as string)) {
       settings.theme = 'classic';
     }
+  }
+
+  // PIN and recovery answer used to be stored as plaintext. Hash any plaintext value found
+  // (one-time, on first load after upgrading) and delete the original field immediately —
+  // it must never reach the typed GravyState, since that's what gets autosaved/synced.
+  if (settings) {
+    if (typeof settings.pin === 'string' && !('pinHash' in settings)) {
+      const pin = settings.pin.slice(0, 4) || '1234';
+      const salt = randomSaltHex();
+      settings.pinHash = hashWithSalt(pin, salt);
+      settings.pinSalt = salt;
+    }
+    delete settings.pin;
+    if (typeof settings.recoveryAnswer === 'string' && !('recoveryAnswerHash' in settings)) {
+      const answer = settings.recoveryAnswer.trim().toLowerCase();
+      if (answer) {
+        const salt = randomSaltHex();
+        settings.recoveryAnswerHash = hashWithSalt(answer, salt);
+        settings.recoveryAnswerSalt = salt;
+      } else {
+        settings.recoveryAnswerHash = '';
+        settings.recoveryAnswerSalt = '';
+      }
+    }
+    delete settings.recoveryAnswer;
   }
 }
 
@@ -228,9 +262,11 @@ export function saveState(state: GravyState) {
 export const SHARED_SETTING_KEYS: (keyof Settings)[] = [
   'foodPts',
   'bonusPts',
-  'pin',
+  'pinHash',
+  'pinSalt',
   'recoveryQuestion',
-  'recoveryAnswer',
+  'recoveryAnswerHash',
+  'recoveryAnswerSalt',
 ];
 
 function genProfileId(): string {

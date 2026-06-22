@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faDeleteLeft, faKey } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
+import { hashWithSalt } from '../state/hash';
 
 interface PinScreenProps {
   onSuccess: () => void;
@@ -19,10 +20,11 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
   const [recoverError, setRecoverError] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [newPinConfirm, setNewPinConfirm] = useState('');
-  const canRecover = state.settings.recoveryQuestion.trim() !== '' && state.settings.recoveryAnswer.trim() !== '';
+  const canRecover = state.settings.recoveryQuestion.trim() !== '' && state.settings.recoveryAnswerHash !== '';
 
   const submitRecoverAnswer = () => {
-    if (recoverAnswer.trim().toLowerCase() === state.settings.recoveryAnswer.trim().toLowerCase()) {
+    const answerHash = hashWithSalt(recoverAnswer.trim().toLowerCase(), state.settings.recoveryAnswerSalt);
+    if (answerHash === state.settings.recoveryAnswerHash) {
       setRecoverError(false);
       setRecoverStep('newPin');
     } else {
@@ -52,7 +54,7 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
   };
 
   const checkPin = (value: string) => {
-    if (value === String(state.settings.pin)) {
+    if (hashWithSalt(value, state.settings.pinSalt) === state.settings.pinHash) {
       setPin('');
       onSuccess();
     } else {
@@ -91,7 +93,7 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   // checkPin is stable for the life of the component; re-run only when PIN setting changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.settings.pin]);
+  }, [state.settings.pinHash]);
 
   if (recoverStep === 'question') {
     return (

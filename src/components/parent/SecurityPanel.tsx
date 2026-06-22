@@ -5,9 +5,12 @@ import { useGravy } from '../../state/GravyContext';
 
 export function SecurityPanel() {
   const { state, saveSetting } = useGravy();
-  const [pin, setPin] = useState(String(state.settings.pin));
+  // PIN/recovery answer are hashed at rest — there's no plaintext to pre-fill these with,
+  // so they always start blank and only overwrite the saved value if the parent types a new one.
+  const [pin, setPin] = useState('');
   const [recoveryQuestion, setRecoveryQuestion] = useState(state.settings.recoveryQuestion);
-  const [recoveryAnswer, setRecoveryAnswer] = useState(state.settings.recoveryAnswer);
+  const [recoveryAnswer, setRecoveryAnswer] = useState('');
+  const [recoveryAnswerTouched, setRecoveryAnswerTouched] = useState(false);
   const [savedField, setSavedField] = useState<string | null>(null);
   const savedTimerRef = useRef<number | null>(null);
 
@@ -33,7 +36,7 @@ export function SecurityPanel() {
           inputMode="numeric"
           pattern="[0-9]*"
           maxLength={4}
-          placeholder="1234"
+          placeholder="••••"
           value={pin}
           onChange={(e) => {
             const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
@@ -43,9 +46,8 @@ export function SecurityPanel() {
             if (pin.length === 4) {
               saveSetting('pin', pin);
               flashSaved('pin');
-            } else {
-              setPin(String(state.settings.pin));
             }
+            setPin('');
           }}
         />
       </div>
@@ -75,17 +77,26 @@ export function SecurityPanel() {
             Recovery answer
             {savedField === 'recoveryAnswer' && <FontAwesomeIcon icon={faCheck} className="saved-flash" />}
           </div>
-          <div className="settings-sub">Not case-sensitive. Leave blank to disable PIN recovery</div>
+          <div className="settings-sub">
+            Not case-sensitive. {state.settings.recoveryAnswerHash ? 'Leave blank and save to disable PIN recovery' : 'Currently disabled'}
+          </div>
         </div>
         <input
           type="text"
           maxLength={60}
-          placeholder="Rex"
+          placeholder={state.settings.recoveryAnswerHash ? '••••••' : 'Rex'}
           value={recoveryAnswer}
-          onChange={(e) => setRecoveryAnswer(e.target.value)}
+          onChange={(e) => {
+            setRecoveryAnswer(e.target.value);
+            setRecoveryAnswerTouched(true);
+          }}
           onBlur={(e) => {
-            saveSetting('recoveryAnswer', e.target.value);
-            flashSaved('recoveryAnswer');
+            if (recoveryAnswerTouched) {
+              saveSetting('recoveryAnswer', e.target.value);
+              flashSaved('recoveryAnswer');
+              setRecoveryAnswerTouched(false);
+            }
+            setRecoveryAnswer('');
           }}
         />
       </div>
