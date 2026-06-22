@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFire, faUtensils, faListCheck, faStar, faMedal, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faFire, faUtensils, faListCheck, faStar, faMedal, faChevronRight, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { AppIcon } from './AppIcon';
 import { useGravy } from '../state/GravyContext';
 import { useTodaySnapshot } from '../state/useTodaySnapshot';
@@ -7,9 +7,10 @@ import { getEnabledBadgeCount } from '../state/badges';
 
 interface StatsCardProps {
   onOpenBadges: () => void;
+  onOpenRank: () => void;
 }
 
-export function StatsCard({ onOpenBadges }: StatsCardProps) {
+export function StatsCard({ onOpenBadges, onOpenRank }: StatsCardProps) {
   const { state } = useGravy();
   const { rank, xpText, pct, foodDone, dailyGoals, goalsAllDone, streakAtRisk } = useTodaySnapshot();
   const earnedCount = state.earnedBadges.length;
@@ -18,6 +19,9 @@ export function StatsCard({ onOpenBadges }: StatsCardProps) {
   return (
     <div className="stats-card">
       <div className="stats-rank">
+        <button className="stats-rank-info-btn" onClick={onOpenRank} aria-label="View rank ladder" type="button">
+          <FontAwesomeIcon icon={faCircleInfo} />
+        </button>
         <div className="stats-rank-header">
           <div className="stats-rank-icon-circle">
             <AppIcon iconKey={rank.icon} emojiFallback={rank.emoji} className="stats-rank-emoji" />
