@@ -79,9 +79,15 @@ export function cloneDefaultState(): GravyState {
   return JSON.parse(JSON.stringify(defaultState));
 }
 
+// Formats a date as YYYY-MM-DD using UTC fields, not the device's local timezone — so every
+// device in a household agrees on what day it is regardless of where each one is physically
+// located, rather than each one rolling over at its own local midnight.
+function dateStrUTC(d: Date): string {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
 export function todayStr(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return dateStrUTC(new Date());
 }
 
 // Migrates saved state that was written by an older version of the app
@@ -193,9 +199,9 @@ export function backfillStreaksFromLogs(state: GravyState): void {
   let trackingGoal = true;
   let trackingMega = true;
   const d = new Date();
-  d.setDate(d.getDate() - 1);
+  d.setUTCDate(d.getUTCDate() - 1);
   for (let i = 0; i < 3650 && (trackingFood || trackingGoal || trackingMega); i++) {
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const dateStr = dateStrUTC(d);
     const log = state.dayLogs[dateStr];
     if (!log) break;
     const fullTray = FOODS.every((f) => (log.foodCounts[f.id] || 0) > 0);
@@ -203,7 +209,7 @@ export function backfillStreaksFromLogs(state: GravyState): void {
     if (trackingFood && fullTray) foodStreak++; else trackingFood = false;
     if (trackingGoal && allGoalsDone) goalStreak++; else trackingGoal = false;
     if (trackingMega && fullTray && allGoalsDone) megaStreak++; else trackingMega = false;
-    d.setDate(d.getDate() - 1);
+    d.setUTCDate(d.getUTCDate() - 1);
   }
   state.foodStreak = foodStreak;
   state.goalStreak = goalStreak;
@@ -355,8 +361,8 @@ export function applyDayRollover(state: GravyState): GravyState {
   const today = todayStr();
   if (state.lastActiveDate && state.lastActiveDate !== today) {
     const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    const yStr = dateStrUTC(yesterday);
     const hadActivity =
       Object.keys(state.todayFoodCounts).length > 0 ||
       state.todayGoals.length > 0 ||
