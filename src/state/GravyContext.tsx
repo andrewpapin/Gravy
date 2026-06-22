@@ -762,8 +762,13 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const reward = next.rewards.find((r) => r.id === pr.rewardId);
       next.pendingRewards = next.pendingRewards.filter((p) => p.id !== prId);
       if (reward) {
+        const shortfall = reward.cost - next.points;
         next.points = Math.max(0, next.points - reward.cost);
-        showToast(faCircleCheck, `${reward.name} approved!`);
+        if (shortfall > 0) {
+          showToast(faTriangleExclamation, `${reward.name} approved — balance was short by ${shortfall} pts`);
+        } else {
+          showToast(faCircleCheck, `${reward.name} approved!`);
+        }
       }
       return next;
     });
