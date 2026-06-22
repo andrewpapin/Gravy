@@ -4,6 +4,7 @@ import { HomeScreen } from './components/HomeScreen';
 import { StoreScreen } from './components/StoreScreen';
 import { BadgesScreen } from './components/BadgesScreen';
 import { GamesScreen } from './components/GamesScreen';
+import { RankScreen } from './components/RankScreen';
 import { GrownUpsDrawer } from './components/parent/GrownUpsDrawer';
 import { AccountMenu } from './components/AccountMenu';
 import { ProfileSwitcher } from './components/ProfileSwitcher';
@@ -46,6 +47,7 @@ function AppShell() {
   const [storeOpen, setStoreOpen] = useState(false);
   const [badgesOpen, setBadgesOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
+  const [rankOpen, setRankOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [grownUpsOpen, setGrownUpsOpen] = useState(false);
   const [switchProfileOpen, setSwitchProfileOpen] = useState(false);
@@ -63,6 +65,7 @@ function AppShell() {
           onOpenAvatarMenu={() => setAccountMenuOpen(true)}
           onOpenBadges={() => setBadgesOpen(true)}
           onOpenGames={() => setGamesOpen(true)}
+          onOpenRank={() => setRankOpen(true)}
         />
         <StoreScreen open={storeOpen} onClose={() => setStoreOpen(false)} />
         <BadgesScreen
@@ -71,6 +74,7 @@ function AppShell() {
           onShowBadge={setActiveBadge}
         />
         <GamesScreen open={gamesOpen} onClose={() => setGamesOpen(false)} />
+        <RankScreen open={rankOpen} onClose={() => setRankOpen(false)} />
         <AccountMenu
           open={accountMenuOpen}
           onClose={() => setAccountMenuOpen(false)}

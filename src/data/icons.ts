@@ -29,6 +29,10 @@ import {
   faUserNinja, faUserAstronaut, faMask,
   // Mood / behavior
   faFaceAngry, faCommentSlash,
+  // Rank ladder
+  faBaby, faPersonCane, faDragon, faCrow, faFishFins, faHandSparkles,
+  faStaffSnake, faFrog, faSkullCrossbones, faMicrochip, faBoltLightning,
+  faSnowflake, faGaugeHigh, faWorm,
 } from '@fortawesome/free-solid-svg-icons';
 
 /**
@@ -147,6 +151,21 @@ export const ICONS = {
   // Mood / behavior
   faceAngry: faFaceAngry,
   commentSlash: faCommentSlash,
+  // Rank ladder
+  baby: faBaby,
+  personCane: faPersonCane,
+  dragon: faDragon,
+  crow: faCrow,
+  fishFins: faFishFins,
+  handSparkles: faHandSparkles,
+  staffSnake: faStaffSnake,
+  frog: faFrog,
+  skullCrossbones: faSkullCrossbones,
+  microchip: faMicrochip,
+  boltLightning: faBoltLightning,
+  snowflake: faSnowflake,
+  gaugeHigh: faGaugeHigh,
+  worm: faWorm,
 } satisfies Record<string, IconDefinition>;
 
 export type IconKey = keyof typeof ICONS;
