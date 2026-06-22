@@ -12,8 +12,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useGravy, SYNC_SKIPPED_KEY } from '../state/GravyContext';
 import { isValidHouseholdCode } from '../state/sync';
-
-export const ONBOARDING_DONE_KEY = 'gravy_onboarded';
+import { ONBOARDING_DONE_KEY } from '../state/defaultState';
 
 interface WalkStep {
   icon: typeof faHandSparkles;

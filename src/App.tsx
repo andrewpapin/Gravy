@@ -1,21 +1,25 @@
-import { useState, Component, type ReactNode } from 'react';
+import { useState, Component, lazy, Suspense, type ReactNode } from 'react';
 import { GravyProvider } from './state/GravyContext';
 import { HomeScreen } from './components/HomeScreen';
-import { StoreScreen } from './components/StoreScreen';
-import { BadgesScreen } from './components/BadgesScreen';
-import { GamesScreen } from './components/GamesScreen';
-import { RankScreen } from './components/RankScreen';
 import { GrownUpsDrawer } from './components/parent/GrownUpsDrawer';
 import { AccountMenu } from './components/AccountMenu';
-import { ProfileSwitcher } from './components/ProfileSwitcher';
-import { ProfilesManager } from './components/ProfilesManager';
 import { ToastContainer } from './components/ToastContainer';
 import { Celebration } from './components/Celebration';
 import { Confetti } from './components/Confetti';
 import { BadgePopup } from './components/BadgePopup';
-import { SyncGateModal } from './components/SyncGateModal';
-import { Onboarding, ONBOARDING_DONE_KEY } from './components/Onboarding';
-import { STORAGE_KEY } from './state/defaultState';
+import { STORAGE_KEY, ONBOARDING_DONE_KEY } from './state/defaultState';
+
+// These are all overlays/modals that aren't needed for the initial kid-facing paint (closed
+// by default, or — for Onboarding/SyncGateModal — only one of the two ever mounts depending
+// on first-run state). Loading them on demand keeps their weight out of the main bundle.
+const StoreScreen = lazy(() => import('./components/StoreScreen').then((m) => ({ default: m.StoreScreen })));
+const BadgesScreen = lazy(() => import('./components/BadgesScreen').then((m) => ({ default: m.BadgesScreen })));
+const GamesScreen = lazy(() => import('./components/GamesScreen').then((m) => ({ default: m.GamesScreen })));
+const RankScreen = lazy(() => import('./components/RankScreen').then((m) => ({ default: m.RankScreen })));
+const ProfileSwitcher = lazy(() => import('./components/ProfileSwitcher').then((m) => ({ default: m.ProfileSwitcher })));
+const ProfilesManager = lazy(() => import('./components/ProfilesManager').then((m) => ({ default: m.ProfilesManager })));
+const SyncGateModal = lazy(() => import('./components/SyncGateModal').then((m) => ({ default: m.SyncGateModal })));
+const Onboarding = lazy(() => import('./components/Onboarding').then((m) => ({ default: m.Onboarding })));
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -67,14 +71,22 @@ function AppShell() {
           onOpenGames={() => setGamesOpen(true)}
           onOpenRank={() => setRankOpen(true)}
         />
-        <StoreScreen open={storeOpen} onClose={() => setStoreOpen(false)} />
-        <BadgesScreen
-          open={badgesOpen}
-          onClose={() => setBadgesOpen(false)}
-          onShowBadge={setActiveBadge}
-        />
-        <GamesScreen open={gamesOpen} onClose={() => setGamesOpen(false)} />
-        <RankScreen open={rankOpen} onClose={() => setRankOpen(false)} />
+        <Suspense fallback={null}>
+          <StoreScreen open={storeOpen} onClose={() => setStoreOpen(false)} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <BadgesScreen
+            open={badgesOpen}
+            onClose={() => setBadgesOpen(false)}
+            onShowBadge={setActiveBadge}
+          />
+        </Suspense>
+        <Suspense fallback={null}>
+          <GamesScreen open={gamesOpen} onClose={() => setGamesOpen(false)} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <RankScreen open={rankOpen} onClose={() => setRankOpen(false)} />
+        </Suspense>
         <AccountMenu
           open={accountMenuOpen}
           onClose={() => setAccountMenuOpen(false)}
@@ -84,15 +96,21 @@ function AppShell() {
           onOpenProfiles={() => { setAccountMenuOpen(false); setProfilesOpen(true); }}
         />
         <GrownUpsDrawer open={grownUpsOpen} onClose={() => setGrownUpsOpen(false)} />
-        <ProfileSwitcher open={switchProfileOpen} onClose={() => setSwitchProfileOpen(false)} />
-        <ProfilesManager open={profilesOpen} onClose={() => setProfilesOpen(false)} />
+        <Suspense fallback={null}>
+          <ProfileSwitcher open={switchProfileOpen} onClose={() => setSwitchProfileOpen(false)} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <ProfilesManager open={profilesOpen} onClose={() => setProfilesOpen(false)} />
+        </Suspense>
       </div>
 
       <BadgePopup badgeId={activeBadge} onClose={() => setActiveBadge(null)} />
       <Celebration />
       <Confetti />
       <ToastContainer />
-      {onboarded ? <SyncGateModal /> : <Onboarding onComplete={() => setOnboarded(true)} />}
+      <Suspense fallback={null}>
+        {onboarded ? <SyncGateModal /> : <Onboarding onComplete={() => setOnboarded(true)} />}
+      </Suspense>
     </>
   );
 }

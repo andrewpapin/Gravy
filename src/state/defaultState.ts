@@ -3,6 +3,9 @@ import { FOODS } from '../data/foods';
 import { hashWithSalt, randomSaltHex } from './hash';
 
 export const STORAGE_KEY = 'gravy_v1';
+// Lives here (not in Onboarding.tsx) so App.tsx can read it without a static import that
+// would pull the lazy-loaded Onboarding component back into the main bundle.
+export const ONBOARDING_DONE_KEY = 'gravy_onboarded';
 
 // Fixed salt for the shipped default PIN only — the value '1234' is already public
 // (documented as the default), so there's nothing to protect by randomizing it. Any
