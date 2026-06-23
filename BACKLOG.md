@@ -91,10 +91,12 @@ process), not missing features.
   browsing), and validate the shape of incoming Supabase realtime payloads
   before trusting them. *(P1, M.)*
 - ~~**Add an "update available" prompt** for the PWA.~~ — **DONE.**
-  `registerType` switched to `'prompt'` and `src/components/UpdatePrompt.tsx`
-  (using `virtual:pwa-register/react`'s `useRegisterSW()`) renders a dismissible
-  bottom banner with a "Refresh" button when a new service worker is waiting,
-  instead of silently auto-activating in the background until a cold relaunch.
+  `src/components/UpdatePrompt.tsx` (using `virtual:pwa-register/react`'s
+  `useRegisterSW()`) checks for a new service worker every 60s while the app
+  is open and again on every `visibilitychange` to visible, then auto-applies
+  and reloads immediately (no manual click, no dismiss) with a brief status
+  banner — tuned for a rapid-beta-testing phase where missing an update is
+  worse than an unprompted reload.
 - **Refactor `GravyContext.tsx`** (~1240 lines) — extract household/sync logic
   into its own hook/module before it grows further. Pure maintainability, no
   user-facing effect. *(P2, M.)*

@@ -2272,34 +2272,6 @@ button.goal-tile:active { transform: scale(0.97); }
   max-width: 360px;
   animation: toastIn 0.3s ease;
 }
-.update-prompt-action {
-  background: var(--coral);
-  color: white;
-  border: var(--border-width-md) solid var(--dark);
-  border-radius: 50px;
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 6px 14px;
-  cursor: pointer;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-.update-prompt-dismiss {
-  background: transparent;
-  border: none;
-  color: var(--dark);
-  opacity: 0.6;
-  cursor: pointer;
-  flex-shrink: 0;
-  padding: 4px;
-  display: flex;
-}
-.update-prompt-dismiss:hover {
-  opacity: 1;
-}
 
 /* ===== CONFETTI ===== */
 .confetti-canvas {

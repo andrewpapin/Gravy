@@ -1,29 +1,34 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowsRotate, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
+import { useEffect } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
+
+const UPDATE_CHECK_INTERVAL_MS = 60_000;
 
 export function UpdatePrompt() {
   const {
-    needRefresh: [needRefresh, setNeedRefresh],
+    needRefresh: [needRefresh],
     updateServiceWorker,
-  } = useRegisterSW();
+  } = useRegisterSW({
+    onRegisteredSW(_swUrl, registration) {
+      if (!registration) return;
+      setInterval(() => registration.update(), UPDATE_CHECK_INTERVAL_MS);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') registration.update();
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (needRefresh) updateServiceWorker(true);
+  }, [needRefresh, updateServiceWorker]);
 
   if (!needRefresh) return null;
 
   return (
     <div className="update-prompt">
-      <FontAwesomeIcon icon={faArrowsRotate} />
-      <span>A new version of Gravy is ready.</span>
-      <button className="update-prompt-action" onClick={() => updateServiceWorker(true)}>
-        Refresh
-      </button>
-      <button
-        className="update-prompt-dismiss"
-        onClick={() => setNeedRefresh(false)}
-        aria-label="Dismiss update notice"
-      >
-        <FontAwesomeIcon icon={faXmark} />
-      </button>
+      <FontAwesomeIcon icon={faArrowsRotate} spin />
+      <span>Updating to the latest version…</span>
     </div>
   );
 }

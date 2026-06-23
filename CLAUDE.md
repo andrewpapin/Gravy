@@ -125,3 +125,7 @@ First-run users (no `localStorage[STORAGE_KEY]` and no `ONBOARDING_DONE_KEY = 'g
 ### Deployment
 
 GitHub Actions (`.github/workflows/deploy.yml`) builds and deploys to GitHub Pages on push to `main`. The Vite `base` is `/Gravy/`.
+
+### PWA Update Mechanism
+
+`vite-plugin-pwa` (configured in `vite.config.ts`, `registerType: 'prompt'`) generates a Workbox service worker that precaches the build's hashed JS/CSS plus `index.html`, so a fresh deploy always ships under new asset URLs. `UpdatePrompt.tsx` drives when that new service worker is detected and applied: it checks for updates on a `UPDATE_CHECK_INTERVAL_MS` (60s) interval while the app is open, and again on every `visibilitychange` to `'visible'` — covering a backgrounded PWA being reopened, not just a cold load. As soon as an update is found it calls `updateServiceWorker(true)` immediately (no button, no dismiss) and reloads, showing a brief non-interactive "Updating…" status rather than the previous dismissible Refresh/X prompt. This is a deliberate tradeoff for a rapid-beta-testing phase — favoring "no one is stuck on a stale build" over interruption-free UX. The service worker only runs against production builds (`npm run build && npm run preview`); `npm run dev` doesn't register it since `devOptions.enabled` isn't set in `vite.config.ts`.
