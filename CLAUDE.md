@@ -94,7 +94,7 @@ The persisted shape is `GravyRoot` (`{ version: 2, activeProfileId, profiles: Pr
 
 ### Badge System
 
-65 unlockable badges defined in `src/data/badges.ts` across 7 groups (Food, Chores, Points, Streaks, Store, Combos, Games), evaluated in `src/state/badges.ts`. Badges are triggered by:
+71 unlockable badges defined in `src/data/badges.ts` across 7 groups (Food, Chores, Points, Streaks, Store, Combos, Games), evaluated in `src/state/badges.ts`. Badges are triggered by:
 - First-time events (`first_food`, `first_chore`, `first_reward`, `first_game`)
 - Cumulative counter thresholds (`fruit:N`, `veggie:N`, `pts:N`, `pts_day:N`, `streak:N`, `chore_count:N`, `combo:N`, `games_won:N`, etc. — see the trigger-type comment atop `badges.ts`)
 

@@ -67,6 +67,7 @@ export const BADGE_MASTER: BadgeDef[] = [
   { id: 'all_chores14', emoji: '🌊', icon: 'water',          name: 'Chore Tsunami',     desc: 'Finish all chores 14 days',               trigger: 'all_chores:14',  group: 'Chores' },
   { id: 'all_chores30', emoji: '🏅', icon: 'medal',          name: 'Legendary Cleaner', desc: 'Finish all chores 30 days',               trigger: 'all_chores:30',  group: 'Chores' },
   { id: 'chore_streak7',emoji: '🔥', icon: 'fire',           name: 'Chore Streak',      desc: 'Use the app 7 days in a row',             trigger: 'streak:7',       group: 'Chores' },
+  { id: 'chore200',     emoji: '🏆', icon: 'trophy',         name: 'Chore Champion',    desc: 'Complete 200 chores total',               trigger: 'chore_count:200',group: 'Chores' },
 
   // ── POINTS (12) ────────────────────────────────────────────────────
   { id: 'pts50',        emoji: '🌱', icon: 'seedling',       name: 'Just Starting',     desc: 'Earn 50 points total',                    trigger: 'pts:50',      group: 'Points' },
@@ -81,6 +82,8 @@ export const BADGE_MASTER: BadgeDef[] = [
   { id: 'pts3000',      emoji: '🌌', icon: 'brain',          name: 'Galaxy Brain',      desc: 'Earn 3,000 points total',                 trigger: 'pts:3000',    group: 'Points' },
   { id: 'pts4000',      emoji: '☄️', icon: 'meteor',         name: 'Comet Chaser',      desc: 'Earn 4,000 points total',                 trigger: 'pts:4000',    group: 'Points' },
   { id: 'pts5000',      emoji: '🦄', icon: 'wandMagicSparkles', name: 'Unicorn',        desc: 'Earn 5,000 points total',                 trigger: 'pts:5000',    group: 'Points' },
+  { id: 'pts7500',      emoji: '💥', icon: 'burst',          name: 'Supernova',        desc: 'Earn 7,500 points total',                 trigger: 'pts:7500',    group: 'Points' },
+  { id: 'pts10000',     emoji: '🐉', icon: 'dragon',         name: 'Cosmic Legend',     desc: 'Earn 10,000 points total',                trigger: 'pts:10000',   group: 'Points' },
 
   // ── STREAKS (10) ───────────────────────────────────────────────────
   { id: 'streak2',      emoji: '✌️', icon: 'handPeace',      name: 'Two Days',          desc: 'Use the app 2 days in a row',             trigger: 'streak:2',    group: 'Streaks' },
@@ -93,6 +96,8 @@ export const BADGE_MASTER: BadgeDef[] = [
   { id: 'streak18',     emoji: '🌪️', icon: 'wind',           name: 'Storm Chaser',      desc: 'Use the app 18 days in a row',            trigger: 'streak:18',   group: 'Streaks' },
   { id: 'streak21',     emoji: '🏔️', icon: 'mountain',       name: 'Mountain Top',      desc: 'Use the app 21 days in a row',            trigger: 'streak:21',   group: 'Streaks' },
   { id: 'streak30',     emoji: '🌞', icon: 'sun',            name: 'Month Master',      desc: 'Use the app 30 days in a row',            trigger: 'streak:30',   group: 'Streaks' },
+  { id: 'streak60',     emoji: '🏅', icon: 'medal',          name: 'Two-Month Marathon',desc: 'Use the app 60 days in a row',            trigger: 'streak:60',   group: 'Streaks' },
+  { id: 'streak100',    emoji: '💯', icon: 'crown',          name: 'Triple Digit Streak',desc: 'Use the app 100 days in a row',          trigger: 'streak:100',  group: 'Streaks' },
 
   // ── STORE (5) ──────────────────────────────────────────────────────
   { id: 'first_reward', emoji: '🎁', icon: 'gift',           name: 'Spender',           desc: 'Request your first reward',               trigger: 'first_reward',    group: 'Store' },
@@ -100,6 +105,7 @@ export const BADGE_MASTER: BadgeDef[] = [
   { id: 'reward5',      emoji: '🛒', icon: 'cartShopping',   name: 'Cart Champion',     desc: 'Request 5 rewards',                       trigger: 'reward_count:5',  group: 'Store' },
   { id: 'reward10',     emoji: '💸', icon: 'moneyBillWave',  name: 'High Roller',       desc: 'Request 10 rewards',                      trigger: 'reward_count:10', group: 'Store' },
   { id: 'reward25',     emoji: '🤑', icon: 'sackDollar',     name: 'Reward Royalty',    desc: 'Request 25 rewards',                      trigger: 'reward_count:25', group: 'Store' },
+  { id: 'reward50',     emoji: '🤑', icon: 'sackDollar',     name: 'Reward Tycoon',     desc: 'Request 50 rewards',                      trigger: 'reward_count:50', group: 'Store' },
 
   // ── COMBOS (9) ─────────────────────────────────────────────────────
   { id: 'combo1',       emoji: '🌮', icon: 'pizzaSlice',     name: 'Perfect Day',       desc: 'Full tray + all chores in one day',       trigger: 'combo:1',     group: 'Combos' },
@@ -116,4 +122,5 @@ export const BADGE_MASTER: BadgeDef[] = [
   { id: 'first_game',   emoji: '🔤', icon: 'font',           name: 'First Win!',        desc: 'Win your first game',                     trigger: 'first_game',     group: 'Games' },
   { id: 'games_won10',  emoji: '🧠', icon: 'brain',          name: 'Word Whiz',         desc: 'Win 10 games',                            trigger: 'games_won:10',   group: 'Games' },
   { id: 'games_won25',  emoji: '🏅', icon: 'medal',          name: 'Word Wizard',       desc: 'Win 25 games',                            trigger: 'games_won:25',   group: 'Games' },
+  { id: 'games_won50',  emoji: '🎮', icon: 'gamepad',        name: 'Game Master',       desc: 'Win 50 games',                            trigger: 'games_won:50',   group: 'Games' },
 ];
