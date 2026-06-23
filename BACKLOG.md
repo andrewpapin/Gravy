@@ -61,16 +61,31 @@ process), not missing features.
 
 ## Epic 2 — Engineering Foundation & Quality
 
-- **Stand up Vitest** and write unit tests for the state logic that actually
+- ~~**Stand up Vitest** and write unit tests for the state logic that actually
   moves points: `awardPoints`/`awardPointsForDay`, streak rollover
   (`applyDayRollover`), badge triggers (`findNewlyEarnedBadges`), and bonus-item
-  forgiveness/exact-undo. This logic has already shipped real exploit bugs once
-  (see PR #79 — negative-balance flooring, calendar point-farming). There is
-  currently zero automated coverage; the only test asset is the unwired manual
-  Playwright script `verify_gravy.mjs`. *(P0, M.)*
-- ~~**Add a CI gate**~~ — **PARTIALLY DONE.** `deploy.yml` now runs
-  `npm run lint` before `npm run build`, so a lint failure blocks deploy.
-  Re-open once Vitest exists below to also gate on tests. *(P0, S.)*
+  forgiveness/exact-undo.~~ **DONE.** Added `vitest` + `npm test`; the award/
+  forgiveness/exact-undo arithmetic was extracted out of `GravyContext.tsx`'s
+  `useCallback` closures into a pure `src/state/points.ts` (same behavior, now
+  independently testable) with `src/state/points.test.ts` covering it,
+  `src/state/defaultState.test.ts` covering `applyDayRollover`/
+  `backfillStreaksFromLogs`, and `src/state/badges.test.ts` covering
+  `findNewlyEarnedBadges`/`getBadgeProgress`/`getBadgeDisplay`. Writing the
+  rollover tests caught a real live bug in the process (see new entry below) —
+  exactly the kind of regression this item was meant to guard against. *(P0, M.)*
+- **Fix:** `applyDayRollover` only cleared `todayGoals` of ids that no longer
+  matched a *current* daily goal, instead of clearing it outright. Once a daily
+  goal's id had ever appeared in `todayGoals`, it stayed there forever across
+  every future day rollover, which made `incrementGoal`'s "already awarded
+  today" guard (`!next.todayGoals.includes(id)`) permanently true for that
+  goal — so it silently stopped paying out points on day 2 onward while the UI
+  (which checks `todayGoalCounts`, correctly reset daily) kept showing it as
+  completable/done. Found and fixed while writing the day-rollover Vitest
+  suite; `todayGoals` is now unconditionally cleared (`= []`) at rollover, same
+  as `todayGoalCounts`. *(was silently shipped, now fixed)*
+- ~~**Add a CI gate**~~ — **DONE.** `deploy.yml` now runs `npm run lint` then
+  `npm test` before `npm run build`, so a lint or test failure blocks deploy.
+  *(P0, S.)*
 - **Harden error handling**: wrap `localStorage` writes in try/catch with a
   user-visible fallback for quota-exceeded or disabled storage (e.g. iOS private
   browsing), and validate the shape of incoming Supabase realtime payloads
@@ -149,7 +164,8 @@ scope today is "plan for optionality," not commit.)*
 1. ~~Revive and merge PR #93 (PIN/recovery hashing + lockout).~~ **DONE** — merged as #97.
 2. ~~Decide the fate of PR #92 (rank reorder)~~ — **DECIDED**: stays closed, won't merge (see Epic 1).
 3. ~~Add the `npm run lint` CI gate to `deploy.yml`.~~ **DONE.**
-4. Stand up Vitest with tests for points/streak/badge logic. **Still open.**
+4. ~~Stand up Vitest with tests for points/streak/badge logic.~~ **DONE** —
+   also caught and fixed a live `todayGoals` rollover bug along the way (see Epic 2).
 5. ~~Make an explicit access-control decision for Supabase~~ — **DONE**, see
    Epic 1: scoped mutations behind `SECURITY DEFINER` RPCs, SELECT left open
    for Realtime sync, accepted as the current risk posture for single/few-household scope.

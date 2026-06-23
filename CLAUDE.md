@@ -9,11 +9,19 @@ npm run dev       # Start dev server at http://localhost:5173
 npm run build     # Type-check (tsc -b) then bundle to ./dist
 npm run lint      # Run ESLint
 npm run preview   # Serve ./dist locally
+npm test          # Run Vitest unit tests (src/**/*.test.ts)
 ```
 
-There is **no test framework configured** (no Jest/Vitest/`npm test`, no `npm run` script for Playwright despite it being a devDependency). `verify_gravy.mjs` at the repo root is an ad-hoc Playwright smoke-test script (not wired into `npm`) that drives the app in a headless browser against a running `npm run dev` server and screenshots each step to `/tmp`. Run it manually with `node verify_gravy.mjs` only if you need to script a UI walkthrough — otherwise testing is manual via the browser.
+Vitest covers the pure point/streak/badge logic: `src/state/points.ts` (award/forgiveness/exact-undo arithmetic, extracted from `GravyContext.tsx`'s `useCallback` closures so it's testable independent of React/toast/celebration side effects), `src/state/defaultState.ts` (`applyDayRollover`, `backfillStreaksFromLogs`), and `src/state/badges.ts` (`findNewlyEarnedBadges` and friends). Colocated `*.test.ts` files live next to the module they test. There is no component/UI test setup — `verify_gravy.mjs` at the repo root is an ad-hoc Playwright smoke-test script (not wired into `npm`) that drives the app in a headless browser against a running `npm run dev` server and screenshots each step to `/tmp`. Run it manually with `node verify_gravy.mjs` only if you need to script a UI walkthrough — otherwise UI testing is manual via the browser.
 
 See `BACKLOG.md` for a living backlog (security, infra, accessibility, process gaps) written from an audit of the codebase and PR history — check it before assuming a known gap (e.g. plaintext PIN storage) is unintentional or unreported.
+
+### Keeping tests and docs in sync with new features
+
+- **New or changed logic in `src/state/*.ts`** (points, streaks, badges, day rollover, or any other pure state logic) needs corresponding coverage in its colocated `*.test.ts` — add cases for new behavior, update existing cases when behavior intentionally changes. If the logic you need to test is still tangled inside a `GravyContext.tsx` `useCallback` (side effects mixed with arithmetic), extract the pure part into `src/state/*.ts` first, the way `points.ts` was pulled out — that's the established pattern here, not a one-off.
+- **Architecture or behavior changes** (new screens, new shared/per-profile fields, new panels, changed data flow) need the relevant section of this file updated in the same change — this file is read automatically every session, so a stale description actively misleads future work, not just future readers.
+- **Closing or opening a tracked gap** needs `BACKLOG.md` updated to match (strikethrough + `DONE`, or a new entry), following the existing format.
+- Run `npm test`, `npm run build`, and `npm run lint` before considering a change finished — all three are required to merge into `main` (`deploy.yml` gates on lint then test then build).
 
 ## Architecture Overview
 

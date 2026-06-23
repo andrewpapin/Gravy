@@ -29,6 +29,7 @@ import {
 import { FOODS } from '../data/foods';
 import { resolveToastIcon } from '../data/icons';
 import { findNewlyEarnedBadges, getBadgeDisplay } from './badges';
+import { applyAward, applyAwardForDay, applyBonusItem, applyBonusItemForDay, reverseBonusItem } from './points';
 import { getRank, RANKS } from '../data/ranks';
 import { GAMES } from '../data/games';
 import { hashWithSalt, randomSaltHex } from './hash';
@@ -296,12 +297,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   // (TopBar / rank) and where they're spent (approveReward).
   const awardPoints = useCallback(
     (next: GravyState, pts: number, reason: string, opts?: { silent?: boolean; action?: ToastAction }) => {
-      next.points = next.points + pts;
-      next.totalPoints = next.totalPoints + pts;
-      next.todayPoints += pts;
-      if (next.todayPoints > (next.counters.maxDayPoints || 0)) {
-        next.counters.maxDayPoints = next.todayPoints;
-      }
+      applyAward(next, pts);
       if (!opts?.silent) {
         const sign = pts < 0 ? '−' : '+';
         showToast(faStar, `${sign}${Math.abs(pts)} ${reason}`.trim(), opts?.action);
@@ -315,12 +311,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   // moving the live balance/lifetime total exactly like editing today does.
   const awardPointsForDay = useCallback(
     (next: GravyState, log: DayLog, pts: number, reason: string, opts?: { silent?: boolean }) => {
-      next.points = next.points + pts;
-      next.totalPoints = next.totalPoints + pts;
-      log.points += pts;
-      if (log.points > (next.counters.maxDayPoints || 0)) {
-        next.counters.maxDayPoints = log.points;
-      }
+      applyAwardForDay(next, log, pts);
       if (!opts?.silent) {
         const sign = pts < 0 ? '−' : '+';
         showToast(faStar, `${sign}${Math.abs(pts)} ${reason}`.trim());
@@ -528,17 +519,8 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       if (!next.todayBonusApplied) next.todayBonusApplied = {};
       next.todayGoalCounts[id] = (next.todayGoalCounts[id] || 0) + 1;
 
-      // A penalty (negative pts) is forgiven once the kid is broke: never deduct more than
-      // the current balance. Record what was actually applied so the matching undo gives
-      // back exactly that — handing back the full nominal amount would mint points.
-      const applied = goal.pts >= 0 ? goal.pts : -Math.min(-goal.pts, Math.max(0, next.points));
-      next.points += applied;
-      next.totalPoints += applied;
-      next.todayPoints += applied;
+      const applied = applyBonusItem(next, goal.pts);
       next.todayBonusApplied[id] = (next.todayBonusApplied[id] || 0) + applied;
-      if (next.todayPoints > (next.counters.maxDayPoints || 0)) {
-        next.counters.maxDayPoints = next.todayPoints;
-      }
 
       const sign = goal.pts < 0 ? '−' : '+';
       showToast(faStar, `${sign}${Math.abs(goal.pts)} ${goal.name}`);
@@ -558,12 +540,8 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       if (!next.todayBonusApplied) next.todayBonusApplied = {};
       next.todayGoalCounts[id] = currentCount - 1;
 
-      // Reverse only what this item actually applied (tracked in logBonusItem), bounded by
-      // a single tap's nominal value — so undoing a forgiven penalty returns nothing extra.
       const net = next.todayBonusApplied[id] || 0;
-      const reverse = goal.pts >= 0
-        ? -Math.min(goal.pts, Math.max(0, net))
-        : Math.min(-goal.pts, Math.max(0, -net));
+      const reverse = reverseBonusItem(net, goal.pts);
       next.points += reverse;
       next.totalPoints += reverse;
       next.todayPoints += reverse;
@@ -708,17 +686,8 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       if (!log.bonusApplied) log.bonusApplied = {};
       log.bonusCounts[goalId] = (log.bonusCounts[goalId] || 0) + 1;
 
-      // A penalty (negative pts) is forgiven once the kid is broke: never deduct more than
-      // the current balance. Record what was actually applied so the matching undo gives
-      // back exactly that — handing back the full nominal amount would mint points.
-      const applied = goal.pts >= 0 ? goal.pts : -Math.min(-goal.pts, Math.max(0, next.points));
-      next.points += applied;
-      next.totalPoints += applied;
-      log.points += applied;
+      const applied = applyBonusItemForDay(next, log, goal.pts);
       log.bonusApplied[goalId] = (log.bonusApplied[goalId] || 0) + applied;
-      if (log.points > (next.counters.maxDayPoints || 0)) {
-        next.counters.maxDayPoints = log.points;
-      }
 
       const sign = goal.pts < 0 ? '−' : '+';
       showToast(resolveToastIcon(goal.icon, goal.emoji), `${sign}${Math.abs(goal.pts)} ${goal.name}`);
@@ -740,12 +709,8 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       if (!nextLog.bonusApplied) nextLog.bonusApplied = {};
       nextLog.bonusCounts[goalId] = currentCount - 1;
 
-      // Reverse only what this item actually applied (tracked above), bounded by a single
-      // tap's nominal value — so undoing a forgiven penalty returns nothing extra.
       const net = nextLog.bonusApplied[goalId] || 0;
-      const reverse = goal.pts >= 0
-        ? -Math.min(goal.pts, Math.max(0, net))
-        : Math.min(-goal.pts, Math.max(0, -net));
+      const reverse = reverseBonusItem(net, goal.pts);
       next.points += reverse;
       next.totalPoints += reverse;
       nextLog.points += reverse;

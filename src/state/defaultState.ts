@@ -505,12 +505,9 @@ export function applyDayRollover(state: GravyState): GravyState {
     }
     state.todayFoodCounts = {};
     state.todayPoints = 0;
-    // Daily goals and Bonus Points items both reset daily — keep only ids of
-    // current Daily goals (also self-heals any stale legacy one-time-goal ids).
-    const dailyIds = new Set(
-      (state.goals || []).filter((g) => g.isDaily !== false).map((g) => g.id)
-    );
-    state.todayGoals = (state.todayGoals || []).filter((id) => dailyIds.has(id));
+    // Daily goals and Bonus Points items both reset daily — every completion (and stale
+    // legacy one-time-goal id) is cleared, not just the ones tied to current goal ids.
+    state.todayGoals = [];
     state.todayGoalCounts = {};
     // Bonus penalties settle at the end of the day — start the new day with a clean ledger.
     state.todayBonusApplied = {};
