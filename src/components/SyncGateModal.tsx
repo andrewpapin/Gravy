@@ -5,6 +5,7 @@ import { useGravy, SYNC_SKIPPED_KEY } from '../state/GravyContext';
 import { isValidHouseholdCode } from '../state/sync';
 import { safeGetItem, safeSetItem } from '../state/storage';
 import { PinSetupStep } from './PinSetupStep';
+import { useFocusTrap } from './useFocusTrap';
 
 export function SyncGateModal() {
   const { householdCode, syncStatus, createHousehold, joinHousehold } = useGravy();
@@ -14,6 +15,8 @@ export function SyncGateModal() {
   // True only while this device just created the household (vs. one that already existed when
   // the modal mounted) — that's the moment we walk the parent through setting a real PIN.
   const [justCreated, setJustCreated] = useState(false);
+  // No onClose: this is a decision gate (create/join/skip), not dismissible via Escape.
+  const cardRef = useFocusTrap<HTMLDivElement>(!((householdCode && !justCreated) || dismissed));
 
   if ((householdCode && !justCreated) || dismissed) return null;
 
@@ -49,7 +52,7 @@ export function SyncGateModal() {
 
   return (
     <div className="sync-gate-overlay">
-      <div className="onb-modal-card">
+      <div className="onb-modal-card" ref={cardRef} role="dialog" aria-modal="true" aria-label="Set up cloud sync" tabIndex={-1}>
         {justCreated ? (
           <PinSetupStep onDone={() => setJustCreated(false)} />
         ) : (

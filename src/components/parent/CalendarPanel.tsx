@@ -94,7 +94,7 @@ export function CalendarPanel({ onHeaderChange, goToRoot }: CalendarPanelProps) 
   return (
     <div className="card">
       <div className="calendar-header">
-        <button className="calendar-nav-btn" onClick={prevMonth} type="button">
+        <button className="calendar-nav-btn" onClick={prevMonth} type="button" aria-label="Previous month">
           <FontAwesomeIcon icon={faChevronLeft} />
         </button>
         <div className="calendar-month-label">{MONTH_NAMES[viewMonth]} {viewYear}</div>

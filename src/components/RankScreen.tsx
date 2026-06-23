@@ -3,6 +3,7 @@ import { faXmark, faCheck, faLock } from '@fortawesome/free-solid-svg-icons';
 import { AppIcon } from './AppIcon';
 import { RANKS, getRank } from '../data/ranks';
 import { useGravy } from '../state/GravyContext';
+import { useFocusTrap } from './useFocusTrap';
 
 interface RankScreenProps {
   open: boolean;
@@ -13,13 +14,14 @@ export function RankScreen({ open, onClose }: RankScreenProps) {
   const { state } = useGravy();
   const displayTotal = Math.max(0, state.totalPoints);
   const { index: currentIndex } = getRank(displayTotal);
+  const sheetRef = useFocusTrap<HTMLDivElement>(open, onClose);
 
   return (
     <div
       className={`calendar-modal-overlay ${open ? 'show' : ''}`}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="calendar-modal-sheet">
+      <div className="calendar-modal-sheet" ref={sheetRef} role="dialog" aria-modal="true" aria-label="Rank Ladder" tabIndex={-1}>
         <div className="calendar-modal-header">
           <span className="calendar-modal-title">Rank Ladder</span>
           <button className="calendar-modal-close" onClick={onClose} aria-label="Close rank ladder" type="button">

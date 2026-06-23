@@ -130,10 +130,10 @@ export function GoalsPanel() {
           target={editGoal.target}
           onTargetChange={(value) => setEditGoal({ ...editGoal, target: value })}
         />
-        <button type="submit" className="btn btn-sm btn-purple" title="Save">
+        <button type="submit" className="btn btn-sm btn-purple" title="Save" aria-label="Save">
           <FontAwesomeIcon icon={faCheck} />
         </button>
-        <button type="button" className="btn btn-sm btn-pink" title="Cancel" onClick={() => setEditingId(null)}>
+        <button type="button" className="btn btn-sm btn-pink" title="Cancel" aria-label="Cancel" onClick={() => setEditingId(null)}>
           <FontAwesomeIcon icon={faXmark} />
         </button>
       </form>
@@ -155,7 +155,7 @@ export function GoalsPanel() {
           />
           <span className="pbadge-toggle-track" />
         </label>
-        <button className="btn btn-sm btn-purple" title="Edit" onClick={() => startEdit(g)}>
+        <button className="btn btn-sm btn-purple" title="Edit" aria-label="Edit" onClick={() => startEdit(g)}>
           <FontAwesomeIcon icon={faPen} />
         </button>
         <button className="btn btn-sm btn-pink" onClick={() => removeGoal(g.id)}>
@@ -190,7 +190,7 @@ export function GoalsPanel() {
           Add
         </button>
       </form>
-      <div style={{ fontSize: '0.68rem', color: 'var(--muted)', fontWeight: 700, marginTop: -8, marginBottom: 'var(--space-md)' }}>
+      <div className="muted-note" style={{ fontSize: '0.68rem', marginTop: -8, marginBottom: 'var(--space-md)' }}>
         {isDaily
           ? 'The × field sets how many times a goal must be done per day (e.g. "Drink water" ×3)'
           : 'Use a negative number to subtract points (e.g. "Was rude" −15)'}
@@ -212,7 +212,7 @@ export function GoalsPanel() {
 
       <div className="section-label">Daily Goals</div>
       {dailyGoals.length === 0 ? (
-        <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontWeight: 700, padding: '12px 0' }}>
+        <div className="muted-note" style={{ fontSize: '0.8rem', padding: '12px 0' }}>
           No daily goals added yet
         </div>
       ) : (
@@ -221,7 +221,7 @@ export function GoalsPanel() {
 
       <div className="section-label">Bonus Points</div>
       {bonusItems.length === 0 ? (
-        <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontWeight: 700, padding: '12px 0' }}>
+        <div className="muted-note" style={{ fontSize: '0.8rem', padding: '12px 0' }}>
           No bonus items added yet
         </div>
       ) : (

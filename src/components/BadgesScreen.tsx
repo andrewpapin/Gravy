@@ -23,7 +23,7 @@ export function BadgesScreen({ open, onClose, onShowBadge }: BadgesScreenProps) 
       title={<span className="calendar-modal-title">My Badges</span>}
     >
       {visible.length === 0 ? (
-        <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
+        <div className="empty-state empty-state--bare" style={{ gridColumn: '1 / -1' }}>
           <span className="empty-state-emoji"><FontAwesomeIcon icon={faMoon} /></span>
           <div className="empty-state-text">
             No badges enabled yet.

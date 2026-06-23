@@ -8,6 +8,7 @@ import { HangmanGame } from './games/HangmanGame';
 import { MathFactsGame } from './games/MathFactsGame';
 import { WordScrambleGame } from './games/WordScrambleGame';
 import { MemoryMatchGame } from './games/MemoryMatchGame';
+import { useFocusTrap } from './useFocusTrap';
 
 interface GamesScreenProps {
   open: boolean;
@@ -25,13 +26,21 @@ export function GamesScreen({ open, onClose }: GamesScreenProps) {
   };
 
   const activeGameDef = GAMES.find((g) => g.id === activeGame);
+  const sheetRef = useFocusTrap<HTMLDivElement>(open, handleClose);
 
   return (
     <div
       className={`calendar-modal-overlay ${open ? 'show' : ''}`}
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
-      <div className="calendar-modal-sheet">
+      <div
+        className="calendar-modal-sheet"
+        ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={activeGameDef ? activeGameDef.name : 'Games'}
+        tabIndex={-1}
+      >
         <div className="calendar-modal-header">
           <div className="calendar-modal-header-titles">
             {activeGameDef && (

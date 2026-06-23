@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faGift, faRightLeft, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
+import { useFocusTrap } from './useFocusTrap';
 
 interface AccountMenuProps {
   open: boolean;
@@ -21,6 +22,7 @@ export function AccountMenu({
 }: AccountMenuProps) {
   const { state, profiles } = useGravy();
   const pendingCount = state.pendingRewards.length;
+  const menuRef = useFocusTrap<HTMLDivElement>(open, onClose);
 
   return (
     <div
@@ -28,7 +30,7 @@ export function AccountMenu({
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       {open && (
-        <div className="badge-popup account-menu">
+        <div className="badge-popup account-menu" ref={menuRef} role="dialog" aria-modal="true" aria-label="Account menu" tabIndex={-1}>
           <button type="button" className="account-menu-option" onClick={onOpenStore}>
             <span
               className="account-menu-option-icon nav-badge"

@@ -1,10 +1,30 @@
+import { useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useGravy } from '../state/GravyContext';
 
 export function Celebration() {
   const { celebration, hideCelebration } = useGravy();
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (celebration) overlayRef.current?.focus();
+  }, [celebration]);
+
   return (
-    <div className={`celebration ${celebration ? 'show' : ''}`} onClick={hideCelebration}>
+    <div
+      className={`celebration ${celebration ? 'show' : ''}`}
+      onClick={hideCelebration}
+      role={celebration ? 'button' : undefined}
+      tabIndex={celebration ? 0 : -1}
+      aria-label="Dismiss celebration"
+      ref={overlayRef}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          hideCelebration();
+        }
+      }}
+    >
       {celebration && (
         <>
           <div className="celebration-icon">

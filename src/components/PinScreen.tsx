@@ -235,7 +235,7 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
         <button className="pin-key" onClick={() => pinKey('0')}>
           0
         </button>
-        <button className="pin-key delete" onClick={pinDelete}>
+        <button className="pin-key delete" onClick={pinDelete} aria-label="Delete digit" type="button">
           <FontAwesomeIcon icon={faDeleteLeft} />
         </button>
       </div>

@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { useFocusTrap } from './useFocusTrap';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const popupRef = useFocusTrap<HTMLDivElement>(open, onCancel);
   return (
     <div
       className={`badge-popup-overlay ${open ? 'show' : ''}`}
@@ -32,7 +34,7 @@ export function ConfirmDialog({
       }}
     >
       {open && (
-        <div className="badge-popup">
+        <div className="badge-popup" ref={popupRef} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1}>
           <span className="badge-popup-icon"><FontAwesomeIcon icon={icon} /></span>
           <div className="badge-popup-name">{title}</div>
           <div className="badge-popup-desc">{message}</div>

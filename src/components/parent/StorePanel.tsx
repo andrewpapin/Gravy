@@ -67,7 +67,7 @@ export function StorePanel() {
       </form>
       <div className="section-label">Current Rewards</div>
       {state.rewards.length === 0 ? (
-        <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontWeight: 700, padding: '12px 0' }}>
+        <div className="muted-note" style={{ fontSize: '0.8rem', padding: '12px 0' }}>
           No rewards added yet
         </div>
       ) : (
@@ -97,10 +97,10 @@ export function StorePanel() {
                 value={editReward.cost}
                 onChange={(e) => setEditReward({ ...editReward, cost: e.target.value })}
               />
-              <button type="submit" className="btn btn-sm btn-purple" title="Save">
+              <button type="submit" className="btn btn-sm btn-purple" title="Save" aria-label="Save">
                 <FontAwesomeIcon icon={faCheck} />
               </button>
-              <button type="button" className="btn btn-sm btn-pink" title="Cancel" onClick={() => setEditingId(null)}>
+              <button type="button" className="btn btn-sm btn-pink" title="Cancel" aria-label="Cancel" onClick={() => setEditingId(null)}>
                 <FontAwesomeIcon icon={faXmark} />
               </button>
             </form>
@@ -111,7 +111,7 @@ export function StorePanel() {
                 <div className="parent-item-name">{r.name}</div>
                 <div className="parent-item-pts"><FontAwesomeIcon icon={faStar} /> {r.cost} pts</div>
               </div>
-              <button className="btn btn-sm btn-purple" title="Edit" onClick={() => startEdit(r)}>
+              <button className="btn btn-sm btn-purple" title="Edit" aria-label="Edit" onClick={() => startEdit(r)}>
                 <FontAwesomeIcon icon={faPen} />
               </button>
               <button className="btn btn-sm btn-pink" onClick={() => removeReward(r.id)}>

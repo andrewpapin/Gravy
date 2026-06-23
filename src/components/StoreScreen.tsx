@@ -27,12 +27,12 @@ export function StoreScreen({ open, onClose }: StoreScreenProps) {
       closeLabel="Close store"
       title={<span className="calendar-modal-title">Reward Store</span>}
     >
-      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--muted)', marginBottom: 14, textAlign: 'center' }}>
+      <div className="muted-note" style={{ fontSize: '0.8rem', marginBottom: 14, textAlign: 'center' }}>
         Tap a reward to ask for it — a grown-up will need to say yes!
       </div>
 
       {state.rewards.length === 0 ? (
-        <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
+        <div className="empty-state empty-state--bare" style={{ gridColumn: '1 / -1' }}>
           <span className="empty-state-emoji"><FontAwesomeIcon icon={faStore} /></span>
           <div className="empty-state-text">
             The store is empty!
@@ -41,7 +41,7 @@ export function StoreScreen({ open, onClose }: StoreScreenProps) {
           </div>
         </div>
       ) : available.length === 0 ? (
-        <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
+        <div className="empty-state empty-state--bare" style={{ gridColumn: '1 / -1' }}>
           <span className="empty-state-emoji"><FontAwesomeIcon icon={faHourglassHalf} /></span>
           <div className="empty-state-text">
             All rewards requested!
@@ -84,7 +84,7 @@ export function StoreScreen({ open, onClose }: StoreScreenProps) {
           <span className="card-title-icon icon-coral"><FontAwesomeIcon icon={faHourglassHalf} /></span> Pending Requests
         </div>
         {state.pendingRewards.length === 0 ? (
-          <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontWeight: 700, textAlign: 'center', padding: 8 }}>
+          <div className="muted-note" style={{ fontSize: '0.8rem', textAlign: 'center', padding: 8 }}>
             No pending requests
           </div>
         ) : (

@@ -139,13 +139,25 @@ process), not missing features.
   (interactive tiles, modals/drawers, theme CSS), so reviewing/landing them
   together is cheaper than reopening the same components four times.
   *(P1, M overall.)*
-  - Add aria-labels / semantic roles to interactive tiles — many are
+  - ~~Add aria-labels / semantic roles to interactive tiles~~ — many were
     `div`+`onClick` or unlabeled buttons across both kid and parent surfaces.
-  - Add focus trapping / return-focus to modals and drawers (Calendar, Badge
-    popup, Onboarding, PIN screen).
-  - Run a color-contrast pass across all 5 themes (classic / midnight / ocean
-    / bubblegum / cyberpunk) — likely WCAG AA failures in muted-text-on-card
-    combinations, especially after prior ad-hoc contrast patches.
+    **DONE.**
+  - ~~Add focus trapping / return-focus to modals and drawers~~ (Calendar,
+    Badge popup, Onboarding, PIN screen). **DONE** — `useFocusTrap`
+    (`src/components/useFocusTrap.ts`), wired into `Modal`, `RankScreen`,
+    `GamesScreen`, `BadgePopup`, `ConfirmDialog`, `AccountMenu`,
+    `SyncGateModal`, `Celebration`, and `PinScreen`.
+  - ~~Run a color-contrast pass across all 5 themes~~ (classic / midnight /
+    ocean / bubblegum / cyberpunk). **DONE** — darkened the base `--muted`
+    token for classic and ocean (the two themes where `--bg`/`--card`/
+    `--cream` are all light, so a single token fix covers every
+    muted-text-on-card combination); for midnight/cyberpunk, where `--dark`/
+    `--text`/`--muted` are dual-purposed (flipped light to read on dark
+    surfaces elsewhere), extended the existing scoped per-selector ink
+    overrides in `src/index.css` instead of touching the shared token. Added
+    `.muted-note` and `.empty-state--bare` classes to replace inline
+    `color: 'var(--muted)'` styles and a dual-context shared class, both of
+    which were otherwise unreachable by a CSS theme override.
   - Audit/raise minimum label font sizes (some labels sit around ~10px) —
     lowest priority of the four (P2); fold in opportunistically rather than
     blocking the rest.
@@ -210,9 +222,9 @@ prioritized from what's actually still open:
    `DATA_HANDLING.md`.
 2. ~~Harden error handling~~ around `localStorage` writes and incoming
    Supabase realtime payloads (Epic 2, P1/M) — **DONE**, see Epic 2 above.
-3. **Run the accessibility hardening pass** (Epic 3, P1/M) — bundles
-   aria-labels, focus trapping, contrast, and the font-size audit into one
-   effort over the same surfaces.
+3. ~~Run the accessibility hardening pass~~ (Epic 3, P1/M) — aria-labels,
+   focus trapping, and the contrast pass are **DONE**; only the (P2,
+   lowest-priority) font-size audit remains open, see Epic 3 above.
 4. **Design the points economy in one pass**: rank curve + daily point
    ceiling together (Epic 4, P1/M).
 5. **Ship PWA push notifications** (Epic 5, P1/L) — the single biggest lever

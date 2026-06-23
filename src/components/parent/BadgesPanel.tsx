@@ -46,7 +46,7 @@ export function BadgesPanel() {
       <div className="section-label">
         Badge Library — <span>{`${enabledCount} / ${BADGE_MASTER.length}`}</span> enabled
       </div>
-      <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--muted)', marginBottom: 12, lineHeight: 1.5 }}>
+      <div className="muted-note" style={{ fontSize: '0.72rem', marginBottom: 12, lineHeight: 1.5 }}>
         Toggle badges on or off, rename them, or give them a new icon. The trigger rules never change.
       </div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>

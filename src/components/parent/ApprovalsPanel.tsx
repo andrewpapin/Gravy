@@ -24,7 +24,7 @@ export function ApprovalsPanel() {
     return (
       <div>
         <div className="section-label">Reward Requests</div>
-        <div className="empty-state" style={{ padding: '24px 0' }}>
+        <div className="empty-state empty-state--bare" style={{ padding: '24px 0' }}>
           <span className="empty-state-emoji"><FontAwesomeIcon icon={faMoon} /></span>
           <div className="empty-state-text">No pending requests</div>
         </div>

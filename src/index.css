@@ -11,7 +11,7 @@
   --card: #fdfbf7;
   --bg: #f4ece4;
   --text: #303336;
-  --muted: #6e747a;
+  --muted: #5d6368;
   --orange: var(--yellow); /* alias — fixes undefined var() references */
   --border: var(--dark);
 
@@ -74,7 +74,7 @@
   --card: #ffffff;
   --cream: #b2ebf2;
   --text: #023e8a;
-  --muted: #48cae4;
+  --muted: #276d7b;
   --dark: #03045e;
   --yellow: #ffb703;
   --coral: #0077b6;
@@ -121,11 +121,17 @@
    the few spots that paint ink directly on the raw page --bg instead of a card. */
 :root[data-theme="cyberpunk"] .topbar,
 :root[data-theme="cyberpunk"] .home-greeting-name,
+:root[data-theme="cyberpunk"] .home-greeting-date,
 :root[data-theme="cyberpunk"] .calendar-modal-title,
 :root[data-theme="cyberpunk"] .pin-title,
 :root[data-theme="cyberpunk"] .onb-back,
 :root[data-theme="cyberpunk"] .onb-wordmark,
-:root[data-theme="cyberpunk"] .onb-title {
+:root[data-theme="cyberpunk"] .onb-title,
+:root[data-theme="cyberpunk"] .onb-tagline,
+:root[data-theme="cyberpunk"] .onb-desc,
+:root[data-theme="cyberpunk"] .onb-link,
+:root[data-theme="cyberpunk"] .muted-note,
+:root[data-theme="cyberpunk"] .empty-state--bare {
   color: #000000;
 }
 :root[data-theme="cyberpunk"] .pbadge-toggle-track::after {
@@ -149,7 +155,9 @@
 :root[data-theme="midnight"] .pin-key.delete,
 :root[data-theme="midnight"] .household-code-display,
 :root[data-theme="midnight"] .group-pill.active,
-:root[data-theme="midnight"] .calendar-day.selected {
+:root[data-theme="midnight"] .calendar-day.selected,
+:root[data-theme="midnight"] .pin-dot.filled,
+:root[data-theme="midnight"] .game-result-btn.primary {
   color: #0f0f13;
 }
 :root[data-theme="cyberpunk"] .points-pill,
@@ -166,7 +174,9 @@
 :root[data-theme="cyberpunk"] .pin-key.delete,
 :root[data-theme="cyberpunk"] .household-code-display,
 :root[data-theme="cyberpunk"] .group-pill.active,
-:root[data-theme="cyberpunk"] .calendar-day.selected {
+:root[data-theme="cyberpunk"] .calendar-day.selected,
+:root[data-theme="cyberpunk"] .pin-dot.filled,
+:root[data-theme="cyberpunk"] .game-result-btn.primary {
   color: #000000;
 }
 
@@ -186,11 +196,15 @@
 :root[data-theme="cyberpunk"] .pending-item-name,
 :root[data-theme="cyberpunk"] .badge-info-btn,
 :root[data-theme="cyberpunk"] .badge-popup-name,
+:root[data-theme="cyberpunk"] .badge-popup-desc,
 :root[data-theme="cyberpunk"] .menu-card-icon,
 :root[data-theme="cyberpunk"] .icon-picker-trigger,
 :root[data-theme="cyberpunk"] .icon-picker-cell:not(.active),
 :root[data-theme="cyberpunk"] .settings-row input,
-:root[data-theme="cyberpunk"] .pbadge-name-input {
+:root[data-theme="cyberpunk"] .pbadge-name-input,
+:root[data-theme="cyberpunk"] .store-cost.unaffordable,
+:root[data-theme="cyberpunk"] .games-cap-banner:not(.maxed),
+:root[data-theme="cyberpunk"] .scramble-answer-slot:not(.filled) {
   color: #000000;
 }
 
@@ -2310,6 +2324,17 @@ button.goal-tile:active { transform: scale(0.97); }
 }
 .empty-state-emoji { font-size: 3rem; display: block; margin-bottom: 12px; }
 .empty-state-text { font-size: 0.9rem; font-weight: 700; }
+
+/* Same look as .empty-state but used where the surrounding context is the raw page
+   background rather than a .card — see the cyberpunk/midnight scoped overrides above,
+   which target this modifier instead of the bare .empty-state class so they don't also
+   darken the already-safe on-card usages. */
+.empty-state--bare { color: var(--muted); }
+
+/* Small muted helper/caption text sitting directly on the page background rather than a
+   .card — a dedicated class (instead of an inline style) so the cyberpunk/midnight scoped
+   overrides above can target it; inline color styles can't be reached by a CSS selector. */
+.muted-note { color: var(--muted); font-weight: 700; }
 
 /* ===== UTILS ===== */
 .mt-8 { margin-top: 8px; }
