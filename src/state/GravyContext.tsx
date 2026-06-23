@@ -1116,12 +1116,17 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       setSyncStatus('idle');
       showToast(faCloud, 'Joined household sync!');
       return true;
-    } catch {
+    } catch (err) {
       setSyncStatus('error');
-      showToast(
-        faCircleXmark,
-        navigator.onLine ? 'Server error — please try again' : 'No internet connection — try again when back online',
-      );
+      const message = (err as { message?: string }).message;
+      if (message?.startsWith('Too many attempts')) {
+        showToast(faCircleXmark, message);
+      } else {
+        showToast(
+          faCircleXmark,
+          navigator.onLine ? 'Server error — please try again' : 'No internet connection — try again when back online',
+        );
+      }
       return false;
     }
   }, [showToast]);

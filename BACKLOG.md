@@ -51,10 +51,19 @@ process), not missing features.
   auth claim to scope it by). Decision: accept the remaining read exposure for
   now given single/few-household scope; revisit if the household-code space is
   ever opened to the public.
-- **Rate-limit household-code lookups** against brute-force scanning (today
-  nothing stops a scripted sweep of the ~32^6 code space). Not addressed by the
-  RPC migration above — RPCs validate code *format*, not request *rate*.
-  *(P1, S–M.)*
+- ~~**Rate-limit household-code lookups**~~ — **DONE.**
+  `supabase/migrations/20260623184956_rate_limit_household_lookup.sql` adds a
+  `gravy_lookup_household` `SECURITY DEFINER` RPC (and a backing
+  `household_lookup_attempts` table) that throttles join-by-code lookups to 10
+  per 5-minute window per source IP (read from PostgREST's `request.headers`
+  GUC, falling back to a single shared bucket if no IP is available) before
+  returning a code's state. `fetchHousehold()` (`src/state/sync.ts`) now calls
+  this RPC instead of querying the table directly; `joinHousehold` surfaces the
+  rate-limit error as a toast. Residual risk, same class as the one already
+  accepted above: the table's SELECT grant must stay open for `anon` for
+  Realtime, so a client that bypasses this RPC and queries the REST endpoint
+  directly isn't blocked by it — this closes the documented, discoverable
+  join-flow path, not direct REST access. *(P1, S–M.)*
 - **Write a short data-handling note**: what's collected, where it lives
   (device `localStorage` + optional Supabase row), how to delete it (`Reset
   Everything`). Cheap now, required before any wider distribution. *(P1, S.)*

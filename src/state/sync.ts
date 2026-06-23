@@ -31,14 +31,13 @@ export async function renameHousehold(oldCode: string, newCode: string): Promise
   if (error) throw error;
 }
 
+// Routed through a SECURITY DEFINER RPC (rather than a direct table select) so lookups by
+// code are rate-limited per source IP — see
+// supabase/migrations/20260623184956_rate_limit_household_lookup.sql.
 export async function fetchHousehold(code: string): Promise<GravyRoot | null> {
-  const { data, error } = await supabase
-    .from('households')
-    .select('state')
-    .eq('code', code)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc('gravy_lookup_household', { p_code: code });
   if (error) throw error;
-  return data ? (data.state as GravyRoot) : null;
+  return (data as GravyRoot | null) ?? null;
 }
 
 // Routed through a SECURITY DEFINER RPC — see supabase/migrations/20260623000000_scope_household_mutations.sql.
