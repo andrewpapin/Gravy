@@ -1,17 +1,26 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTriangleExclamation, faCheck, faCloud } from '@fortawesome/free-solid-svg-icons';
+import { faTriangleExclamation, faCheck, faCloud, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../../state/GravyContext';
 import { isValidHouseholdCode } from '../../state/sync';
 import { ConfirmDialog } from '../ConfirmDialog';
 
 export function SyncPanel() {
-  const { householdCode, syncStatus, createHousehold, joinHousehold, leaveHousehold, changeHouseholdCode } = useGravy();
+  const {
+    householdCode,
+    syncStatus,
+    createHousehold,
+    joinHousehold,
+    leaveHousehold,
+    deleteHouseholdEverywhere,
+    changeHouseholdCode,
+  } = useGravy();
   const [joinCode, setJoinCode] = useState('');
   const [customCreateCode, setCustomCreateCode] = useState('');
   const [editCode, setEditCode] = useState('');
   const [justChanged, setJustChanged] = useState<string | null>(null);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleJoin = () => {
     if (!joinCode.trim()) return;
@@ -58,6 +67,9 @@ export function SyncPanel() {
           </div>
           <button className="btn btn-primary btn-ghost" onClick={() => setConfirmLeave(true)}>
             Turn off cloud sync
+          </button>
+          <button className="btn btn-primary btn-dark" onClick={() => setConfirmDelete(true)}>
+            <FontAwesomeIcon icon={faTrashCan} /> Delete household everywhere
           </button>
         </div>
       ) : null}
@@ -141,6 +153,19 @@ export function SyncPanel() {
           setConfirmLeave(false);
         }}
         onCancel={() => setConfirmLeave(false)}
+      />
+      <ConfirmDialog
+        open={confirmDelete}
+        icon={faTrashCan}
+        title="Delete household everywhere?"
+        message="This permanently deletes the shared household data from the cloud. Every device using this code — not just this one — will lose sync access. This can't be undone."
+        confirmLabel="Delete everywhere"
+        danger
+        onConfirm={() => {
+          deleteHouseholdEverywhere();
+          setConfirmDelete(false);
+        }}
+        onCancel={() => setConfirmDelete(false)}
       />
     </div>
   );

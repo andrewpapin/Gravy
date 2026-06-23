@@ -35,6 +35,7 @@ import { GAMES } from '../data/games';
 import { hashWithSalt, randomSaltHex } from './hash';
 import {
   createHousehold as createHouseholdRow,
+  deleteHousehold as deleteHouseholdRow,
   fetchHousehold,
   generateHouseholdCode,
   isValidHouseholdCode,
@@ -141,6 +142,7 @@ interface GravyContextValue {
   createHousehold: (customCode?: string) => Promise<string | null>;
   joinHousehold: (code: string) => Promise<boolean>;
   leaveHousehold: () => void;
+  deleteHouseholdEverywhere: () => Promise<boolean>;
   changeHouseholdCode: (newCode: string) => Promise<boolean>;
 }
 
@@ -1154,6 +1156,31 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     showToast(faCloud, 'Cloud sync turned off');
   }, [showToast]);
 
+  // Unlike leaveHousehold (which only disconnects this device), this deletes the household
+  // row server-side — every other device synced to this code loses access to it too.
+  const deleteHouseholdEverywhere = useCallback(async () => {
+    if (!householdCode) return false;
+    pendingTimersRef.current.forEach((t) => clearTimeout(t));
+    pendingTimersRef.current = [];
+    setSyncStatus('syncing');
+    try {
+      await deleteHouseholdRow(householdCode);
+      safeRemoveItem(HOUSEHOLD_CODE_KEY);
+      setHouseholdCode(null);
+      lastSyncedRef.current = null;
+      setSyncStatus('idle');
+      showToast(faTrashCan, 'Household deleted everywhere');
+      return true;
+    } catch {
+      setSyncStatus('error');
+      showToast(
+        faCircleXmark,
+        navigator.onLine ? 'Server error — please try again' : 'No internet connection — try again when back online',
+      );
+      return false;
+    }
+  }, [householdCode, showToast]);
+
   const changeHouseholdCode = useCallback(async (newCode: string) => {
     const normalized = newCode.trim().toUpperCase();
     if (!isValidHouseholdCode(normalized)) {
@@ -1241,6 +1268,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     createHousehold,
     joinHousehold,
     leaveHousehold,
+    deleteHouseholdEverywhere,
     changeHouseholdCode,
   };
 

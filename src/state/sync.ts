@@ -46,6 +46,14 @@ export async function pushHouseholdState(code: string, state: GravyRoot): Promis
   if (error) throw error;
 }
 
+// Deletes the household row everywhere (all devices synced to this code lose access to it),
+// as opposed to leaveHousehold()'s local-only disconnect — see
+// supabase/migrations/20260623225331_delete_household_everywhere.sql.
+export async function deleteHousehold(code: string): Promise<void> {
+  const { error } = await supabase.rpc('gravy_delete_household', { p_code: code });
+  if (error) throw error;
+}
+
 // Minimal structural check on a realtime payload before handing it to the app — a
 // malformed row (flaky replication, a buggy peer client, or RLS ever being misconfigured)
 // shouldn't be trusted just because it arrived over the household's postgres_changes

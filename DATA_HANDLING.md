@@ -50,18 +50,24 @@ reporting, or third-party tracking script anywhere in the app.
   — those are identity/account settings, not progress, and resetting a kid's
   points shouldn't lock the parent out or rename the kid. Clearing the
   browser's site data for the app removes the `gravy_v1` entry entirely.
-- **Synced data:** Parent Dashboard → Settings → Sync → "Leave household"
-  stops *this device* from syncing and forgets the code locally.
+- **Synced data, this device only:** Parent Dashboard → Settings → Sync →
+  "Turn off cloud sync" stops *this device* from syncing and forgets the
+  code locally — the household row keeps existing for any other device
+  still using that code.
+- **Synced data, everywhere:** Parent Dashboard → Settings → Sync → "Delete
+  household everywhere" permanently deletes the Supabase `households` row
+  for that code, so every device synced to it (not just this one) loses
+  access. Deliberately a separate, more destructive action from "Turn off
+  cloud sync" for that reason.
 
 ## Known limitations
 
-- **Leaving/resetting doesn't delete the server-side row.** Both actions
-  above only affect the local device — the Supabase `households` row for
-  that code keeps existing (and keeps syncing to any other device still
-  using that code) until it's overwritten or removed directly in Supabase.
-  There's no in-app "delete this household everywhere" action yet.
-- **`household_lookup_attempts` has no retention/cleanup** — rate-limit
-  buckets are never expired, so the table grows unbounded. Low severity (small,
-  low-cardinality, not user content) but worth a cleanup pass eventually.
+- **`household_lookup_attempts` is opportunistically swept, not retained
+  forever.** Rate-limit buckets older than the rate-limit window are deleted
+  the next time `gravy_lookup_household` runs (see
+  `supabase/migrations/20260623225536_cleanup_lookup_attempts.sql`), bounding
+  the table to roughly the IPs seen in the last window rather than growing
+  unbounded — there's still no scheduled job, so a long stretch with no
+  lookups at all would leave stale rows until the next lookup happens.
 
-Both limitations are tracked as follow-up items in `BACKLOG.md` Epic 1.
+This is tracked as a closed-out item in `BACKLOG.md` Epic 1.

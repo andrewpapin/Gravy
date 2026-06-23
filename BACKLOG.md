@@ -68,14 +68,19 @@ process), not missing features.
   what's collected (child name + hashed PIN/recovery answer only — no email,
   accounts, or analytics), where it lives (`localStorage` + optional Supabase
   household row), and how to delete it.
-- **Close two gaps found while writing that note**: (1) "Reset Everything"
-  and "Leave household" only disconnect the local device — neither deletes
-  the Supabase `households` row, so a "left" household's data keeps existing
-  server-side until overwritten; there's no in-app "delete this household
-  everywhere" action. (2) `household_lookup_attempts` (the rate-limit bucket
-  table from the lookup-throttle item above) never expires old rows and grows
-  unbounded — low severity (small, low-cardinality, not user content) but
-  worth a cleanup pass. *(P2, S.)*
+- ~~**Close two gaps found while writing that note**~~ — **DONE.**
+  (1) `supabase/migrations/20260623225331_delete_household_everywhere.sql`
+  adds a `gravy_delete_household` SECURITY DEFINER RPC, scoped to one code
+  like the other three; `SyncPanel` now has a "Delete household everywhere"
+  action distinct from "Turn off cloud sync" — leaving still only disconnects
+  this device (other devices may depend on the row), but a parent can now
+  explicitly delete it for everyone. (2)
+  `supabase/migrations/20260623225536_cleanup_lookup_attempts.sql` has
+  `gravy_lookup_household` opportunistically delete other buckets whose
+  rate-limit window has lapsed on every call, bounding
+  `household_lookup_attempts` to roughly the IPs seen in the last window
+  instead of growing forever, without needing a separate scheduled job.
+  *(P2, S.)*
 
 ## Epic 2 — Engineering Foundation & Quality
 
