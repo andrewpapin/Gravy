@@ -26,22 +26,29 @@ process), not missing features.
 
 ## Epic 1 — Security & Trust
 
-- **Revive PR #93** (`Hash PIN and recovery answer; add brute-force lockout`) —
-  rebase onto current `main` and merge. This was already built and reviewed but
-  closed without merging; current `main` (HEAD `cc1c88d`) still stores the parent
-  PIN and recovery answer in **plaintext** in `localStorage` with **no
-  rate-limiting** — a 4-digit PIN is brute-forceable by a bored kid in well under
-  an hour. *(P0, M — code already exists, needs rebase + re-verification.)*
-- **Decide the fate of PR #92** (rank-ladder reorder) — also closed-unmerged.
-  This is a content/balance call, not a fix: either land it or explicitly close
-  it for a reason, don't leave it in limbo. *(P0, S.)*
-- **Add real access control to the Supabase `households` table.** Today, the
-  anon key plus a matching 6-char code is full read/write — there is no RLS and
-  no concept of an owner. Anyone who learns or brute-forces a code can read or
-  overwrite that family's entire state. *(P1 if family-only, P0 if ever opened to
-  other households — flagged P1 for now per current single/few-household scope.)*
+- ~~**Revive PR #93**~~ — **DONE.** Rebased and merged as PR #97
+  (`Hash PIN and recovery answer; add brute-force lockout`). PIN and recovery
+  answer are now salted-SHA-256 hashes (`src/state/hash.ts`), with a per-device
+  exponential-backoff lockout after 5 failed attempts (`src/state/pinLockout.ts`).
+  Plaintext fields are migrated to hashes on load and deleted.
+- **Decide the fate of PR #92** (rank-ladder reorder) — still closed-unmerged,
+  no decision recorded yet. This is a content/balance call, not a fix: either
+  land it or explicitly close it for a reason, don't leave it in limbo.
+  *(P0, S.)*
+- ~~**Add real access control to the Supabase `households` table.**~~ —
+  **DONE.** `supabase/migrations/20260623000000_scope_household_mutations.sql`
+  revokes the unscoped anon INSERT/UPDATE grants and replaces them with three
+  `SECURITY DEFINER` RPCs (`gravy_create_household`, `gravy_upsert_household_state`,
+  `gravy_rename_household`) that each only touch the one row matching the
+  caller-supplied code. SELECT is intentionally still open (required for
+  Supabase Realtime sync under the shared anon key — there's no per-household
+  auth claim to scope it by). Decision: accept the remaining read exposure for
+  now given single/few-household scope; revisit if the household-code space is
+  ever opened to the public.
 - **Rate-limit household-code lookups** against brute-force scanning (today
-  nothing stops a scripted sweep of the ~32^6 code space). *(P1, S–M.)*
+  nothing stops a scripted sweep of the ~32^6 code space). Not addressed by the
+  RPC migration above — RPCs validate code *format*, not request *rate*.
+  *(P1, S–M.)*
 - **Write a short data-handling note**: what's collected, where it lives
   (device `localStorage` + optional Supabase row), how to delete it (`Reset
   Everything`). Cheap now, required before any wider distribution. *(P1, S.)*
@@ -55,10 +62,9 @@ process), not missing features.
   (see PR #79 — negative-balance flooring, calendar point-farming). There is
   currently zero automated coverage; the only test asset is the unwired manual
   Playwright script `verify_gravy.mjs`. *(P0, M.)*
-- **Add a CI gate**: run `npm run lint` (and tests, once Vitest exists) in
-  `.github/workflows/deploy.yml` before build/deploy — today only `tsc -b` +
-  `vite build` run, so a lint failure or (once written) a failing test would
-  still deploy. *(P0, S.)*
+- ~~**Add a CI gate**~~ — **PARTIALLY DONE.** `deploy.yml` now runs
+  `npm run lint` before `npm run build`, so a lint failure blocks deploy.
+  Re-open once Vitest exists below to also gate on tests. *(P0, S.)*
 - **Harden error handling**: wrap `localStorage` writes in try/catch with a
   user-visible fallback for quota-exceeded or disabled storage (e.g. iOS private
   browsing), and validate the shape of incoming Supabase realtime payloads
@@ -132,9 +138,10 @@ scope today is "plan for optionality," not commit.)*
 
 ## Do these first (top 5, in order)
 
-1. Revive and merge PR #93 (PIN/recovery hashing + lockout).
-2. Decide the fate of PR #92 (rank reorder) — land or close with a reason.
-3. Add the `npm run lint` CI gate to `deploy.yml`.
-4. Stand up Vitest with tests for points/streak/badge logic.
-5. Make an explicit access-control decision for Supabase (even if the decision
-   is "accept the risk for now, family-only" — write it down here once decided).
+1. ~~Revive and merge PR #93 (PIN/recovery hashing + lockout).~~ **DONE** — merged as #97.
+2. Decide the fate of PR #92 (rank reorder) — land or close with a reason. **Still open.**
+3. ~~Add the `npm run lint` CI gate to `deploy.yml`.~~ **DONE.**
+4. Stand up Vitest with tests for points/streak/badge logic. **Still open.**
+5. ~~Make an explicit access-control decision for Supabase~~ — **DONE**, see
+   Epic 1: scoped mutations behind `SECURITY DEFINER` RPCs, SELECT left open
+   for Realtime sync, accepted as the current risk posture for single/few-household scope.
