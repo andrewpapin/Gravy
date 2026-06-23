@@ -16,6 +16,13 @@ Vitest covers the pure point/streak/badge logic: `src/state/points.ts` (award/fo
 
 See `BACKLOG.md` for a living backlog (security, infra, accessibility, process gaps) written from an audit of the codebase and PR history — check it before assuming a known gap (e.g. plaintext PIN storage) is unintentional or unreported.
 
+### Keeping tests and docs in sync with new features
+
+- **New or changed logic in `src/state/*.ts`** (points, streaks, badges, day rollover, or any other pure state logic) needs corresponding coverage in its colocated `*.test.ts` — add cases for new behavior, update existing cases when behavior intentionally changes. If the logic you need to test is still tangled inside a `GravyContext.tsx` `useCallback` (side effects mixed with arithmetic), extract the pure part into `src/state/*.ts` first, the way `points.ts` was pulled out — that's the established pattern here, not a one-off.
+- **Architecture or behavior changes** (new screens, new shared/per-profile fields, new panels, changed data flow) need the relevant section of this file updated in the same change — this file is read automatically every session, so a stale description actively misleads future work, not just future readers.
+- **Closing or opening a tracked gap** needs `BACKLOG.md` updated to match (strikethrough + `DONE`, or a new entry), following the existing format.
+- Run `npm test`, `npm run build`, and `npm run lint` before considering a change finished — all three are required to merge into `main` (`deploy.yml` gates on lint then test then build).
+
 ## Architecture Overview
 
 Gravy is a gamified chores + nutrition + rewards PWA for kids built with React 19, TypeScript, and Vite. It is a client-side-only SPA — no server, no API. Data persists to `localStorage` with optional cloud sync via Supabase. The real entry point is `index.html` → `src/main.tsx` → `src/App.tsx`.
