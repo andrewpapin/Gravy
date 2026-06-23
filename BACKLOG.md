@@ -79,19 +79,17 @@ process), not missing features.
   independently testable) with `src/state/points.test.ts` covering it,
   `src/state/defaultState.test.ts` covering `applyDayRollover`/
   `backfillStreaksFromLogs`, and `src/state/badges.test.ts` covering
-  `findNewlyEarnedBadges`/`getBadgeProgress`/`getBadgeDisplay`. Writing the
-  rollover tests caught a real live bug in the process (see new entry below) —
-  exactly the kind of regression this item was meant to guard against. *(P0, M.)*
-- **Fix:** `applyDayRollover` only cleared `todayGoals` of ids that no longer
-  matched a *current* daily goal, instead of clearing it outright. Once a daily
-  goal's id had ever appeared in `todayGoals`, it stayed there forever across
-  every future day rollover, which made `incrementGoal`'s "already awarded
-  today" guard (`!next.todayGoals.includes(id)`) permanently true for that
-  goal — so it silently stopped paying out points on day 2 onward while the UI
-  (which checks `todayGoalCounts`, correctly reset daily) kept showing it as
-  completable/done. Found and fixed while writing the day-rollover Vitest
-  suite; `todayGoals` is now unconditionally cleared (`= []`) at rollover, same
-  as `todayGoalCounts`. *(was silently shipped, now fixed)*
+  `findNewlyEarnedBadges`/`getBadgeProgress`/`getBadgeDisplay`. *(P0, M.)*
+- ~~**Fix the `todayGoals` rollover bug**~~ caught while writing the tests
+  above: `applyDayRollover` only cleared `todayGoals` of ids that no longer
+  matched a *current* daily goal, instead of clearing it outright, so a daily
+  goal's id stayed there forever once logged once — permanently tripping
+  `incrementGoal`'s "already awarded today" guard and silently killing its
+  payout from day 2 onward, while the UI (driven by `todayGoalCounts`,
+  correctly reset daily) kept showing it as completable. **DONE** —
+  `todayGoals` is now unconditionally cleared (`= []`) at rollover, same as
+  `todayGoalCounts`. Exactly the kind of regression standing up tests was
+  meant to catch.
 - ~~**Add a CI gate**~~ — **DONE.** `deploy.yml` now runs `npm run lint` then
   `npm test` before `npm run build`, so a lint or test failure blocks deploy.
   *(P0, S.)*
@@ -112,29 +110,34 @@ process), not missing features.
 
 ## Epic 3 — Accessibility
 
-- **Add aria-labels / semantic roles** to interactive tiles — many are
-  `div`+`onClick` or unlabeled buttons across both kid and parent surfaces.
-  *(P1, M.)*
-- **Add focus trapping / return-focus** to modals and drawers (Calendar, Badge
-  popup, Onboarding, PIN screen). *(P1, M.)*
-- **Run a color-contrast pass** across all 5 themes (classic / midnight / ocean
-  / bubblegum / cyberpunk) — likely WCAG AA failures in muted-text-on-card
-  combinations, especially after prior ad-hoc contrast patches. *(P1, S.)*
-- **Audit/raise minimum label font sizes** (some labels sit around ~10px).
-  *(P2, S.)*
+- **Accessibility hardening pass** — bundle the four items below into one
+  effort instead of four separate sweeps: each one touches the same surfaces
+  (interactive tiles, modals/drawers, theme CSS), so reviewing/landing them
+  together is cheaper than reopening the same components four times.
+  *(P1, M overall.)*
+  - Add aria-labels / semantic roles to interactive tiles — many are
+    `div`+`onClick` or unlabeled buttons across both kid and parent surfaces.
+  - Add focus trapping / return-focus to modals and drawers (Calendar, Badge
+    popup, Onboarding, PIN screen).
+  - Run a color-contrast pass across all 5 themes (classic / midnight / ocean
+    / bubblegum / cyberpunk) — likely WCAG AA failures in muted-text-on-card
+    combinations, especially after prior ad-hoc contrast patches.
+  - Audit/raise minimum label font sizes (some labels sit around ~10px) —
+    lowest priority of the four (P2); fold in opportunistically rather than
+    blocking the rest.
 
 ## Epic 4 — Game Balance & Content Debt
 
-- **Resolve the rank point-curve**, explicitly called a placeholder in PR #90
-  ("exact balance will be revisited later") — needs a real design pass now that
-  the 24-tier ladder is live and kids are progressing through it. *(P1, M.)*
+- **Design the points economy in one pass**: resolve the rank point-curve
+  (explicitly called a placeholder in PR #90, "exact balance will be revisited
+  later") *and* re-check the total daily point ceiling (daily goals, bonus
+  items, and 4 separately-capped games all award points now) together — rank
+  thresholds can't be sanely set without first knowing the realistic
+  daily/weekly point ceiling they're paced against, so treat the curve and the
+  ceiling check as one design pass, not two. *(P1, M.)*
 - **Lock the theme palette.** It was wholesale-replaced once already (4 themes →
   5 new ones in PR #80); avoid a second full swap without a clear signal that
   the current set isn't working. *(P2, decision only.)*
-- **Re-check the total daily point ceiling** now that daily goals, bonus items,
-  and 4 separately-capped games all award points — confirm the per-source caps
-  compose into a sane daily maximum rather than just being capped in isolation.
-  *(P1, S.)*
 
 ## Epic 5 — Retention & Engagement
 
@@ -160,8 +163,10 @@ scope today is "plan for optionality," not commit.)*
 
 ## Epic 7 — Process Hygiene
 
-- **Triage every open/unmerged branch explicitly** (#92, #93 today) — don't
-  let future work pile up unmerged and unresolved the way these two did.
+- ~~**Triage every open/unmerged branch explicitly** (#92, #93 today)~~ —
+  **DONE**: #93 merged as #97, #92 explicitly decided to stay closed (see
+  Epic 1). Standing principle going forward: don't let future work pile up
+  unmerged and unresolved the way these two did.
 - **Keep this `BACKLOG.md` living** — update priorities as items land instead
   of letting new PRs silently supersede old ones without a record.
 - **Hold a short UI-stabilization window** while Epics 1–3 land: the parent
@@ -170,13 +175,21 @@ scope today is "plan for optionality," not commit.)*
   churn, low durability. Resist a fourth redesign or second palette swap until
   there's a concrete signal (user feedback, data) calling for it.
 
-## Do these first (top 5, in order)
+## Do these next (top 5, in order)
 
-1. ~~Revive and merge PR #93 (PIN/recovery hashing + lockout).~~ **DONE** — merged as #97.
-2. ~~Decide the fate of PR #92 (rank reorder)~~ — **DECIDED**: stays closed, won't merge (see Epic 1).
-3. ~~Add the `npm run lint` CI gate to `deploy.yml`.~~ **DONE.**
-4. ~~Stand up Vitest with tests for points/streak/badge logic.~~ **DONE** —
-   also caught and fixed a live `todayGoals` rollover bug along the way (see Epic 2).
-5. ~~Make an explicit access-control decision for Supabase~~ — **DONE**, see
-   Epic 1: scoped mutations behind `SECURITY DEFINER` RPCs, SELECT left open
-   for Realtime sync, accepted as the current risk posture for single/few-household scope.
+The original top-5 here (PIN/recovery hashing, the PR #92 decision, the lint
+gate, Vitest, and Supabase access control) is now fully done — see the
+strikethroughs in Epics 1, 2, and 7 above. Replacing it with the next five,
+prioritized from what's actually still open:
+
+1. **Write the data-handling note** (Epic 1, P1/S) — cheapest remaining item,
+   and a prerequisite for any wider distribution.
+2. **Harden error handling** around `localStorage` writes and incoming
+   Supabase realtime payloads (Epic 2, P1/M).
+3. **Run the accessibility hardening pass** (Epic 3, P1/M) — bundles
+   aria-labels, focus trapping, contrast, and the font-size audit into one
+   effort over the same surfaces.
+4. **Design the points economy in one pass**: rank curve + daily point
+   ceiling together (Epic 4, P1/M).
+5. **Ship PWA push notifications** (Epic 5, P1/L) — the single biggest lever
+   for retention; sequenced last here only because of size, not importance.
