@@ -168,13 +168,23 @@ process), not missing features.
 
 ## Epic 4 — Game Balance & Content Debt
 
-- **Design the points economy in one pass**: resolve the rank point-curve
-  (explicitly called a placeholder in PR #90, "exact balance will be revisited
-  later") *and* re-check the total daily point ceiling (daily goals, bonus
-  items, and 4 separately-capped games all award points now) together — rank
-  thresholds can't be sanely set without first knowing the realistic
-  daily/weekly point ceiling they're paced against, so treat the curve and the
-  ceiling check as one design pass, not two. *(P1, M.)*
+- ~~**Design the points economy in one pass**~~ — **DECIDED: current curve and
+  point values are sound, no changes needed.** Tallied actual point sources
+  against default settings: food tray (5 × `foodPts` 10 + `bonusPts` 25 full-tray
+  bonus = 75/day, capped), daily goals (8 defaults summing to 105/day, capped),
+  games (capped at `DAILY_GAME_WIN_CAP` × `gamePts` = 45/day), and bonus items
+  (uncapped by design — CLAUDE.md documents these as honor-system/repeatable,
+  not a gap to close here). That puts the realistic daily ceiling at roughly
+  90–160/day for an engaged kid (not maxing every category every day) and
+  ~225–285/day at a theoretical perfect day. Paced against the rank ladder's
+  top threshold (13,800, a deliberate +50-per-tier triangular curve from PR
+  #90, not arbitrary) that's ~3–5 months of real use to reach the top rank —
+  fast early ranks (Noob/Granny clear in under a day) slowing into a
+  multi-month arc — which the product owner confirmed matches actual observed
+  pacing. No changes made to `ranks.ts`, `defaultState.ts`, or per-action point
+  values; this closes the "placeholder, revisit later" flag from PR #90 with a
+  validated answer instead of leaving it open indefinitely. *(P1, M — closed
+  as a decision, same pattern as the PR #92 rank-reorder call in Epic 1.)*
 - **Lock the theme palette.** It was wholesale-replaced once already (4 themes →
   5 new ones in PR #80); avoid a second full swap without a clear signal that
   the current set isn't working. *(P2, decision only.)*
@@ -229,7 +239,10 @@ prioritized from what's actually still open:
 3. ~~Run the accessibility hardening pass~~ (Epic 3, P1/M) — **DONE**: all
    four sub-items (aria-labels, focus trapping, the contrast pass, and the
    font-size audit) are complete, see Epic 3 above.
-4. **Design the points economy in one pass**: rank curve + daily point
-   ceiling together (Epic 4, P1/M).
+4. ~~Design the points economy in one pass~~ (Epic 4, P1/M) — **DONE**:
+   tallied the real daily point ceiling and rank pacing, confirmed against
+   actual usage that the current curve and point values need no changes, see
+   Epic 4 above.
 5. **Ship PWA push notifications** (Epic 5, P1/L) — the single biggest lever
-   for retention; sequenced last here only because of size, not importance.
+   for retention; the only item left from this top-5 list, sequenced last
+   only because of size, not importance.
