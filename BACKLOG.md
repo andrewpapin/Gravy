@@ -104,6 +104,27 @@ process), not missing features.
   `todayGoals` is now unconditionally cleared (`= []`) at rollover, same as
   `todayGoalCounts`. Exactly the kind of regression standing up tests was
   meant to catch.
+- ~~**Fix UTC/local day-boundary mismatch in day rollover**~~ — reported as
+  "the day at the top says today, but items I selected last night are still
+  selected." `todayStr()`/`applyDayRollover()` keyed "today" off **UTC**
+  date fields (by original deliberate design, so every device in a synced
+  household agreed on "today" regardless of timezone) while the date shown
+  in the UI (`Greeting.tsx`, `CalendarPanel.tsx`) used the device's
+  **local** date. For any timezone west of UTC (all of North/South America),
+  UTC midnight lands hours before local midnight, so an evening goal-check
+  could already land on the next UTC day; by the next local morning, the
+  local calendar had rolled over but the UTC date — and thus
+  `lastActiveDate` — hadn't, so rollover silently no-op'd and last night's
+  selections stayed checked. **DONE** — `dateStrUTC()` is now
+  `dateStrLocal()`, built from local date fields, matching the UI; all call
+  sites (`todayStr()`, `applyDayRollover()`'s yesterday calc,
+  `backfillStreaksFromLogs()`) and their `setUTCDate`/`setDate` arithmetic
+  were updated to match. `vitest.config.ts` pins `TZ=UTC` for the test
+  process so the existing UTC-suffixed test fixtures stay deterministic;
+  `src/state/defaultState.test.ts` adds a regression test that fails
+  against the old UTC-keyed implementation. Tradeoff: a household synced
+  across timezones may now briefly disagree on "today" near midnight
+  instead of agreeing on the wrong "today" for everyone.
 - ~~**Add a CI gate**~~ — **DONE.** `deploy.yml` now runs `npm run lint` then
   `npm test` before `npm run build`, so a lint or test failure blocks deploy.
   *(P0, S.)*

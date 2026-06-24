@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyDayRollover, backfillStreaksFromLogs, cloneDefaultState, saveRoot, saveState } from './defaultState';
+import { applyDayRollover, backfillStreaksFromLogs, cloneDefaultState, saveRoot, saveState, todayStr } from './defaultState';
 import type { Goal, GravyRoot, GravyState } from './types';
 
 const FULL_TRAY = { fruit: 1, veggie: 1, protein: 1, dairy: 1, grain: 1 };
@@ -20,6 +20,7 @@ function setToday(iso: string) {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllEnvs();
 });
 
 describe('applyDayRollover', () => {
@@ -173,6 +174,30 @@ describe('applyDayRollover', () => {
     // simulate a same-day re-check by inspecting the filtered list directly post-rollover.
     const result = applyDayRollover(state);
     expect(result.todayGoals).toEqual([]); // cleared for the new day regardless
+  });
+
+  it('keys "today" off the device-local calendar date, not the UTC date', () => {
+    vi.stubEnv('TZ', 'America/New_York');
+    // 11:30pm Jan 10 in New York is already 4:30am Jan 11 in UTC.
+    setToday('2024-01-11T04:30:00Z');
+    expect(todayStr()).toBe('2024-01-10');
+  });
+
+  it('does not roll over between two moments that fall on the same local day but different UTC days', () => {
+    vi.stubEnv('TZ', 'America/New_York');
+    // Kid checks off a goal at 11:30pm Jan 10 local time -- already Jan 11 in UTC.
+    setToday('2024-01-11T04:30:00Z');
+    const lastNight = applyDayRollover(freshState({ lastActiveDate: null }));
+    expect(lastNight.lastActiveDate).toBe('2024-01-10');
+    lastNight.todayGoals = [DAILY_GOAL.id];
+    lastNight.todayPoints = 10;
+
+    // 7am Jan 11 local time: a new local day, but still the same UTC calendar date as above.
+    setToday('2024-01-11T12:00:00Z');
+    const nextMorning = applyDayRollover(lastNight);
+    expect(nextMorning.lastActiveDate).toBe('2024-01-11');
+    expect(nextMorning.todayGoals).toEqual([]);
+    expect(nextMorning.todayPoints).toBe(0);
   });
 });
 
