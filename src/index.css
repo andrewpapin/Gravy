@@ -1776,6 +1776,13 @@ button.goal-tile:active { transform: scale(0.97); }
 .account-menu-option-text { display: flex; flex-direction: column; gap: 2px; }
 .account-menu-option-title { font-size: 1rem; font-weight: 900; color: var(--dark); }
 .account-menu-option-sub { font-size: 0.75rem; font-weight: 700; color: var(--muted); }
+.account-menu-version {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+}
 
 /* ===== PARENT MODE ===== */
 .pin-screen {

@@ -130,7 +130,11 @@ The parent PIN and recovery answer are stored as salted SHA-256 hashes (`src/sta
 
 ### Deployment
 
-GitHub Actions (`.github/workflows/deploy.yml`) builds and deploys to GitHub Pages on push to `main`. The Vite `base` is `/Gravy/`.
+GitHub Actions (`.github/workflows/deploy.yml`) builds and deploys to GitHub Pages on push to `main`. The Vite `base` is `/Gravy/`. The checkout step uses `fetch-depth: 0` (full history, not the default shallow clone) so the version computation below has commit messages to search.
+
+### Version Display
+
+`vite.config.ts` computes a version string at build time and injects it via the `__APP_VERSION__` define: `APP_VERSION_BASE` (currently `'1.1'`, bumped manually for breaking/major UI changes) plus the most recent PR number found by scanning `git log -50 --pretty=%s` for a `#<digits>` pattern (matches both merge-commit titles like `Merge pull request #109 from ...` and squash-merge titles like `Title (#102)`) — falls back to `0` if none is found (e.g. a shallow clone with no PR-referencing commit in range). `src/version.ts` declares the `__APP_VERSION__` ambient global and re-exports it as `APP_VERSION`; `AccountMenu.tsx` renders it (`v1.1.109`-style) in a small footer below the menu options so a parent/tester can always see which build is running. This number is for display/debugging only — it doesn't drive `migrateLegacyState()` or any other app logic, and it isn't related to the persisted-state `version: 2` field in `GravyRoot` (`src/state/types.ts`).
 
 ### PWA Update Mechanism
 

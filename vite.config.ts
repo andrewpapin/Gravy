@@ -1,10 +1,28 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'node:child_process'
+
+// Bumped manually for breaking/major UI changes; the trailing number is the
+// most recently merged PR, picked up automatically from git history below.
+const APP_VERSION_BASE = '1.1'
+
+function getAppVersion(): string {
+  try {
+    const log = execSync('git log -50 --pretty=%s', { encoding: 'utf-8' })
+    const match = log.match(/#(\d+)/)
+    return `${APP_VERSION_BASE}.${match ? match[1] : '0'}`
+  } catch {
+    return `${APP_VERSION_BASE}.0`
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/Gravy/' : '/',
+  define: {
+    __APP_VERSION__: JSON.stringify(getAppVersion()),
+  },
   plugins: [
     react(),
     VitePWA({

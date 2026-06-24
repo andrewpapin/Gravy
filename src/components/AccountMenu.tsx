@@ -2,6 +2,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faGift, faRightLeft, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import { useFocusTrap } from './useFocusTrap';
+import { APP_VERSION } from '../version';
 
 interface AccountMenuProps {
   open: boolean;
@@ -67,6 +68,7 @@ export function AccountMenu({
               <span className="account-menu-option-sub">Enter PIN</span>
             </span>
           </button>
+          <div className="account-menu-version">v{APP_VERSION}</div>
         </div>
       )}
     </div>
