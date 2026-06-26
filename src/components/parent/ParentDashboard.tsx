@@ -7,7 +7,6 @@ import { GoalsPanel } from './GoalsPanel';
 import { CalendarPanel } from './CalendarPanel';
 import { StorePanel } from './StorePanel';
 import { BadgesPanel } from './BadgesPanel';
-import { SettingsPanel } from './SettingsPanel';
 
 type Root = 'menu' | RootDest;
 
@@ -17,7 +16,6 @@ const ROOT_TITLES: Record<Exclude<Root, 'menu'>, string> = {
   calendar: 'Calendar',
   store: 'Store',
   badges: 'Badges',
-  settings: 'Settings',
 };
 
 interface ParentDashboardProps {
@@ -46,6 +44,5 @@ export function ParentDashboard({ onHeaderChange }: ParentDashboardProps) {
   if (root === 'goals') return <GoalsPanel />;
   if (root === 'calendar') return <CalendarPanel onHeaderChange={onHeaderChange} goToRoot={goToRoot} />;
   if (root === 'store') return <StorePanel />;
-  if (root === 'badges') return <BadgesPanel />;
-  return <SettingsPanel />;
+  return <BadgesPanel />;
 }

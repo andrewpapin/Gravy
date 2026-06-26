@@ -35,24 +35,26 @@ Gravy is a gamified chores + nutrition + rewards PWA for kids built with React 1
 
 Both surfaces are reached as overlay drawers/modals from `HomeScreen` (`src/App.tsx` `AppShell`); there is no router, just boolean open/close state per drawer.
 
-- **Kid view** (`src/components/`) — `HomeScreen` (rank/streak/badge stats card, Games hub card, food tray, daily goals, bonus items) plus drawers for the reward store, badges, games, and the rank ladder. Tapping the avatar icon in `TopBar` opens **`AccountMenu`**, a menu with up to four destinations:
+- **Kid view** (`src/components/`) — `HomeScreen` (rank/streak/badge stats card, Games hub card, food tray, daily goals, bonus items) plus drawers for the reward store, badges, games, and the rank ladder. Tapping the avatar icon in `TopBar` opens **`AccountMenu`**, a menu with up to five destinations:
   - **Reward Store** — no PIN, always tappable.
-  - **Grown-Up Access** — a single lock row, not a destination. Locked, it shows `faLock` and "Locked — tap to unlock"; tapping it opens `PinScreen` inline (in place of the menu list) and, on success, calls `unlockGrownUpAccess()`. Unlocked, it shows `faLockOpen` and "Unlocked for this session — tap to lock"; tapping it again calls `lockGrownUpAccess()` and re-locks immediately. This one lock gates all three items below — there's no more per-item PIN screen.
+  - **Grown-Up Access** — a single lock row, not a destination. Locked, it shows `faLock` and "Locked — tap to unlock"; tapping it opens `PinScreen` inline (in place of the menu list) and, on success, calls `unlockGrownUpAccess()`. Unlocked, it shows `faLockOpen` and "Unlocked for this session — tap to lock"; tapping it again calls `lockGrownUpAccess()` and re-locks immediately. This one lock gates all four items below — there's no more per-item PIN screen.
   - **Switch Profile** — only shown when there's more than one profile; disabled (native `disabled` attribute) until the lock above is unlocked. Opens `ProfileSwitcher`, a read-only quick-switch list (tap a profile → `switchProfile(id)`).
   - **Grown ups** — disabled until unlocked. Opens `GrownUpsDrawer` → `ParentDashboard` directly, no inline PIN step.
   - **Profiles** — disabled until unlocked. Opens `ProfilesManager`, full CRUD for kid profiles (add/edit name, avatar icon+colors, theme; delete with confirm; never deletes the last profile).
+  - **Advanced Settings** — disabled until unlocked. Opens `AdvancedSettingsDrawer` (`src/components/parent/AdvancedSettingsDrawer.tsx`) directly, no inline PIN step — a thin `Modal` wrapper around `SettingsPanel` (see Parent dashboard below). This used to be a `ParentDashboard` root-menu card (`RootMenu`'s "Settings" entry) but was promoted to a top-level `AccountMenu` item, sibling to Profiles, since it's account-level config rather than day-to-day parenting tasks.
 
-  The unlocked state (`grownUpUnlocked` in `GravyContext`, backed by `src/state/grownUpUnlock.ts`) is stored in `sessionStorage`, not `localStorage` like the rest of the app's data — so it follows the current browser tab/PWA window and resets to locked whenever that session ends, even though everything else persists indefinitely. `GrownUpsDrawer`/`ProfilesManager`/`ProfileSwitcher` no longer render `PinScreen` themselves; they assume they're only ever opened from `AccountMenu` once already unlocked.
+  The unlocked state (`grownUpUnlocked` in `GravyContext`, backed by `src/state/grownUpUnlock.ts`) is stored in `sessionStorage`, not `localStorage` like the rest of the app's data — so it follows the current browser tab/PWA window and resets to locked whenever that session ends, even though everything else persists indefinitely. `GrownUpsDrawer`/`ProfilesManager`/`ProfileSwitcher`/`AdvancedSettingsDrawer` no longer render `PinScreen` themselves; they assume they're only ever opened from `AccountMenu` once already unlocked.
 
   There is no longer a no-PIN "kid settings" screen — theme and child name, which used to live in a standalone `SettingsScreen`, are now per-profile fields edited through the PIN-gated `ProfilesManager`.
 
-- **Parent dashboard** (`src/components/parent/`) — `ParentDashboard` is a two-level router: a local `root` state (`'menu' | 'approvals' | 'goals' | 'calendar' | 'store' | 'badges' | 'settings'`). At `'menu'` it renders `RootMenu` (a card list, not tabs); picking a card drills into one panel with a back button that restores the menu:
+- **Parent dashboard** (`src/components/parent/`) — `ParentDashboard` is a two-level router: a local `root` state (`'menu' | 'approvals' | 'goals' | 'calendar' | 'store' | 'badges'`). At `'menu'` it renders `RootMenu` (a card list, not tabs); picking a card drills into one panel with a back button that restores the menu:
   - `ApprovalsPanel` — approve/decline pending reward requests.
   - `GoalsPanel` — goal/bonus-item CRUD, and (nested at the bottom of this same panel) `PointsPanel` for the per-action point values (`foodPts`, `bonusPts`, `gamePts`).
   - `CalendarPanel` — view/edit past days.
   - `StorePanel` — reward CRUD.
   - `BadgesPanel` — customize badge name/emoji/icon/visibility.
-  - `SettingsPanel` — a thin composer that just renders `TimezonePanel` (account time zone) + `SecurityPanel` (PIN + recovery Q&A) + `SyncPanel` (household code create/join/change/leave) + `DangerZonePanel` (reset today / reset everything) in sequence.
+
+  `SettingsPanel` — a thin composer that just renders `TimezonePanel` (account time zone) + `SecurityPanel` (PIN + recovery Q&A) + `SyncPanel` (household code create/join/change/leave) + `DangerZonePanel` (reset today / reset everything) in sequence — is no longer one of `ParentDashboard`'s root-menu panels. It's reached directly from `AccountMenu`'s "Advanced Settings" item via `AdvancedSettingsDrawer` (see Kid view above), not nested inside the Grown ups dashboard.
 
 ### Global State
 
