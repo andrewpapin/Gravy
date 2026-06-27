@@ -5,8 +5,25 @@ import type { ActionLogEntry, ActionLogType, GravyState } from './types';
 // (already-correct) point-reversal arithmetic, which is unaffected by what's evicted.
 export const ACTION_LOG_MAX_ENTRIES = 500;
 
-export function appendActionLog(next: GravyState, entry: Omit<ActionLogEntry, 'id' | 'at'>): void {
-  next.actionLog.push({ ...entry, id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, at: Date.now() });
+// Identifies the parent account that performed an action (Epic 8 item 5). `undefined` means no
+// account was signed in — the entry is logged without an actor (legacy / anonymous parent).
+export interface LogActor {
+  userId?: string;
+  label?: string;
+}
+
+export function appendActionLog(
+  next: GravyState,
+  actor: LogActor | undefined,
+  entry: Omit<ActionLogEntry, 'id' | 'at' | 'actorUserId' | 'actorLabel'>,
+): void {
+  next.actionLog.push({
+    ...entry,
+    ...(actor?.userId ? { actorUserId: actor.userId } : {}),
+    ...(actor?.label ? { actorLabel: actor.label } : {}),
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    at: Date.now(),
+  });
   if (next.actionLog.length > ACTION_LOG_MAX_ENTRIES) {
     next.actionLog.splice(0, next.actionLog.length - ACTION_LOG_MAX_ENTRIES);
   }

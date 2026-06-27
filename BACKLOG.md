@@ -293,40 +293,40 @@ see the "real access control" and rate-limiting items there. Supabase Auth is th
 assumed backend: `@supabase/supabase-js` is already a dependency, and RLS policies keyed
 to `auth.uid()` are only cleanly achievable through it.)*
 
-- **Adopt Supabase Auth for parent accounts** (email/password + magic link). Replaces
-  "anyone with the PIN" with real per-parent identity and unlocks `auth.uid()`-scoped RLS,
-  which the current open-`SELECT`-on-`households` model structurally cannot use. *(P1, L.)*
-- **Keep the household PIN as a local kid-screen lock, decoupled from account auth.** The
-  PIN's actual job is keeping a kid out of the parent dashboard on a shared device, not
-  authenticating a parent's identity — that job doesn't go away once accounts exist.
-  Re-scope `pinHash`/`src/state/pinLockout.ts` as a per-device session lock layered on top
-  of an authenticated account, not a replacement for one. *(P1, S.)*
-- **Household ownership + invite-by-code model.** A household gets an `owner_id`
-  (`auth.uid()` of the creating account); the existing 6-char code becomes a join/invite
-  token linking additional parent accounts to that household, instead of today's "anyone
-  with the code has full anonymous read/write." Needs a `household_members` join table
-  (`household_id`, `user_id`, `role`) and a rewrite of the existing `SECURITY DEFINER` RPCs
-  (`gravy_create_household`, `gravy_upsert_household_state`, `gravy_rename_household`,
-  `gravy_lookup_household`, `gravy_delete_household`) to check membership/ownership instead
-  of just code-match. *(P1, L.)*
-- **Migration: claim-or-deprecate window for existing PIN-only households.** Existing
-  households (PIN + code, no account) keep working unmigrated for an explicit window; on
-  first parent-account signup, "claim this household" sets `owner_id` on the existing
-  code's row with no data migration needed (`state` JSONB is untouched). After the window,
-  require claiming to keep cloud sync — this is what actually closes the open-`SELECT`
-  residual risk Epic 1 accepted, instead of leaving it open forever. Must ship in the same
-  release as household ownership, not after, and needs an in-app warning banner during the
-  window so no household is silently locked out. *(P1, M.)*
-- **Per-parent attribution on `actionLog`.** Add an actor field (`actorUserId`/
-  `actorLabel`) to `ActionLogEntry` (`src/state/types.ts`, confirmed it has no actor
-  field today) so `LogPanel` can show which parent logged food, approved a reward, or
-  adjusted a goal — every entry is anonymous-parent by construction today. Sequenced after
-  the two items above (nothing to attribute to before accounts exist). *(P2, S.)*
-- **Audit trail for dashboard-level/destructive actions.** Extends attribution beyond
-  kid-progress actions to what `LogPanel` deliberately excludes today (catalog edits,
-  settings changes, profile CRUD, Danger Zone resets, sync changes) now that there's a real
-  identity to attach to each. A separate, currently-nonexistent log surface, not an
-  extension of the existing action log. *(P2, M.)*
+- ~~**Adopt Supabase Auth for parent accounts**~~ — **DONE.** Email/password + magic-link
+  sign-in via `src/state/auth.ts`, surfaced in `AccountPanel` (Parent Dashboard → Advanced
+  Settings → Parent Account). Session state lives in `GravyContext` (`authUser`/`authReady`).
+  `auth.uid()`-scoped RLS itself is still deferred to Epic 9 (it can only land once enough
+  households have claimed), but the account identity it depends on now exists. *(was P1, L.)*
+- ~~**Keep the household PIN as a local kid-screen lock, decoupled from account auth.**~~ —
+  **DONE.** The PIN/`grownUpUnlocked` lock (`src/state/grownUpUnlock.ts`,
+  `src/state/pinLockout.ts`) is explicitly documented and kept as a per-device kid-screen
+  lock independent of the parent account — neither gates the other. *(was P1, S.)*
+- ~~**Household ownership + invite-by-code model.**~~ — **DONE.**
+  `supabase/migrations/20260627000000_auth_household_ownership.sql` adds `households.owner_id`,
+  a `household_members` (`household_code`, `user_id`, `role`) join table, and rewrites every
+  `SECURITY DEFINER` RPC (`gravy_create_household`, `gravy_upsert_household_state`,
+  `gravy_rename_household`, `gravy_delete_household`, `gravy_lookup_household`, plus new
+  `gravy_claim_household`/`gravy_household_status`) to check membership/ownership. A claimed
+  household restricts writes to members; the 6-char code becomes the join/invite token
+  (entering it while signed in links the account). *(was P1, L.)*
+- ~~**Migration: claim-or-deprecate window for existing PIN-only households.**~~ — **DONE.**
+  Pre-existing households all have `owner_id IS NULL` and keep working anonymously (legacy
+  anon read/write) until a signed-in parent claims them via `gravy_claim_household` — which
+  sets `owner_id` with no data migration (`state` JSONB untouched). The "Secure this
+  household" prompt in `SyncPanel` is the in-app banner driving the window. Tightening the
+  open-`SELECT` residual risk into `auth.uid()`-scoped RLS (the actual close-out) is the
+  Epic 9 RLS-migration item, sequenced after enough households claim. *(was P1, M.)*
+- ~~**Per-parent attribution on `actionLog`.**~~ — **DONE.** `ActionLogEntry` gained
+  `actorUserId`/`actorLabel` (`src/state/types.ts`); `appendActionLog(next, actor, entry)`
+  stamps them from the signed-in account (absent when none), and `LogPanel` shows "· by
+  <email>" on attributed entries. Unit-tested in `actionLog.test.ts`. *(was P2, S.)*
+- ~~**Audit trail for dashboard-level/destructive actions.**~~ — **DONE.** New shared
+  `auditLog` field + `src/state/auditLog.ts` (`appendAuditLog`, cap 300), instrumented across
+  catalog edits, settings (value-change-only; never logs secret values), badge config, profile
+  CRUD, danger-zone resets, and sync/ownership changes — each actor-attributed. Surfaced as a
+  new read-only "Admin Log" `ParentDashboard` destination (`AuditLogPanel`), distinct from the
+  kid-progress action log. Unit-tested in `auditLog.test.ts`. *(was P2, M.)*
 - *(Decision, stated so it isn't silently revisited: kid profiles stay non-authenticated
   sub-records under a parent-owned household, switched via the existing PIN-gated
   `ProfileSwitcher` — no kid email/password/OAuth, avoiding COPPA exposure from collecting

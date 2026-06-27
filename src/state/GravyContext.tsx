@@ -27,7 +27,8 @@ import {
   makeNewProfile,
   todayStr,
 } from './defaultState';
-import { appendActionLog, markMostRecentUndone } from './actionLog';
+import { appendActionLog, markMostRecentUndone, type LogActor } from './actionLog';
+import { appendAuditLog } from './auditLog';
 import { FOODS } from '../data/foods';
 import { resolveToastIcon } from '../data/icons';
 import { isValidTimezone } from '../data/timezones';
@@ -48,6 +49,18 @@ import {
 } from './sync';
 import { safeGetItem, safeRemoveItem, safeSetItem } from './storage';
 import { readGrownUpUnlocked, writeGrownUpUnlocked } from './grownUpUnlock';
+import {
+  type AuthResult,
+  type AuthUser,
+  type HouseholdStatus,
+  claimHousehold as claimHouseholdRpc,
+  getHouseholdStatus,
+  onAuthChange,
+  sendMagicLink,
+  signInWithPassword,
+  signOut as signOutSupabase,
+  signUpWithPassword,
+} from './auth';
 
 export type SyncStatus = 'idle' | 'syncing' | 'error';
 
@@ -63,6 +76,22 @@ const THEME_COLORS: Record<Theme, string> = {
   ocean: '#e0f7fa',
   bubblegum: '#ffe5ec',
   cyberpunk: '#fcee0a',
+};
+
+// Friendly names for the Admin Log's settingChanged entries (Epic 8 item 6).
+const SETTING_LABELS: Partial<Record<SettableSettingKey, string>> = {
+  pin: 'PIN',
+  recoveryAnswer: 'recovery answer',
+  recoveryQuestion: 'recovery question',
+  childName: 'child name',
+  foodPts: 'food points',
+  bonusPts: 'bonus points',
+  gamePts: 'game points',
+  theme: 'theme',
+  avatarIcon: 'avatar icon',
+  avatarIconColor: 'avatar icon color',
+  avatarBgColor: 'avatar background color',
+  timezone: 'time zone',
 };
 
 export interface ToastItem {
@@ -146,6 +175,17 @@ interface GravyContextValue {
   leaveHousehold: () => void;
   deleteHouseholdEverywhere: () => Promise<boolean>;
   changeHouseholdCode: (newCode: string) => Promise<boolean>;
+  // --- Parent account (Epic 8) ---
+  authUser: AuthUser | null;
+  authReady: boolean;
+  signUp: (email: string, password: string) => Promise<AuthResult>;
+  signIn: (email: string, password: string) => Promise<AuthResult>;
+  sendSignInLink: (email: string) => Promise<AuthResult>;
+  signOutAccount: () => Promise<void>;
+  // Whether the current synced household is owned by an account (claimed). null = unknown/not
+  // checked yet (e.g. no household, or offline). Drives the "secure this household" prompt.
+  householdStatus: HouseholdStatus | null;
+  claimHousehold: () => Promise<boolean>;
 }
 
 const GravyContext = createContext<GravyContextValue | null>(null);
@@ -200,9 +240,43 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     writeGrownUpUnlocked(false);
     setGrownUpUnlocked(false);
   }, []);
+  // Parent account (Epic 8). Independent of the kid-screen PIN/grownUpUnlocked lock above —
+  // signing in identifies a parent for household ownership, the PIN keeps a kid out of the
+  // dashboard on a shared device. authReady gates UI until the initial session check resolves.
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [householdStatus, setHouseholdStatus] = useState<HouseholdStatus | null>(null);
   const lastSyncedRef = useRef<string | null>(null);
   const pendingTimersRef = useRef<number[]>([]);
   const storageWarnedRef = useRef(false);
+  // Read synchronously by the log-append helpers so every entry is stamped with the parent
+  // account that performed it without re-creating those callbacks on each sign-in (Epic 8 item 5/6).
+  const actorRef = useRef<LogActor | undefined>(undefined);
+
+  // Track the signed-in parent account. Fires once on mount with the current session (or null)
+  // and again on every sign-in/out.
+  useEffect(() => {
+    const unsub = onAuthChange((user) => {
+      setAuthUser(user);
+      setAuthReady(true);
+      actorRef.current = user ? { userId: user.id, label: user.email ?? undefined } : undefined;
+    });
+    return unsub;
+  }, []);
+
+  // Refresh whether the current household is claimed whenever the code or the signed-in account
+  // changes — drives the "secure this household" prompt. Failures (offline) leave status null.
+  useEffect(() => {
+    if (!householdCode) {
+      setHouseholdStatus(null);
+      return;
+    }
+    let cancelled = false;
+    getHouseholdStatus(householdCode)
+      .then((s) => { if (!cancelled) setHouseholdStatus(s); })
+      .catch(() => { if (!cancelled) setHouseholdStatus(null); });
+    return () => { cancelled = true; };
+  }, [householdCode, authUser]);
 
   // Applies the parent-selected theme to the whole app. useLayoutEffect (rather than
   // useEffect) so the attribute is set before paint, avoiding a flash of the light theme.
@@ -400,7 +474,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const food = FOODS.find((f) => f.id === id);
       const label = `${food?.label ?? ''} logged!`;
       awardPoints(next, next.settings.foodPts, label);
-      appendActionLog(next, {
+      appendActionLog(next, actorRef.current, {
         type: 'food',
         label,
         pts: next.settings.foodPts,
@@ -471,7 +545,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         next.todayGoals.push(id);
         next.counters.totalGoals++;
         awardPoints(next, goal.pts, `${goal.name} done!`);
-        appendActionLog(next, {
+        appendActionLog(next, actorRef.current, {
           type: 'goal',
           label: `${goal.name} done!`,
           pts: goal.pts,
@@ -531,7 +605,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
           next.todayGameWins++;
           const label = `🎉 ${game?.name ?? 'Game'} win!`;
           awardPoints(next, next.settings.gamePts, label);
-          appendActionLog(next, {
+          appendActionLog(next, actorRef.current, {
             type: 'game',
             label,
             pts: next.settings.gamePts,
@@ -562,7 +636,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
 
       const sign = goal.pts < 0 ? '−' : '+';
       showToast(faStar, `${sign}${Math.abs(goal.pts)} ${goal.name}`);
-      appendActionLog(next, {
+      appendActionLog(next, actorRef.current, {
         type: 'bonus',
         label: `${sign}${Math.abs(goal.pts)} ${goal.name}`,
         pts: applied,
@@ -614,7 +688,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const food = FOODS.find((f) => f.id === foodId);
       const label = `${food?.label ?? ''} added!`;
       awardPointsForDay(next, log, next.settings.foodPts, label);
-      appendActionLog(next, {
+      appendActionLog(next, actorRef.current, {
         type: 'food',
         label,
         pts: next.settings.foodPts,
@@ -716,7 +790,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         // the live balance/lifetime total exactly like completing the goal today does.
         const label = `${goal.name} logged!`;
         awardPointsForDay(next, log, goal.pts, label);
-        appendActionLog(next, {
+        appendActionLog(next, actorRef.current, {
           type: 'goal',
           label,
           pts: goal.pts,
@@ -755,7 +829,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
 
       const sign = goal.pts < 0 ? '−' : '+';
       showToast(resolveToastIcon(goal.icon, goal.emoji), `${sign}${Math.abs(goal.pts)} ${goal.name}`);
-      appendActionLog(next, {
+      appendActionLog(next, actorRef.current, {
         type: 'bonus',
         label: `${sign}${Math.abs(goal.pts)} ${goal.name}`,
         pts: applied,
@@ -834,7 +908,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       next.pendingRewards.push(pr);
       next.counters.totalRewards++;
       showToast(faEnvelope, `${reward.name} requested!`);
-      appendActionLog(next, {
+      appendActionLog(next, actorRef.current, {
         type: 'rewardRequested',
         label: `${reward.name} requested!`,
         pts: 0,
@@ -860,7 +934,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
           ? `${reward.name} approved — balance was short by ${shortfall} pts`
           : `${reward.name} approved!`;
         showToast(shortfall > 0 ? faTriangleExclamation : faCircleCheck, label);
-        appendActionLog(next, {
+        appendActionLog(next, actorRef.current, {
           type: 'rewardApproved',
           label,
           pts: -(prev.points - next.points),
@@ -877,7 +951,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const next = clone(prev);
       next.pendingRewards = next.pendingRewards.filter((p) => p.id !== prId);
       showToast(faCircleXmark, 'Request declined');
-      appendActionLog(next, {
+      appendActionLog(next, actorRef.current, {
         type: 'rewardDeclined',
         label: 'Request declined',
         pts: 0,
@@ -891,6 +965,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     setState((prev) => {
       const next = clone(prev);
       next.goals.push({ id: Date.now(), ...goal });
+      appendAuditLog(next, actorRef.current, { type: 'goalAdded', label: `Added ${goal.isDaily === false ? 'bonus item' : 'goal'} "${goal.name}"` });
       showToast(faCircleCheck, `"${goal.name}" added!`);
       return next;
     });
@@ -903,6 +978,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const next = clone(prev);
       next.goals = next.goals.filter((g) => g.id !== id);
       next.todayGoals = next.todayGoals.filter((g) => g !== id);
+      appendAuditLog(next, actorRef.current, { type: 'goalRemoved', label: `Removed goal "${goal.name}"` });
       showToast(faTrashCan, `"${goal.name}" removed`);
       return next;
     });
@@ -922,6 +998,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         if (next.todayGoalCounts) delete next.todayGoalCounts[id];
         if (goal.isDaily === false) goal.target = undefined;
       }
+      appendAuditLog(next, actorRef.current, { type: 'goalUpdated', label: `Edited goal "${goal.name}"` });
       return next;
     });
   }, []);
@@ -930,6 +1007,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     setState((prev) => {
       const next = clone(prev);
       next.rewards.push({ id: Date.now(), ...reward });
+      appendAuditLog(next, actorRef.current, { type: 'rewardAdded', label: `Added reward "${reward.name}" (${reward.cost} pts)` });
       showToast(faCartShopping, `"${reward.name}" added to store!`);
       return next;
     });
@@ -941,6 +1019,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const reward = next.rewards.find((r) => r.id === id);
       if (!reward) return prev;
       Object.assign(reward, patch);
+      appendAuditLog(next, actorRef.current, { type: 'rewardUpdated', label: `Edited reward "${reward.name}"` });
       return next;
     });
   }, []);
@@ -952,6 +1031,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const next = clone(prev);
       next.rewards = next.rewards.filter((r) => r.id !== id);
       next.pendingRewards = next.pendingRewards.filter((pr) => pr.rewardId !== id);
+      appendAuditLog(next, actorRef.current, { type: 'rewardRemoved', label: `Removed reward "${reward.name}"` });
       showToast(faTrashCan, `"${reward.name}" removed`);
       return next;
     });
@@ -996,6 +1076,16 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       } else {
         (next.settings[key] as number) = Math.max(0, parseInt(val) || 0);
       }
+      // Audit only real changes (SecurityPanel blur-saves can fire with no actual edit). Never
+      // record the value of secret fields (PIN / recovery answer), only that they changed.
+      if (JSON.stringify(next.settings) !== JSON.stringify(prev.settings)) {
+        const name = SETTING_LABELS[key] ?? key;
+        const secret = key === 'pin' || key === 'recoveryAnswer';
+        appendAuditLog(next, actorRef.current, {
+          type: 'settingChanged',
+          label: secret ? `Updated ${name}` : `Changed ${name} to "${val}"`,
+        });
+      }
       return next;
     });
   }, []);
@@ -1010,6 +1100,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       next.todayGoals = [];
       next.todayGoalCounts = {};
       next.todayBonusApplied = {};
+      appendAuditLog(next, actorRef.current, { type: 'resetToday', label: "Reset today's progress" });
       showToast(faRotate, "Today reset!");
       return next;
     });
@@ -1043,6 +1134,10 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       next.settings.avatarIconColor = prev.settings.avatarIconColor;
       next.settings.avatarBgColor = prev.settings.avatarBgColor;
       next.badgeConfig = badgeConfig;
+      // Preserve the household audit trail across a reset (don't let "reset everything" erase
+      // its own evidence), then record the reset itself.
+      next.auditLog = prev.auditLog;
+      appendAuditLog(next, actorRef.current, { type: 'resetAll', label: 'Reset everything' });
       showToast(faTriangleExclamation, 'Everything reset');
       return applyDayRollover(next);
     });
@@ -1053,6 +1148,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const next = clone(prev);
       const cfg = next.badgeConfig[id] || {};
       next.badgeConfig[id] = { ...cfg, [key]: value };
+      appendAuditLog(next, actorRef.current, { type: 'badgeConfigChanged', label: `Updated badge settings (${id})` });
       return next;
     });
   }, []);
@@ -1087,12 +1183,21 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         activeProfileId: switchTo ? entry.id : merged.activeProfileId,
       });
       if (switchTo) setState(entry.state);
+      setState((prev) => {
+        const next = clone(prev);
+        appendAuditLog(next, actorRef.current, { type: 'profileAdded', label: `Added profile "${entry.state.settings.childName}"` });
+        return next;
+      });
       showToast(faUserPlus, `Added ${entry.state.settings.childName}`);
     },
     [showToast],
   );
 
   const updateProfile = useCallback((id: string, patch: ProfilePatch) => {
+    const profileName =
+      id === rootRef.current.activeProfileId
+        ? stateRef.current.settings.childName
+        : rootRef.current.profiles.find((p) => p.id === id)?.state.settings.childName;
     if (id === rootRef.current.activeProfileId) {
       setState((prev) => ({ ...prev, settings: { ...prev.settings, ...patch } }));
     } else {
@@ -1105,6 +1210,11 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         ),
       }));
     }
+    setState((prev) => {
+      const next = clone(prev);
+      appendAuditLog(next, actorRef.current, { type: 'profileUpdated', label: `Edited profile${profileName ? ` "${profileName}"` : ''} settings` });
+      return next;
+    });
   }, []);
 
   const deleteProfile = useCallback(
@@ -1126,6 +1236,11 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         activeProfileId: wasActive ? remaining[0].id : merged.activeProfileId,
       });
       if (wasActive) setState(nextState);
+      setState((prev) => {
+        const next = clone(prev);
+        appendAuditLog(next, actorRef.current, { type: 'profileRemoved', label: `Deleted profile${removed ? ` "${removed.state.settings.childName}"` : ''}` });
+        return next;
+      });
       if (removed) showToast(faTrashCan, `Deleted ${removed.state.settings.childName}`);
     },
     [showToast],
@@ -1146,6 +1261,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         safeSetItem(HOUSEHOLD_CODE_KEY, normalized);
         setHouseholdCode(normalized);
         setSyncStatus('idle');
+        setState((prev) => { const next = clone(prev); appendAuditLog(next, actorRef.current, { type: 'syncEnabled', label: `Enabled cloud sync (code ${normalized})` }); return next; });
         showToast(faCloud, `Cloud sync enabled! Code: ${normalized}`);
         return normalized;
       } catch (err) {
@@ -1174,6 +1290,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         safeSetItem(HOUSEHOLD_CODE_KEY, code);
         setHouseholdCode(code);
         setSyncStatus('idle');
+        setState((prev) => { const next = clone(prev); appendAuditLog(next, actorRef.current, { type: 'syncEnabled', label: `Enabled cloud sync (code ${code})` }); return next; });
         showToast(faCloud, `Cloud sync enabled! Code: ${code}`);
         return code;
       } catch (err) {
@@ -1221,6 +1338,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       safeSetItem(HOUSEHOLD_CODE_KEY, normalized);
       setHouseholdCode(normalized);
       setSyncStatus('idle');
+      setState((prev) => { const next = clone(prev); appendAuditLog(next, actorRef.current, { type: 'syncJoined', label: `Joined household (code ${normalized})` }); return next; });
       showToast(faCloud, 'Joined household sync!');
       return true;
     } catch (err) {
@@ -1247,6 +1365,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     setHouseholdCode(null);
     lastSyncedRef.current = null;
     setSyncStatus('idle');
+    setState((prev) => { const next = clone(prev); appendAuditLog(next, actorRef.current, { type: 'syncDisabled', label: 'Turned off cloud sync (this device)' }); return next; });
     showToast(faCloud, 'Cloud sync turned off');
   }, [showToast]);
 
@@ -1263,6 +1382,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       setHouseholdCode(null);
       lastSyncedRef.current = null;
       setSyncStatus('idle');
+      setState((prev) => { const next = clone(prev); appendAuditLog(next, actorRef.current, { type: 'syncDeleted', label: 'Deleted household everywhere' }); return next; });
       showToast(faTrashCan, 'Household deleted everywhere');
       return true;
     } catch {
@@ -1288,6 +1408,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       safeSetItem(HOUSEHOLD_CODE_KEY, normalized);
       setHouseholdCode(normalized);
       setSyncStatus('idle');
+      setState((prev) => { const next = clone(prev); appendAuditLog(next, actorRef.current, { type: 'syncCodeChanged', label: `Changed sync code to ${normalized}` }); return next; });
       showToast(faCloud, `Sync code changed to ${normalized}`);
       return true;
     } catch (err) {
@@ -1303,6 +1424,60 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       return false;
     }
   }, [householdCode, showToast]);
+
+  // --- Parent account actions (Epic 8) ---
+  const signUp = useCallback(async (email: string, password: string) => {
+    const res = await signUpWithPassword(email, password);
+    if (res.ok) showToast(faCircleCheck, 'Account created — check your email to confirm');
+    else showToast(faCircleXmark, res.error);
+    return res;
+  }, [showToast]);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    const res = await signInWithPassword(email, password);
+    if (res.ok) showToast(faCircleCheck, 'Signed in');
+    else showToast(faCircleXmark, res.error);
+    return res;
+  }, [showToast]);
+
+  const sendSignInLink = useCallback(async (email: string) => {
+    const res = await sendMagicLink(email);
+    if (res.ok) showToast(faEnvelope, 'Check your email for a sign-in link');
+    else showToast(faCircleXmark, res.error);
+    return res;
+  }, [showToast]);
+
+  const signOutAccount = useCallback(async () => {
+    await signOutSupabase();
+    showToast(faCircleCheck, 'Signed out');
+  }, [showToast]);
+
+  // Secures the currently-synced household to the signed-in account (the claim-or-deprecate
+  // path for an existing PIN-only household). No-ops harmlessly if already owned by this account.
+  const claimHousehold = useCallback(async () => {
+    if (!householdCode) return false;
+    if (!authUser) {
+      showToast(faCircleXmark, 'Sign in first to secure this household');
+      return false;
+    }
+    try {
+      await claimHouseholdRpc(householdCode);
+      const status = await getHouseholdStatus(householdCode).catch(() => null);
+      if (status) setHouseholdStatus(status);
+      setState((prev) => { const next = clone(prev); appendAuditLog(next, actorRef.current, { type: 'householdClaimed', label: `Secured household (code ${householdCode}) to account` }); return next; });
+      showToast(faCircleCheck, 'Household secured to your account');
+      return true;
+    } catch (err) {
+      const message = (err as { message?: string }).message;
+      showToast(
+        faCircleXmark,
+        message?.includes('already claimed')
+          ? 'This household is already owned by another account'
+          : navigator.onLine ? 'Server error — please try again' : 'No internet connection — try again when back online',
+      );
+      return false;
+    }
+  }, [householdCode, authUser, showToast]);
 
   // The active kid's identity comes from the live `state`; the others from the root.
   const profiles: ProfileSummary[] = root.profiles.map((p) => {
@@ -1368,6 +1543,14 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     leaveHousehold,
     deleteHouseholdEverywhere,
     changeHouseholdCode,
+    authUser,
+    authReady,
+    signUp,
+    signIn,
+    sendSignInLink,
+    signOutAccount,
+    householdStatus,
+    claimHousehold,
   };
 
   return <GravyContext.Provider value={value}>{children}</GravyContext.Provider>;

@@ -1,4 +1,4 @@
-import type { ActionLogEntry, GravyState, GravyRoot, ProfileEntry, Settings, Theme, Goal, Reward, PendingReward } from './types';
+import type { ActionLogEntry, AuditLogEntry, GravyState, GravyRoot, ProfileEntry, Settings, Theme, Goal, Reward, PendingReward } from './types';
 import { FOODS } from '../data/foods';
 import { hashWithSalt, randomSaltHex } from './hash';
 import { safeGetItem, safeSetItem } from './storage';
@@ -33,6 +33,7 @@ export const defaultState: GravyState = {
   pendingRewards: [],
   earnedBadges: [],
   actionLog: [],
+  auditLog: [],
   counters: {
     foodLogs: {},
     fullTrayDays: 0,
@@ -329,6 +330,16 @@ function sanitizeActionLog(v: unknown): ActionLogEntry[] {
     : [];
 }
 
+function sanitizeAuditLog(v: unknown): AuditLogEntry[] {
+  return Array.isArray(v)
+    ? v.filter(
+        (e): e is AuditLogEntry =>
+          !!e && typeof e === 'object' && typeof (e as AuditLogEntry).id === 'string' &&
+          typeof (e as AuditLogEntry).type === 'string' && typeof (e as AuditLogEntry).label === 'string',
+      )
+    : [];
+}
+
 // Coerces fields that are present but have the wrong runtime type/shape back to a safe
 // default, rather than letting a malformed payload — a buggy peer client, hand-edited
 // localStorage, or (if Supabase RLS is ever misconfigured) a third party writing directly to
@@ -355,6 +366,7 @@ function sanitizeState(state: GravyState): void {
   state.goals = sanitizeGoals(state.goals);
   state.rewards = sanitizeRewards(state.rewards);
   state.actionLog = sanitizeActionLog(state.actionLog);
+  state.auditLog = sanitizeAuditLog(state.auditLog);
 
   const counters = state.counters as unknown as Record<string, unknown>;
   counters.fullTrayDays = asFiniteNumber(counters.fullTrayDays, 0);
@@ -461,6 +473,8 @@ function copySharedInto(dest: GravyState, src: GravyState): void {
   dest.goals = JSON.parse(JSON.stringify(src.goals));
   dest.rewards = JSON.parse(JSON.stringify(src.rewards));
   dest.badgeConfig = JSON.parse(JSON.stringify(src.badgeConfig));
+  // The Admin Log is a household-wide history, so it's a shared field mirrored across profiles.
+  dest.auditLog = JSON.parse(JSON.stringify(src.auditLog ?? []));
   const destSettings = dest.settings as unknown as Record<string, unknown>;
   for (const k of SHARED_SETTING_KEYS) destSettings[k] = src.settings[k];
 }

@@ -1,9 +1,9 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faCircleCheck, faListCheck, faCartShopping, faMedal, faChevronRight, faCalendarDays,
+  faCircleCheck, faListCheck, faCartShopping, faMedal, faChevronRight, faCalendarDays, faClockRotateLeft,
 } from '@fortawesome/free-solid-svg-icons';
 
-export type RootDest = 'approvals' | 'goals' | 'calendar' | 'store' | 'badges';
+export type RootDest = 'approvals' | 'goals' | 'calendar' | 'store' | 'badges' | 'audit';
 
 interface RootMenuProps {
   pendingCount: number;
@@ -57,6 +57,14 @@ export function RootMenu({ pendingCount, onNavigate }: RootMenuProps) {
         <div className="menu-card-body">
           <div className="menu-card-title">Badges</div>
           <div className="menu-card-sub">Customize the badge library</div>
+        </div>
+        <FontAwesomeIcon icon={faChevronRight} className="menu-card-chevron" />
+      </button>
+      <button className="menu-card" onClick={() => onNavigate('audit')} type="button">
+        <span className="menu-card-icon"><FontAwesomeIcon icon={faClockRotateLeft} /></span>
+        <div className="menu-card-body">
+          <div className="menu-card-title">Admin Log</div>
+          <div className="menu-card-sub">History of grown-up changes &amp; who made them</div>
         </div>
         <FontAwesomeIcon icon={faChevronRight} className="menu-card-chevron" />
       </button>

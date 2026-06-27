@@ -55,6 +55,7 @@ export function LogPanel() {
               <div className="action-log-meta">
                 {new Date(entry.at).toLocaleString()}
                 {entry.pts !== 0 && ` · ${sign}${Math.abs(entry.pts)} pts`}
+                {entry.actorLabel && ` · by ${entry.actorLabel}`}
               </div>
             </div>
             {canUndo && (

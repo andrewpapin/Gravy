@@ -96,6 +96,32 @@ export interface ActionLogEntry {
   at: number;
   itemId?: number | string;
   undone?: boolean;
+  // Which parent account performed this action (Epic 8 item 5). Absent on entries logged with
+  // no signed-in account (legacy / anonymous-parent), which the Log renders without an actor.
+  actorUserId?: string;
+  actorLabel?: string;
+}
+
+// Dashboard-level / destructive actions that the kid-progress actionLog deliberately excludes —
+// catalog edits, settings, badge config, profile CRUD, danger-zone resets, sync changes. Shown
+// in the grown-ups-only Admin Log (Epic 8 item 6). Informational only; never undoable here.
+export type AuditLogType =
+  | 'goalAdded' | 'goalUpdated' | 'goalRemoved'
+  | 'rewardAdded' | 'rewardUpdated' | 'rewardRemoved'
+  | 'settingChanged'
+  | 'badgeConfigChanged'
+  | 'profileAdded' | 'profileUpdated' | 'profileRemoved'
+  | 'resetToday' | 'resetAll'
+  | 'syncEnabled' | 'syncJoined' | 'syncDisabled' | 'syncCodeChanged' | 'syncDeleted'
+  | 'householdClaimed';
+
+export interface AuditLogEntry {
+  id: string;
+  type: AuditLogType;
+  label: string;
+  at: number;
+  actorUserId?: string;
+  actorLabel?: string;
 }
 
 export interface GravyState {
@@ -126,6 +152,10 @@ export interface GravyState {
   // Chronological record of every kid-progress/reward action, for the grown-ups-only Log
   // screen. Per-kid, never mirrored — see SHARED_SETTING_KEYS in defaultState.ts.
   actionLog: ActionLogEntry[];
+  // Household-level admin/destructive-action history (Epic 8 item 6) for the grown-ups-only
+  // Admin Log. Unlike actionLog this IS a shared field (mirrored across profiles by
+  // mirrorSharedFields/copySharedInto), since these are household-wide config changes.
+  auditLog: AuditLogEntry[];
 }
 
 // One kid. Holds a complete GravyState; the shared fields (goals, rewards, badgeConfig and the

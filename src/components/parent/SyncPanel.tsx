@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTriangleExclamation, faCheck, faCloud, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faTriangleExclamation, faCheck, faCloud, faTrashCan, faShieldHalved, faLock } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../../state/GravyContext';
 import { isValidHouseholdCode } from '../../state/sync';
 import { ConfirmDialog } from '../ConfirmDialog';
@@ -15,6 +15,9 @@ export function SyncPanel() {
     leaveHousehold,
     deleteHouseholdEverywhere,
     changeHouseholdCode,
+    authUser,
+    householdStatus,
+    claimHousehold,
   } = useGravy();
   const [joinCode, setJoinCode] = useState('');
   const [customCreateCode, setCustomCreateCode] = useState('');
@@ -77,6 +80,44 @@ export function SyncPanel() {
           </button>
         </div>
       ) : null}
+      {householdCode && householdStatus && (
+        householdStatus.isOwner ? (
+          <div className="settings-row settings-row--col">
+            <div className="settings-sub">
+              <FontAwesomeIcon icon={faShieldHalved} /> Secured to your account — only your household's
+              signed-in devices can change it.
+            </div>
+          </div>
+        ) : householdStatus.claimed ? (
+          <div className="settings-row settings-row--col">
+            <div className="settings-sub">
+              <FontAwesomeIcon icon={faLock} /> This household is secured by its owner.
+              {householdStatus.isMember ? " You're a member." : ''}
+            </div>
+          </div>
+        ) : (
+          <div className="settings-row settings-row--col">
+            <div>
+              <div className="settings-label">
+                <FontAwesomeIcon icon={faShieldHalved} /> Secure this household
+              </div>
+              <div className="settings-sub">
+                This household isn't tied to an account yet — anyone with the code can change it.
+                {authUser
+                  ? ' Claim it to lock changes to your household’s signed-in devices.'
+                  : ' Create or sign in to a parent account above, then come back to claim it.'}
+              </div>
+            </div>
+            <button
+              className="btn btn-primary"
+              onClick={() => claimHousehold()}
+              disabled={!authUser || syncStatus === 'syncing'}
+            >
+              <FontAwesomeIcon icon={faShieldHalved} /> Secure to my account
+            </button>
+          </div>
+        )
+      )}
       {householdCode && (
         <div className="settings-row settings-row--col">
           <div>
