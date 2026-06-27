@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faLockOpen, faGift, faRightLeft, faUsers, faUserShield, faGear } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faLockOpen, faGift, faRightLeft, faUsers, faUserShield, faGear, faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import { useFocusTrap } from './useFocusTrap';
 import { PinScreen } from './PinScreen';
@@ -16,6 +16,7 @@ interface AccountMenuProps {
   onOpenSwitchProfile: () => void;
   onOpenProfiles: () => void;
   onOpenSettings: () => void;
+  onOpenLog: () => void;
 }
 
 export function AccountMenu({
@@ -26,6 +27,7 @@ export function AccountMenu({
   onOpenSwitchProfile,
   onOpenProfiles,
   onOpenSettings,
+  onOpenLog,
 }: AccountMenuProps) {
   const { state, profiles, grownUpUnlocked, unlockGrownUpAccess, lockGrownUpAccess } = useGravy();
   const pendingCount = state.pendingRewards.length;
@@ -104,6 +106,13 @@ export function AccountMenu({
                 <span className="account-menu-option-text">
                   <span className="account-menu-option-title">Grown ups</span>
                   <span className="account-menu-option-sub">Parent dashboard</span>
+                </span>
+              </button>
+              <button type="button" className="account-menu-option" disabled={!grownUpUnlocked} onClick={onOpenLog}>
+                <span className="account-menu-option-icon"><FontAwesomeIcon icon={faClockRotateLeft} /></span>
+                <span className="account-menu-option-text">
+                  <span className="account-menu-option-title">Log</span>
+                  <span className="account-menu-option-sub">History of every action</span>
                 </span>
               </button>
               <button type="button" className="account-menu-option" disabled={!grownUpUnlocked} onClick={onOpenProfiles}>

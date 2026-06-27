@@ -75,6 +75,29 @@ export interface DayLog {
   bonusApplied?: Record<number, number>; // points actually applied per Bonus item this day (signed, forgiveness-aware) — mirrors GravyState.todayBonusApplied
 }
 
+export type ActionLogType =
+  | 'food'
+  | 'goal'
+  | 'bonus'
+  | 'game'
+  | 'rewardRequested'
+  | 'rewardApproved'
+  | 'rewardDeclined';
+
+// One row per kid-progress action (food/goal/bonus/game/reward), shown in the grown-ups-only
+// Log screen. `itemId`/`dateStr` together identify the live item an entry can be undone
+// against — see src/state/actionLog.ts for the undo-eligibility/most-recent-only rules.
+export interface ActionLogEntry {
+  id: string;
+  type: ActionLogType;
+  label: string;
+  pts: number;
+  dateStr: string;
+  at: number;
+  itemId?: number | string;
+  undone?: boolean;
+}
+
 export interface GravyState {
   points: number;
   totalPoints: number;
@@ -100,6 +123,9 @@ export interface GravyState {
   goals: Goal[];
   rewards: Reward[];
   settings: Settings;
+  // Chronological record of every kid-progress/reward action, for the grown-ups-only Log
+  // screen. Per-kid, never mirrored — see SHARED_SETTING_KEYS in defaultState.ts.
+  actionLog: ActionLogEntry[];
 }
 
 // One kid. Holds a complete GravyState; the shared fields (goals, rewards, badgeConfig and the

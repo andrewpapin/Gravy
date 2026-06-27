@@ -21,6 +21,7 @@ const RankScreen = lazy(() => import('./components/RankScreen').then((m) => ({ d
 const ProfileSwitcher = lazy(() => import('./components/ProfileSwitcher').then((m) => ({ default: m.ProfileSwitcher })));
 const ProfilesManager = lazy(() => import('./components/ProfilesManager').then((m) => ({ default: m.ProfilesManager })));
 const AdvancedSettingsDrawer = lazy(() => import('./components/parent/AdvancedSettingsDrawer').then((m) => ({ default: m.AdvancedSettingsDrawer })));
+const LogDrawer = lazy(() => import('./components/parent/LogDrawer').then((m) => ({ default: m.LogDrawer })));
 const SyncGateModal = lazy(() => import('./components/SyncGateModal').then((m) => ({ default: m.SyncGateModal })));
 const Onboarding = lazy(() => import('./components/Onboarding').then((m) => ({ default: m.Onboarding })));
 
@@ -60,6 +61,7 @@ function AppShell() {
   const [switchProfileOpen, setSwitchProfileOpen] = useState(false);
   const [profilesOpen, setProfilesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
   // Returning users who already had saved progress before this feature shipped
   // shouldn't suddenly see the walkthrough — only brand-new installs get it.
   const [onboarded, setOnboarded] = useState(
@@ -99,6 +101,7 @@ function AppShell() {
           onOpenSwitchProfile={() => { setAccountMenuOpen(false); setSwitchProfileOpen(true); }}
           onOpenProfiles={() => { setAccountMenuOpen(false); setProfilesOpen(true); }}
           onOpenSettings={() => { setAccountMenuOpen(false); setSettingsOpen(true); }}
+          onOpenLog={() => { setAccountMenuOpen(false); setLogOpen(true); }}
         />
         <GrownUpsDrawer open={grownUpsOpen} onClose={() => setGrownUpsOpen(false)} />
         <Suspense fallback={null}>
@@ -109,6 +112,9 @@ function AppShell() {
         </Suspense>
         <Suspense fallback={null}>
           <AdvancedSettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <LogDrawer open={logOpen} onClose={() => setLogOpen(false)} />
         </Suspense>
       </div>
 

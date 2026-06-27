@@ -15,7 +15,7 @@ import {
   faUserPlus,
   faGamepad,
 } from '@fortawesome/free-solid-svg-icons';
-import type { DayLog, Goal, GravyRoot, GravyState, ProfileEntry, Reward, Settings, Theme } from './types';
+import type { ActionLogEntry, DayLog, Goal, GravyRoot, GravyState, ProfileEntry, Reward, Settings, Theme } from './types';
 import {
   applyDayRollover,
   cloneDefaultState,
@@ -25,7 +25,9 @@ import {
   hydrateState,
   mirrorSharedFields,
   makeNewProfile,
+  todayStr,
 } from './defaultState';
+import { appendActionLog, markMostRecentUndone } from './actionLog';
 import { FOODS } from '../data/foods';
 import { resolveToastIcon } from '../data/icons';
 import { isValidTimezone } from '../data/timezones';
@@ -63,16 +65,10 @@ const THEME_COLORS: Record<Theme, string> = {
   cyberpunk: '#fcee0a',
 };
 
-export interface ToastAction {
-  label: string;
-  onClick: () => void;
-}
-
 export interface ToastItem {
   id: number;
   icon: IconDefinition | string;
   msg: string;
-  action?: ToastAction;
 }
 
 export interface CelebrationData {
@@ -111,7 +107,7 @@ interface GravyContextValue {
   toasts: ToastItem[];
   celebration: CelebrationData | null;
   confettiTrigger: number;
-  showToast: (icon: IconDefinition | string, msg: string, action?: ToastAction) => void;
+  showToast: (icon: IconDefinition | string, msg: string) => void;
   dismissToast: (id: number) => void;
   hideCelebration: () => void;
   logFood: (id: string) => void;
@@ -126,6 +122,7 @@ interface GravyContextValue {
   toggleGoalForDay: (dateStr: string, goalId: number) => void;
   logBonusItemForDay: (dateStr: string, goalId: number) => void;
   undoBonusItemForDay: (dateStr: string, goalId: number) => void;
+  undoActionLogEntry: (entry: ActionLogEntry) => void;
   requestReward: (id: number) => void;
   approveReward: (prId: string) => void;
   declineReward: (prId: string) => void;
@@ -281,12 +278,12 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
-  const showToast = useCallback((icon: IconDefinition | string, msg: string, action?: ToastAction) => {
+  const showToast = useCallback((icon: IconDefinition | string, msg: string) => {
     const id = ++toastIdCounter;
-    setToasts((t) => [...t, { id, icon, msg, action }]);
+    setToasts((t) => [...t, { id, icon, msg }]);
     setTimeout(() => {
       setToasts((t) => t.filter((toast) => toast.id !== id));
-    }, action ? 4500 : 2800);
+    }, 2800);
   }, []);
 
   // Persist on every state/root change. localStorage can throw (quota exceeded, or storage
@@ -323,11 +320,11 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   // the balance hits zero. Negative balances are floored only where they're displayed
   // (TopBar / rank) and where they're spent (approveReward).
   const awardPoints = useCallback(
-    (next: GravyState, pts: number, reason: string, opts?: { silent?: boolean; action?: ToastAction }) => {
+    (next: GravyState, pts: number, reason: string, opts?: { silent?: boolean }) => {
       applyAward(next, pts);
       if (!opts?.silent) {
         const sign = pts < 0 ? '−' : '+';
-        showToast(faStar, `${sign}${Math.abs(pts)} ${reason}`.trim(), opts?.action);
+        showToast(faStar, `${sign}${Math.abs(pts)} ${reason}`.trim());
       }
     },
     [showToast],
@@ -396,22 +393,19 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   const logFood = useCallback((id: string) => {
     setState((prev) => {
       if ((prev.todayFoodCounts[id] || 0) >= 1) return prev;
-      const snapshot = clone(prev);
       const next = clone(prev);
       const wasFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
       next.todayFoodCounts[id] = (next.todayFoodCounts[id] || 0) + 1;
       next.counters.foodLogs[id] = (next.counters.foodLogs[id] || 0) + 1;
       const food = FOODS.find((f) => f.id === id);
-
-      // Undo restores the full pre-tap snapshot. If another action happens before the toast
-      // expires, tapping Undo reverts to this moment (standard single-step undo, not a stack).
-      const undo = () => {
-        pendingTimersRef.current.forEach((t) => clearTimeout(t));
-        pendingTimersRef.current = [];
-        setState(() => snapshot);
-      };
-      awardPoints(next, next.settings.foodPts, `${food?.label ?? ''} logged!`, {
-        action: { label: 'Undo', onClick: undo },
+      const label = `${food?.label ?? ''} logged!`;
+      awardPoints(next, next.settings.foodPts, label);
+      appendActionLog(next, {
+        type: 'food',
+        label,
+        pts: next.settings.foodPts,
+        dateStr: todayStr(next.settings.timezone),
+        itemId: id,
       });
 
       const isFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
@@ -459,6 +453,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         const allGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => next.todayGoals.includes(g.id));
         if (allGoalsDone) next.counters.comboDays = Math.max(0, next.counters.comboDays - 1);
       }
+      markMostRecentUndone(next.actionLog, 'food', id, todayStr(next.settings.timezone));
       return next;
     });
   }, []);
@@ -476,6 +471,13 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         next.todayGoals.push(id);
         next.counters.totalGoals++;
         awardPoints(next, goal.pts, `${goal.name} done!`);
+        appendActionLog(next, {
+          type: 'goal',
+          label: `${goal.name} done!`,
+          pts: goal.pts,
+          dateStr: todayStr(next.settings.timezone),
+          itemId: id,
+        });
         const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
         // Rising edge: this completion finished the last outstanding daily goal.
         const allGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => next.todayGoals.includes(g.id));
@@ -512,6 +514,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         next.points -= goal.pts;
         next.totalPoints -= goal.pts;
         next.todayPoints -= goal.pts;
+        markMostRecentUndone(next.actionLog, 'goal', id, todayStr(next.settings.timezone));
       }
       return next;
     });
@@ -526,7 +529,15 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         const game = GAMES.find((g) => g.id === gameId);
         if (next.todayGameWins < DAILY_GAME_WIN_CAP) {
           next.todayGameWins++;
-          awardPoints(next, next.settings.gamePts, `🎉 ${game?.name ?? 'Game'} win!`);
+          const label = `🎉 ${game?.name ?? 'Game'} win!`;
+          awardPoints(next, next.settings.gamePts, label);
+          appendActionLog(next, {
+            type: 'game',
+            label,
+            pts: next.settings.gamePts,
+            dateStr: todayStr(next.settings.timezone),
+            itemId: gameId,
+          });
         } else {
           showToast(faGamepad, "Nice win! Today's game points are maxed — keep playing for fun!");
         }
@@ -551,6 +562,13 @@ export function GravyProvider({ children }: { children: ReactNode }) {
 
       const sign = goal.pts < 0 ? '−' : '+';
       showToast(faStar, `${sign}${Math.abs(goal.pts)} ${goal.name}`);
+      appendActionLog(next, {
+        type: 'bonus',
+        label: `${sign}${Math.abs(goal.pts)} ${goal.name}`,
+        pts: applied,
+        dateStr: todayStr(next.settings.timezone),
+        itemId: id,
+      });
       maybeCelebrateRankUp(prev.totalPoints, next);
       return next;
     });
@@ -573,6 +591,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       next.totalPoints += reverse;
       next.todayPoints += reverse;
       next.todayBonusApplied[id] = net + reverse;
+      markMostRecentUndone(next.actionLog, 'bonus', id, todayStr(next.settings.timezone));
       return next;
     });
   }, []);
@@ -593,7 +612,15 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       // Editing a past day from the Calendar (now PIN-gated under Grown-Ups) flows into
       // the live balance/lifetime total exactly like logging the same item today does.
       const food = FOODS.find((f) => f.id === foodId);
-      awardPointsForDay(next, log, next.settings.foodPts, `${food?.label ?? ''} added!`);
+      const label = `${food?.label ?? ''} added!`;
+      awardPointsForDay(next, log, next.settings.foodPts, label);
+      appendActionLog(next, {
+        type: 'food',
+        label,
+        pts: next.settings.foodPts,
+        dateStr,
+        itemId: foodId,
+      });
 
       const isFullTray = FOODS.every((f) => (log.foodCounts[f.id] || 0) > 0);
       if (!wasFullTray && isFullTray) {
@@ -649,6 +676,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      markMostRecentUndone(next.actionLog, 'food', foodId, dateStr);
       backfillStreaksFromLogs(next);
       return next;
     });
@@ -680,12 +708,21 @@ export function GravyProvider({ children }: { children: ReactNode }) {
           next.counters.allGoalsDays = Math.max(0, next.counters.allGoalsDays - 1);
           if (fullTray) next.counters.comboDays = Math.max(0, next.counters.comboDays - 1);
         }
+        markMostRecentUndone(next.actionLog, 'goal', goalId, dateStr);
       } else {
         log.goalIds.push(goalId);
         next.counters.totalGoals++;
         // Editing a past day from the Calendar (now PIN-gated under Grown-Ups) flows into
         // the live balance/lifetime total exactly like completing the goal today does.
-        awardPointsForDay(next, log, goal.pts, `${goal.name} logged!`);
+        const label = `${goal.name} logged!`;
+        awardPointsForDay(next, log, goal.pts, label);
+        appendActionLog(next, {
+          type: 'goal',
+          label,
+          pts: goal.pts,
+          dateStr,
+          itemId: goalId,
+        });
         const isAllGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => log.goalIds.includes(g.id));
         if (isAllGoalsDone) {
           next.counters.allGoalsDays++;
@@ -718,6 +755,13 @@ export function GravyProvider({ children }: { children: ReactNode }) {
 
       const sign = goal.pts < 0 ? '−' : '+';
       showToast(resolveToastIcon(goal.icon, goal.emoji), `${sign}${Math.abs(goal.pts)} ${goal.name}`);
+      appendActionLog(next, {
+        type: 'bonus',
+        label: `${sign}${Math.abs(goal.pts)} ${goal.name}`,
+        pts: applied,
+        dateStr,
+        itemId: goalId,
+      });
       maybeCelebrateRankUp(prev.totalPoints, next);
       return next;
     });
@@ -742,9 +786,32 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       next.totalPoints += reverse;
       nextLog.points += reverse;
       nextLog.bonusApplied[goalId] = net + reverse;
+      markMostRecentUndone(next.actionLog, 'bonus', goalId, dateStr);
       return next;
     });
   }, []);
+
+  // Dispatches a Log entry's Undo to the same exact-inverse action the live UI would call —
+  // today's actions vs. the *ForDay variant, chosen by comparing the entry's day to today.
+  const undoActionLogEntry = useCallback((entry: ActionLogEntry) => {
+    const isToday = entry.dateStr === todayStr(stateRef.current.settings.timezone);
+    switch (entry.type) {
+      case 'food':
+        if (isToday) removeFood(entry.itemId as string);
+        else removeFoodForDay(entry.dateStr, entry.itemId as string);
+        break;
+      case 'goal':
+        if (isToday) decrementGoal(entry.itemId as number);
+        else toggleGoalForDay(entry.dateStr, entry.itemId as number);
+        break;
+      case 'bonus':
+        if (isToday) undoBonusItem(entry.itemId as number);
+        else undoBonusItemForDay(entry.dateStr, entry.itemId as number);
+        break;
+      default:
+        break;
+    }
+  }, [removeFood, removeFoodForDay, decrementGoal, toggleGoalForDay, undoBonusItem, undoBonusItemForDay]);
 
   const requestReward = useCallback((id: number) => {
     setState((prev) => {
@@ -767,6 +834,13 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       next.pendingRewards.push(pr);
       next.counters.totalRewards++;
       showToast(faEnvelope, `${reward.name} requested!`);
+      appendActionLog(next, {
+        type: 'rewardRequested',
+        label: `${reward.name} requested!`,
+        pts: 0,
+        dateStr: todayStr(next.settings.timezone),
+        itemId: id,
+      });
       checkBadges(next);
       return next;
     });
@@ -782,11 +856,17 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       if (reward) {
         const shortfall = reward.cost - next.points;
         next.points = Math.max(0, next.points - reward.cost);
-        if (shortfall > 0) {
-          showToast(faTriangleExclamation, `${reward.name} approved — balance was short by ${shortfall} pts`);
-        } else {
-          showToast(faCircleCheck, `${reward.name} approved!`);
-        }
+        const label = shortfall > 0
+          ? `${reward.name} approved — balance was short by ${shortfall} pts`
+          : `${reward.name} approved!`;
+        showToast(shortfall > 0 ? faTriangleExclamation : faCircleCheck, label);
+        appendActionLog(next, {
+          type: 'rewardApproved',
+          label,
+          pts: -(prev.points - next.points),
+          dateStr: todayStr(next.settings.timezone),
+          itemId: pr.rewardId,
+        });
       }
       return next;
     });
@@ -797,6 +877,12 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const next = clone(prev);
       next.pendingRewards = next.pendingRewards.filter((p) => p.id !== prId);
       showToast(faCircleXmark, 'Request declined');
+      appendActionLog(next, {
+        type: 'rewardDeclined',
+        label: 'Request declined',
+        pts: 0,
+        dateStr: todayStr(next.settings.timezone),
+      });
       return next;
     });
   }, [showToast]);
@@ -814,14 +900,10 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     setState((prev) => {
       const goal = prev.goals.find((g) => g.id === id);
       if (!goal) return prev;
-      const snapshot = clone(prev);
       const next = clone(prev);
       next.goals = next.goals.filter((g) => g.id !== id);
       next.todayGoals = next.todayGoals.filter((g) => g !== id);
-      showToast(faTrashCan, `"${goal.name}" removed`, {
-        label: 'Undo',
-        onClick: () => setState(() => snapshot),
-      });
+      showToast(faTrashCan, `"${goal.name}" removed`);
       return next;
     });
   }, [showToast]);
@@ -867,14 +949,10 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     setState((prev) => {
       const reward = prev.rewards.find((r) => r.id === id);
       if (!reward) return prev;
-      const snapshot = clone(prev);
       const next = clone(prev);
       next.rewards = next.rewards.filter((r) => r.id !== id);
       next.pendingRewards = next.pendingRewards.filter((pr) => pr.rewardId !== id);
-      showToast(faTrashCan, `"${reward.name}" removed`, {
-        label: 'Undo',
-        onClick: () => setState(() => snapshot),
-      });
+      showToast(faTrashCan, `"${reward.name}" removed`);
       return next;
     });
   }, [showToast]);
@@ -1266,6 +1344,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     toggleGoalForDay,
     logBonusItemForDay,
     undoBonusItemForDay,
+    undoActionLogEntry,
     requestReward,
     approveReward,
     declineReward,

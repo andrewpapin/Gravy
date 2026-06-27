@@ -1,4 +1,4 @@
-import type { GravyState, GravyRoot, ProfileEntry, Settings, Theme, Goal, Reward, PendingReward } from './types';
+import type { ActionLogEntry, GravyState, GravyRoot, ProfileEntry, Settings, Theme, Goal, Reward, PendingReward } from './types';
 import { FOODS } from '../data/foods';
 import { hashWithSalt, randomSaltHex } from './hash';
 import { safeGetItem, safeSetItem } from './storage';
@@ -32,6 +32,7 @@ export const defaultState: GravyState = {
   dayLogs: {},
   pendingRewards: [],
   earnedBadges: [],
+  actionLog: [],
   counters: {
     foodLogs: {},
     fullTrayDays: 0,
@@ -297,6 +298,16 @@ function sanitizePendingRewards(v: unknown): PendingReward[] {
     : [];
 }
 
+function sanitizeActionLog(v: unknown): ActionLogEntry[] {
+  return Array.isArray(v)
+    ? v.filter(
+        (e): e is ActionLogEntry =>
+          !!e && typeof e === 'object' && typeof (e as ActionLogEntry).id === 'string' &&
+          typeof (e as ActionLogEntry).type === 'string' && typeof (e as ActionLogEntry).dateStr === 'string',
+      )
+    : [];
+}
+
 // Coerces fields that are present but have the wrong runtime type/shape back to a safe
 // default, rather than letting a malformed payload — a buggy peer client, hand-edited
 // localStorage, or (if Supabase RLS is ever misconfigured) a third party writing directly to
@@ -322,6 +333,7 @@ function sanitizeState(state: GravyState): void {
   state.pendingRewards = sanitizePendingRewards(state.pendingRewards);
   state.goals = sanitizeGoals(state.goals);
   state.rewards = sanitizeRewards(state.rewards);
+  state.actionLog = sanitizeActionLog(state.actionLog);
 
   const counters = state.counters as unknown as Record<string, unknown>;
   counters.fullTrayDays = asFiniteNumber(counters.fullTrayDays, 0);
