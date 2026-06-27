@@ -8,9 +8,10 @@ import { triggerHaptic } from '../lib/haptics';
 
 interface DailyGoalsProps {
   dateStr?: string;
+  editable?: boolean;
 }
 
-export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
+export function DailyGoals({ dateStr, editable = true }: DailyGoalsProps = {}) {
   const { state, incrementGoal, decrementGoal, toggleGoalForDay } = useGravy();
   const today = todayStr(state.settings.timezone);
   const day = dateStr ?? today;
@@ -86,6 +87,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                 key={g.id}
                 type="button"
                 className={`goal-tile ${done ? 'checked' : ''}`}
+                disabled={!editable}
                 onClick={() => {
                   triggerHaptic();
                   if (isToday) {
@@ -95,7 +97,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                   }
                 }}
                 aria-pressed={done}
-                aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
+                aria-label={editable ? (done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`) : `${g.name}${done ? ', done' : ', not done'}`}
               >
                 {done && (
                   <span className="tile-check-badge" aria-hidden="true">

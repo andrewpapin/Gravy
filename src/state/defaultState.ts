@@ -114,11 +114,32 @@ export function todayStr(timezone: string = DEFAULT_TIMEZONE): string {
 // Shifts a YYYY-MM-DD string by `delta` days. Anchored in UTC purely as a calendar-math
 // trick (so setUTCDate can't be perturbed by DST) — it has nothing to do with the zone the
 // dateStr itself was computed in.
-function addDaysToDateStr(dateStr: string, delta: number): string {
+export function addDaysToDateStr(dateStr: string, delta: number): string {
   const [y, m, day] = dateStr.split('-').map(Number);
   const d = new Date(Date.UTC(y, m - 1, day));
   d.setUTCDate(d.getUTCDate() + delta);
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
+// Formats a YYYY-MM-DD string as a calendar date (e.g. "Thursday, June 25") without
+// reinterpreting it through any timezone — the string already names a specific day, not a
+// moment in time, so it's rendered via a local midnight Date rather than `todayStr`'s
+// timezone-aware path.
+export function formatFriendlyDate(dateStr: string): string {
+  const [y, m, day] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, day).toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+export function formatShortDate(dateStr: string): string {
+  const [y, m, day] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, day).toLocaleDateString(undefined, {
+    month: 'long',
+    day: 'numeric',
+  });
 }
 
 // Migrates saved state that was written by an older version of the app
