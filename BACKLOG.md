@@ -223,7 +223,11 @@ process), not missing features.
 
 - **PWA push notifications** for chore reminders and streak-about-to-break
   nudges — the single biggest lever for a habit-forming app, currently absent
-  entirely. *(P1, L.)*
+  entirely. *(P1, L.)* Scoped to web push (Notifications API + service worker)
+  for the PWA as it exists today. If/when Epic 10's Capacitor wrap ships,
+  native push (APNs/FCM) is a separate P1/M implementation, not a free
+  upgrade of this item — don't let "we already shipped push" get assumed to
+  cover the native case.
 - **Parent weekly digest/summary** surfaced in-app (no email infra exists today)
   so engagement doesn't require opening the dashboard. *(P2, M.)*
 - **Family/sibling comparison view** — multi-profile support shipped (PR #82)
@@ -240,12 +244,18 @@ process), not missing features.
 *(Contingent — only pursue if/when a wider-distribution decision is made;
 scope today is "plan for optionality," not commit.)*
 
-- App store packaging (TWA/PWABuilder for Android; iOS wrapper or App Clip).
+- ~~App store packaging (TWA/PWABuilder for Android; iOS wrapper or App
+  Clip).~~ **SUPERSEDED** — the wider-distribution decision this was
+  contingent on has been made (Capacitor wrap, not a TWA/App Clip wrapper);
+  see Epic 10's packaging items instead.
 - Lightweight, privacy-respecting, **opt-in** analytics — no third-party
   trackers exist today by design; if added, keep it self-hosted/aggregate-only
   given the child-data context.
 - Formal privacy policy / ToS page and a COPPA-adjacent compliance review
-  before any public sign-up flow.
+  before any public sign-up flow. Partly addressed by Epic 9's "COPPA-specific
+  review of the account signup flow" item once real accounts are scheduled —
+  that item is narrower (the signup flow itself); this one covers the
+  standalone policy page/ToS.
 
 ## Epic 7 — Process Hygiene
 
@@ -260,6 +270,143 @@ scope today is "plan for optionality," not commit.)*
   and the theme palette fully replaced once (PR #80) in recent history — high
   churn, low durability. Resist a fourth redesign or second palette swap until
   there's a concrete signal (user feedback, data) calling for it.
+
+## Epic 8 — Real Auth & Account Model
+
+*(Supersedes the household-code access control accepted as residual risk in Epic 1 —
+see the "real access control" and rate-limiting items there. Supabase Auth is the
+assumed backend: `@supabase/supabase-js` is already a dependency, and RLS policies keyed
+to `auth.uid()` are only cleanly achievable through it.)*
+
+- **Adopt Supabase Auth for parent accounts** (email/password + magic link). Replaces
+  "anyone with the PIN" with real per-parent identity and unlocks `auth.uid()`-scoped RLS,
+  which the current open-`SELECT`-on-`households` model structurally cannot use. *(P1, L.)*
+- **Keep the household PIN as a local kid-screen lock, decoupled from account auth.** The
+  PIN's actual job is keeping a kid out of the parent dashboard on a shared device, not
+  authenticating a parent's identity — that job doesn't go away once accounts exist.
+  Re-scope `pinHash`/`src/state/pinLockout.ts` as a per-device session lock layered on top
+  of an authenticated account, not a replacement for one. *(P1, S.)*
+- **Household ownership + invite-by-code model.** A household gets an `owner_id`
+  (`auth.uid()` of the creating account); the existing 6-char code becomes a join/invite
+  token linking additional parent accounts to that household, instead of today's "anyone
+  with the code has full anonymous read/write." Needs a `household_members` join table
+  (`household_id`, `user_id`, `role`) and a rewrite of the existing `SECURITY DEFINER` RPCs
+  (`gravy_create_household`, `gravy_upsert_household_state`, `gravy_rename_household`,
+  `gravy_lookup_household`, `gravy_delete_household`) to check membership/ownership instead
+  of just code-match. *(P1, L.)*
+- **Migration: claim-or-deprecate window for existing PIN-only households.** Existing
+  households (PIN + code, no account) keep working unmigrated for an explicit window; on
+  first parent-account signup, "claim this household" sets `owner_id` on the existing
+  code's row with no data migration needed (`state` JSONB is untouched). After the window,
+  require claiming to keep cloud sync — this is what actually closes the open-`SELECT`
+  residual risk Epic 1 accepted, instead of leaving it open forever. Must ship in the same
+  release as household ownership, not after, and needs an in-app warning banner during the
+  window so no household is silently locked out. *(P1, M.)*
+- **Per-parent attribution on `actionLog`.** Add an actor field (`actorUserId`/
+  `actorLabel`) to `ActionLogEntry` (`src/state/types.ts`, confirmed it has no actor
+  field today) so `LogPanel` can show which parent logged food, approved a reward, or
+  adjusted a goal — every entry is anonymous-parent by construction today. Sequenced after
+  the two items above (nothing to attribute to before accounts exist). *(P2, S.)*
+- **Audit trail for dashboard-level/destructive actions.** Extends attribution beyond
+  kid-progress actions to what `LogPanel` deliberately excludes today (catalog edits,
+  settings changes, profile CRUD, Danger Zone resets, sync changes) now that there's a real
+  identity to attach to each. A separate, currently-nonexistent log surface, not an
+  extension of the existing action log. *(P2, M.)*
+- *(Decision, stated so it isn't silently revisited: kid profiles stay non-authenticated
+  sub-records under a parent-owned household, switched via the existing PIN-gated
+  `ProfileSwitcher` — no kid email/password/OAuth, avoiding COPPA exposure from collecting
+  any kid-direct credential.)*
+
+## Epic 9 — Cloud-First Storage & Offline Sync
+
+*(The RLS-migration and account-deletion items depend on Epic 8's account/membership model;
+the merge and offline-queue items are valuable regardless, since today's "local cache + LWW
+on reconnect" is already the weakest link for any multi-device household.)*
+
+- **Replace whole-blob last-write-wins with collection/record-level merge.** Today any write
+  anywhere (`pushHouseholdState` in `src/state/sync.ts`) overwrites the entire `state` JSONB
+  column; two parents editing on two devices at once silently drop one's changes with no
+  conflict surfaced. Multi-device-per-account becomes the normal case once real accounts
+  exist, not the edge case it is today. Scope as "merge id-keyed arrays (goals/rewards/
+  badgeConfig) by id+timestamp, last-write-wins only within a single counter field" — not a
+  general CRDT library; full CRDT is real but `XL`, and isn't warranted by the current data
+  shapes. *(P1, L.)*
+- **Offline write queue with replay.** No queue or retry/backoff exists today beyond the
+  realtime subscription — a device with no signal just edits `localStorage` and sync
+  silently lags until reconnect. Needed regardless of account model so a kid can check off
+  chores with no signal and have it reliably land later; pairs with the merge item above
+  since replay needs something better than "overwrite" to land safely. *(P1, M.)*
+- **Migrate `households` RLS from open-SELECT/RPC-gated to `auth.uid()`-scoped policies.**
+  Once Epic 8's `household_members` exists, replace the anon-role/open-SELECT model
+  (required today only because Realtime has no per-household auth claim to scope by) with
+  real RLS predicates, so Realtime is authenticated per-household instead of relying on a
+  shared anon key with table-wide read access. Mechanical once accounts/membership exist,
+  but every RPC and the `subscribeToHousehold` call site need updating together. *(P1, M.)*
+- **Account-level data export.** A parent can request a structured export of everything
+  tied to their account. Doesn't exist as a concept today (no account to scope it to);
+  becomes a real expectation once accounts exist, and is the easy half of COPPA's
+  access-and-deletion requirement. *(P2, S.)*
+- **Account-level data deletion (right-to-delete).** Extends the existing "Delete household
+  everywhere" (`DangerZonePanel`/`SyncPanel`, Epic 1, done) to also delete the account and
+  any auth-table rows, and to define what happens to a multi-member household when the
+  owning account deletes itself. *(P1, S–M.)*
+- **COPPA-specific review of the account signup flow itself.** Narrower and must land
+  *before* Epic 8 ships to real users: verify signup never collects a child's name/data as
+  part of account creation (only as in-app profile data after a parent is authenticated),
+  add explicit parent-only language to the signup screen, and update `DATA_HANDLING.md` to
+  cover Supabase Auth's own data (email on file, magic-link token storage) — this is what
+  turns the app from "no PII" to "parent email on file." *(P0 once Epic 8 is scheduled.)*
+
+## Epic 10 — Mobile App & Native Capacities
+
+*(Packaging decision: Capacitor wrap of the existing Vite/React app, not a PWA+TWA/App-Clip
+wrapper and not a React Native rewrite — gets real native capability access (APNs/FCM,
+biometrics, camera, widgets, legitimate store-review posture) with near-zero rewrite of
+`src/`, versus a rewrite of all 40+ components in `src/components/` for React Native.)*
+
+- **Packaging spike: Capacitor wrap of the existing Vite/React build.** Wraps `dist/` in a
+  thin native shell with no rewrite of `src/`. *(P1, M for the initial wrap/spike; L total
+  once signing and store-review items below are included.)*
+- **Native push notifications (APNs/FCM).** Distinct implementation from the existing
+  web-push item in Epic 5 (see annotation there) — native transport only available once
+  wrapped. *(P1, M, once wrapped.)*
+- **Biometric unlock alongside PIN.** Face ID/Touch ID/Android biometric as an *additional*
+  unlock path for the grown-up lock — PIN stays as fallback (no biometric-hardware
+  guarantee, and the recovery-question flow already covers PIN-forgotten). No equivalent
+  exists for a PWA. *(P2, S, once wrapped.)*
+- **Haptics on native.** `src/lib/haptics.ts` already exists and calls
+  `navigator.vibrate()` — extend the same call site to use native haptic engines once
+  wrapped; the abstraction point already exists, so this is a small win. *(P2, S.)*
+- **Camera-based proof-of-chore photos.** New capacity: a kid attaches a photo when
+  completing a goal, parent approves with the photo visible in `ApprovalsPanel`. Needs
+  native camera access (awkward/permission-flaky on mobile web) and new storage — photo
+  blobs don't belong in the JSONB state blob, needs Supabase Storage scoped by Epic 9's
+  account model. *(P2, L — gated on both the packaging decision and Epic 9.)*
+- **Home-screen widget / streak status** (iOS Live Activity, Android widget). Surfaces
+  "streak about to break" without opening the app — extends the same retention thesis as
+  Epic 5's push-notification item, but needs native widget APIs with no PWA equivalent.
+  *(P2, L.)*
+- **Calendar integration** (push a recurring goal as a device reminder). Two tiers: a `.ics`
+  download works even unwrapped *(P2, S)*; two-way native reminders-app integration is
+  richer once wrapped *(P2, M)*.
+- **App-store packaging process gaps** — currently 100% absent (today's CI is
+  lint→test→build→GitHub-Pages only):
+  - Developer account setup, signing certificates/provisioning profiles, App Store
+    Connect/Play Console project setup. *(P1, M.)*
+  - CI extension for native builds (Fastlane or equivalent) producing signed builds for
+    TestFlight/internal Play track. *(P1, M.)*
+  - OTA update policy decision (e.g. Capacitor Live Updates vs. accepting store-review-per-
+    release) — a real decision, not just an implementation detail. *(P1, M.)*
+  - Store listing content and the COPPA-relevant store questionnaires (Apple's Kids
+    Category/age rating, Google Play Families program) — both stricter than Epic 6's
+    general privacy-policy item specifically because this targets kids. *(P0 once store
+    submission is scheduled.)*
+  - Crash reporting (Sentry or equivalent) — zero crash/error visibility in production
+    today; much higher-value once native, since store reviewers and update cadence both
+    depend on knowing about crashes you can't reproduce from a web console. *(P1, M.)*
+  - Device-matrix testing — `verify_gravy.mjs` today is a manual, non-CI Playwright script
+    against one browser viewport; native shipping needs real device/OS-version coverage.
+    *(P1, M.)*
 
 ## Do these next (top 5, in order)
 
