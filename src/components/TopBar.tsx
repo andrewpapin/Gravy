@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faCloudArrowUp } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faCloudArrowUp, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import { AppIcon } from './AppIcon';
 
@@ -7,9 +7,10 @@ interface TopBarProps {
   title: string;
   highlightLast?: boolean;
   onOpenAvatarMenu?: () => void;
+  onOpenHistory?: () => void;
 }
 
-export function TopBar({ title, highlightLast, onOpenAvatarMenu }: TopBarProps) {
+export function TopBar({ title, highlightLast, onOpenAvatarMenu, onOpenHistory }: TopBarProps) {
   const { state, householdCode, syncStatus } = useGravy();
   const splitIndex = title.lastIndexOf(' ');
   const syncError = !!householdCode && syncStatus === 'error';
@@ -41,6 +42,16 @@ export function TopBar({ title, highlightLast, onOpenAvatarMenu }: TopBarProps) 
             </span>
           )}
         </div>
+        {onOpenHistory && (
+          <button
+            className="topbar-icon-btn"
+            onClick={onOpenHistory}
+            aria-label="View history calendar"
+            type="button"
+          >
+            <FontAwesomeIcon icon={faCalendarDays} />
+          </button>
+        )}
         {onOpenAvatarMenu && (
           <button
             className="topbar-icon-btn"
