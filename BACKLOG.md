@@ -423,6 +423,34 @@ biometrics, camera, widgets, legitimate store-review posture) with near-zero rew
     against one browser viewport; native shipping needs real device/OS-version coverage.
     *(P1, M.)*
 
+## Epic 11 — Visual Design & Layout Polish
+
+Grounded in a UI-density pass on the kid home screen (branch
+`claude/ui-spacing-layout-d8s2gh`): the screen read as "chonky." A first pass
+tightened it at the token level — radii `22/14 → 18/12`, shadows `4px/5px →
+3px/4px`, `.scroll-area` gutter `16 → 12px`, `.card` padding/gap `16/14 →
+14/10`, the stats/games cards and history banner gaps to `10`, and harmonized
+all hardcoded `14px` radii (parent panels + the kid food/goal tiles) onto
+`var(--radius-sm)` so they track the token as originally intended. The two
+items below were deferred from that pass because they're larger, more
+opinionated changes that need a mockup before committing.
+
+- **Break the single-column home stack into a denser layout.** On a phone,
+  `StatsCard → GamesCard → FoodTray → DailyGoals → BonusPoints`
+  (`src/components/HomeScreen.tsx`) is one long vertical scroll — the biggest
+  "use the space differently" win. Candidates: a 2-up row pairing the Games
+  card with a compact stat, or Daily Goals / Bonus Points side-by-side on
+  wider phones (the `@media (min-width: 768px)` block in `src/index.css`
+  already does this kind of widening for the food/store/badge grids). Needs a
+  mockup to compare against the current flow before building. *(P2, M.)*
+- **Modernize the shadow treatment.** The hard `Npx Npx 0` offset shadows are
+  the heaviest part of the neo-brutalist look. Options: drop card shadows to
+  `2px`, or move cards to a soft `0 2px 8px rgba()` while keeping hard offset
+  shadows only on interactive buttons/tiles. This is a real style shift (it
+  changes the brand feel, not just density), so it should be designed and
+  reviewed as a deliberate visual-direction decision rather than a tweak.
+  *(P2, S–M.)*
+
 ## Do these next (top 5, in order)
 
 The original top-5 here (PIN/recovery hashing, the PR #92 decision, the lint
