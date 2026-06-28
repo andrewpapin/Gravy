@@ -15,6 +15,7 @@ import { findNewlyEarnedBadges, getBadgeDisplay } from './badges';
 import { applyAward, applyAwardForDay } from './points';
 import { getRank, RANKS } from '../data/ranks';
 import { pushHouseholdState, subscribeToHousehold } from './sync';
+import { mergeRoots } from './merge';
 import { safeGetItem } from './storage';
 import { readGrownUpUnlocked, writeGrownUpUnlocked } from './grownUpUnlock';
 import {
@@ -235,21 +236,27 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       try {
         const incomingJson = JSON.stringify(remoteRoot);
         if (incomingJson === lastSyncedRef.current) return;
-        const profiles: ProfileEntry[] = (remoteRoot.profiles || [])
+        const remoteProfiles: ProfileEntry[] = (remoteRoot.profiles || [])
           .filter((p) => p && p.state)
           .map((p) => ({ id: p.id, state: hydrateState(p.state) }));
-        if (profiles.length === 0) return;
-        const finalRoot: GravyRoot = {
+        if (remoteProfiles.length === 0) return;
+        const hydratedRemote: GravyRoot = {
           version: 2,
-          activeProfileId: profiles.some((p) => p.id === remoteRoot.activeProfileId)
-            ? remoteRoot.activeProfileId
-            : profiles[0].id,
-          profiles,
+          activeProfileId: remoteRoot.activeProfileId,
+          profiles: remoteProfiles,
         };
+        // Merge the arriving snapshot into the *current* local root (via refs, since this effect
+        // only re-subscribes on householdCode) rather than replacing it — so id-keyed collections
+        // (goals/rewards/badges/logs) edited locally but not yet pushed survive the remote update
+        // instead of being clobbered. Scalars/counters still take the remote value (last-write-wins).
+        const finalRoot = mergeRoots(buildMergedRoot(rootRef.current, stateRef.current), hydratedRemote);
         mirrorSharedFields(finalRoot);
-        // Record the snapshot we're actually storing (post migration + rollover) so the
-        // outgoing-push effect treats it as already-synced and doesn't echo it straight back.
-        lastSyncedRef.current = JSON.stringify(finalRoot);
+        // Mark the *incoming* snapshot as seen so an identical re-delivery is ignored. We
+        // deliberately don't mark `finalRoot`: when the merge folded in local-only collection
+        // items the peer hasn't got yet, finalRoot != incoming, and the outgoing-push effect
+        // should re-send that merged result so the peer converges. The merge is idempotent, so
+        // this settles rather than echoing forever.
+        lastSyncedRef.current = incomingJson;
         setRoot(finalRoot);
         setState(activeStateOf(finalRoot));
       } catch {

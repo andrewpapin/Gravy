@@ -20,8 +20,10 @@ npm test          # Run Vitest unit tests (src/**/*.test.ts)
 
 Vitest covers the pure point/streak/badge logic: `src/state/points.ts` (award/forgiveness/exact-undo
 arithmetic), `src/state/defaultState.ts` (`applyDayRollover`, `backfillStreaksFromLogs`),
-`src/state/badges.ts` (`findNewlyEarnedBadges` and friends), and `src/state/auth.ts`
-(`normalizeHouseholdStatus`). Colocated `*.test.ts` files live next to the module they test. There
+`src/state/badges.ts` (`findNewlyEarnedBadges` and friends), `src/state/auth.ts`
+(`normalizeHouseholdStatus`), and `src/state/merge.ts` (`mergeRoots`/`mergeStates`, the
+collection/record-level cloud-sync merge). Colocated `*.test.ts` files live next to the module they
+test. There
 is no component/UI test setup — `verify_gravy.mjs` at the repo root is an ad-hoc Playwright
 smoke-test (not wired into `npm`) that drives the app in a headless browser against a running
 `npm run dev`; run it manually with `node verify_gravy.mjs` if you need a scripted UI walkthrough.

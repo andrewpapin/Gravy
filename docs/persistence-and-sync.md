@@ -47,8 +47,19 @@ Deep reference for localStorage persistence, Supabase cloud sync, the household 
   `deleteHouseholdEverywhere()` ("Delete household everywhere", same panel) is the separate, more
   destructive action that deletes the Supabase row via `gravy_delete_household`, so every device
   synced to that code loses it.
-- Real-time sync via Supabase `postgres_changes` subscription; conflict resolution is
-  last-write-wins.
+- Real-time sync via Supabase `postgres_changes` subscription. Conflict resolution is
+  **collection/record-level merge**, not whole-blob last-write-wins (`src/state/merge.ts`, Epic 9):
+  when a remote root arrives, `GravyContext`'s receive effect runs `mergeRoots(localRoot, remoteRoot)`
+  against the *current* local root (read via `rootRef`/`stateRef`) rather than replacing it. Profiles
+  union by id (a kid added on either device survives); per-profile, id-keyed collections union
+  (`goals`/`rewards` by id, `badgeConfig`/`dayLogs` by key, `earnedBadges` as a set, `actionLog`/
+  `auditLog` by entry id, sorted by `at`) so edits made locally but not yet pushed aren't clobbered.
+  Live progress scalars/counters (points, streaks, the `today*` fields, `counters`, `settings`) and
+  `pendingRewards` still take the remote snapshot — last-write-wins **within those fields only**. The
+  merge is idempotent, so the receive effect marks the *incoming* snapshot as seen (not the merged
+  result) and lets the push effect re-send any local-only additions; both devices converge to
+  union-of-collections + last-writer's scalars. Server-side write races (two pushes inside the 800ms
+  debounce) and `pendingRewards` add/remove tombstones remain for the offline-queue/RLS items.
 - `SyncGateModal` prompts new users to create/join a household after onboarding, unless dismissed
   (`gravy_sync_skipped` key) — onboarding's own `sync` phase covers first-run setup, so this modal
   mainly catches users who skipped that step. Like onboarding, if the modal's own "Create New
