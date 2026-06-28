@@ -24,6 +24,64 @@ sync via a 6-character household code. This is a mature, feature-complete produc
 surface — the gaps below are about durability (security, tests, accessibility,
 process), not missing features.
 
+## Path to TestFlight — priority order
+
+*(Added once the near-term goal narrowed to "get a build running on my own phone via
+TestFlight." This re-ranks every open item across all 10 epics by relevance to that one
+goal — it doesn't change any item's own Priority/Size tag within its epic, which still
+describes that item's importance on its own terms. Supersedes "Do these next" below, which
+is now historical.)*
+
+**Tier 1 — blocks getting any build onto your phone, do in order:**
+
+1. **Packaging spike: Capacitor wrap of the existing Vite/React build** (Epic 10) —
+   `npx cap init` / `npx cap add ios` / `npx cap sync` against `dist/`, no rewrite of
+   `src/`. Nothing below is possible until this exists.
+2. **Apple Developer Program enrollment + App ID/Bundle ID + App Store Connect app
+   record** (Epic 10's "Developer account setup" sub-bullet).
+3. **Code signing** — automatic signing in Xcode is the simplest path for a single
+   developer; only fall back to manual certificates/provisioning profiles if that doesn't
+   cover the case (same sub-bullet).
+4. **Archive and upload the first build, add yourself as an internal TestFlight tester,
+   install via the TestFlight app.** This is the literal goal — do it manually through
+   Xcode the first time; no CI needed yet.
+
+**Tier 2 — do soon after, before iterating much further:**
+
+5. **OTA update policy decision** (Capacitor Live Updates vs. accepting
+   store-review-per-release) — affects how every future update ships; cheaper to decide
+   once than retrofit.
+6. **CI extension for native builds (Fastlane or equivalent)** — automates steps 1–4 for
+   every future build. Not required for the first build; valuable the moment you're
+   iterating.
+7. **Crash reporting (Sentry or equivalent)** — cheap to wire in once wrapped, and the
+   first time you can't reproduce a crash from a web console is the wrong time not to
+   have it.
+
+**Tier 3 — needed before widening the beta or going public, not before your own phone:**
+
+8. **Store listing content + COPPA-relevant store questionnaires** (Apple Kids
+   Category/age rating, Google Play Families) — only gates adding other testers or a
+   public listing; your own internal TestFlight install needs neither.
+9. **Device-matrix testing** — matters once more than one device/OS version is in play.
+10. **Design the points economy in one pass** (Epic 4) — pre-existing open item, unrelated
+    to packaging but worth finishing before a wider audience sees the rank curve.
+11. **Ship PWA push notifications** (Epic 5) — pre-existing top item, still the single
+    biggest retention lever, but orthogonal to TestFlight.
+12. **Biometric unlock, haptics on native, calendar integration (.ics)** (Epic 10) — small
+    native polish, no dependency beyond the wrap itself.
+
+**Tier 4 — explicitly not needed for this goal, parked for now:**
+
+- **Epic 8 (Real Auth & Account Model)** and **Epic 9 (Cloud-First Storage & Offline
+  Sync)**, in full — the wrapped app works fine with today's local-storage +
+  household-PIN-and-code model; real per-parent accounts and cloud-first sync are a
+  separate, longer-horizon initiative that doesn't block shipping a build to your phone.
+- **Camera-based proof-of-chore photos, home-screen widgets** (Epic 10) — both large
+  and/or gated on Epic 9 anyway.
+- **Epic 6's remaining items** (opt-in analytics, formal privacy policy) — contingent on a
+  public-distribution decision this goal doesn't require yet.
+
 ## Epic 1 — Security & Trust
 
 - ~~**Revive PR #93**~~ — **DONE.** Rebased and merged as PR #97
@@ -276,7 +334,9 @@ scope today is "plan for optionality," not commit.)*
 *(Supersedes the household-code access control accepted as residual risk in Epic 1 —
 see the "real access control" and rate-limiting items there. Supabase Auth is the
 assumed backend: `@supabase/supabase-js` is already a dependency, and RLS policies keyed
-to `auth.uid()` are only cleanly achievable through it.)*
+to `auth.uid()` are only cleanly achievable through it. Not required for the current
+TestFlight packaging goal — see the "Path to TestFlight" priority list near the top of
+this document, which parks this epic in Tier 4.)*
 
 - **Adopt Supabase Auth for parent accounts** (email/password + magic link). Replaces
   "anyone with the PIN" with real per-parent identity and unlocks `auth.uid()`-scoped RLS,
@@ -321,7 +381,9 @@ to `auth.uid()` are only cleanly achievable through it.)*
 
 *(The RLS-migration and account-deletion items depend on Epic 8's account/membership model;
 the merge and offline-queue items are valuable regardless, since today's "local cache + LWW
-on reconnect" is already the weakest link for any multi-device household.)*
+on reconnect" is already the weakest link for any multi-device household. Not required for
+the current TestFlight packaging goal — see the "Path to TestFlight" priority list near the
+top of this document, which parks this epic in Tier 4.)*
 
 - **Replace whole-blob last-write-wins with collection/record-level merge.** Today any write
   anywhere (`pushHouseholdState` in `src/state/sync.ts`) overwrites the entire `state` JSONB
@@ -408,21 +470,19 @@ biometrics, camera, widgets, legitimate store-review posture) with near-zero rew
     against one browser viewport; native shipping needs real device/OS-version coverage.
     *(P1, M.)*
 
-## Do these next (top 5, in order)
+## Do these next (historical — superseded)
 
-The original top-5 here (PIN/recovery hashing, the PR #92 decision, the lint
-gate, Vitest, and Supabase access control) is now fully done — see the
-strikethroughs in Epics 1, 2, and 7 above. Replacing it with the next five,
-prioritized from what's actually still open:
+Superseded by the **"Path to TestFlight — priority order"** section near the top of this
+document, once the near-term goal narrowed to shipping a build via TestFlight. Kept here
+as a historical record rather than deleted (Epic 7's own principle: don't let priorities
+change without a record). The three items that were already done stay struck through; the
+two that were still open (points economy, push notifications) moved into Tier 3 above
+rather than being re-litigated here.
 
-1. ~~Write the data-handling note~~ (Epic 1, P1/S) — **DONE**, see
-   `DATA_HANDLING.md`.
-2. ~~Harden error handling~~ around `localStorage` writes and incoming
-   Supabase realtime payloads (Epic 2, P1/M) — **DONE**, see Epic 2 above.
-3. ~~Run the accessibility hardening pass~~ (Epic 3, P1/M) — **DONE**: all
-   four sub-items (aria-labels, focus trapping, the contrast pass, and the
-   font-size audit) are complete, see Epic 3 above.
-4. **Design the points economy in one pass**: rank curve + daily point
-   ceiling together (Epic 4, P1/M).
-5. **Ship PWA push notifications** (Epic 5, P1/L) — the single biggest lever
-   for retention; sequenced last here only because of size, not importance.
+1. ~~Write the data-handling note~~ (Epic 1, P1/S) — **DONE**, see `DATA_HANDLING.md`.
+2. ~~Harden error handling~~ around `localStorage` writes and incoming Supabase realtime
+   payloads (Epic 2, P1/M) — **DONE**, see Epic 2 above.
+3. ~~Run the accessibility hardening pass~~ (Epic 3, P1/M) — **DONE**, see Epic 3 above.
+4. ~~Design the points economy in one pass~~ (Epic 4, P1/M) — moved to Path to TestFlight,
+   Tier 3.
+5. ~~Ship PWA push notifications~~ (Epic 5, P1/L) — moved to Path to TestFlight, Tier 3.
