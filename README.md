@@ -19,7 +19,7 @@ PIN-protected "Grown-ups" dashboard for approvals and configuration.
 - **Rank ladder** — a 24-tier progression (Noob → Sonic Snail) with a
   kid-facing screen showing locked/current/achieved tiers and progress
 - **Store** — spend points on parent-defined rewards (pending approval)
-- **Badges** — 65 unlockable badges across food, chores, points, streaks,
+- **Badges** — 71 unlockable badges across food, chores, points, streaks,
   store, combo, and games categories
 - **Multi-profile households** — multiple kid profiles per device, each
   with independent progress/streaks but shared goals, rewards, badge
@@ -52,10 +52,14 @@ Open the printed local URL in your browser.
 - `npm run build` — type-check and build for production
 - `npm run preview` — preview the production build
 - `npm run lint` — run ESLint
+- `npm test` — run the Vitest unit suite
 
-There's no automated test suite configured. `verify_gravy.mjs` at the repo
-root is an ad-hoc Playwright smoke-test script you can run manually against
-a `npm run dev` server (`node verify_gravy.mjs`); otherwise testing is
+`npm test` runs the Vitest unit suite, which covers the pure
+point/streak/badge logic (`src/state/points.ts`, `src/state/defaultState.ts`,
+`src/state/badges.ts`, `src/state/auth.ts`) via colocated `*.test.ts` files.
+There's no component/UI test setup. `verify_gravy.mjs` at the repo root is an
+ad-hoc Playwright smoke-test script you can run manually against a
+`npm run dev` server (`node verify_gravy.mjs`); otherwise UI testing is
 manual via the browser.
 
 ## Project structure
