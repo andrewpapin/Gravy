@@ -21,13 +21,15 @@
   --border-width-md: 1.25px; /* was 2px   — badges, small icons, progress bars */
   --border-width-sm: 1px;    /* was 1.5px — minor indicators */
 
-  /* Shadows */
-  --shadow: 4px 4px 0px var(--dark);
-  --shadow-lg: 5px 5px 0px var(--dark);
+  /* Shadows — tightened one notch (4→3 / 5→4) so the hard offset reads less
+     bulky and eats less space, while keeping the brutalist depth cue. */
+  --shadow: 3px 3px 0px var(--dark);
+  --shadow-lg: 4px 4px 0px var(--dark);
 
-  /* Radii */
-  --radius: 22px;
-  --radius-sm: 14px;
+  /* Radii — pulled in from 22/14 so surfaces read tighter and less "inflated"
+     without losing the rounded, kid-friendly feel. */
+  --radius: 18px;
+  --radius-sm: 12px;
 
   /* Typography */
   --font-display: 'Nunito', system-ui, sans-serif;
@@ -330,16 +332,16 @@ body {
 .scroll-area {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-md);
-  padding-bottom: var(--space-lg);
+  padding: 12px;
+  padding-bottom: var(--space-md);
 }
 
 /* ===== CARDS ===== */
 .card {
   background: var(--card);
   border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
   box-shadow: var(--shadow);
   border: var(--border-width-xl) solid var(--dark);
 }
@@ -349,7 +351,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--muted);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 .card-title-icon {
   display: inline-flex;
@@ -454,7 +456,7 @@ button.calendar-day {
   padding: 4px 10px;
   border-radius: 50px;
   border: var(--border-width-md) solid var(--dark);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 /* ===== HOME SCREEN: STATS CARD (rank + streak) ===== */
@@ -462,7 +464,7 @@ button.calendar-day {
   display: flex;
   flex-direction: column;
   border-radius: var(--radius);
-  margin-bottom: 14px;
+  margin-bottom: 10px;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
   border: var(--border-width-xl) solid var(--dark);
@@ -526,8 +528,8 @@ button.calendar-day {
   border-radius: var(--radius);
   border: var(--border-width-xl) solid var(--dark);
   box-shadow: var(--shadow);
-  padding: 14px 16px;
-  margin-bottom: 14px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
   cursor: pointer;
   color: var(--dark);
 }
