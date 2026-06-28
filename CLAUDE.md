@@ -26,8 +26,11 @@ is no component/UI test setup — `verify_gravy.mjs` at the repo root is an ad-h
 smoke-test (not wired into `npm`) that drives the app in a headless browser against a running
 `npm run dev`; run it manually with `node verify_gravy.mjs` if you need a scripted UI walkthrough.
 
-See `BACKLOG.md` for the living backlog (security, infra, accessibility, process gaps) — check it
-before assuming a known gap (e.g. plaintext PIN storage) is unintentional or unreported.
+See `BACKLOG.md` for the living backlog of **open** items (security, infra, accessibility, process
+gaps) — check it before assuming a known gap (e.g. plaintext PIN storage) is unintentional or
+unreported. Completed/decided items are condensed to one-liners in `BACKLOG_DONE.md` (the decision
+record — the "why" behind shipped work); epic numbers are stable across both files, so `BACKLOG.md`
+has numbering gaps where fully-done epics live only in `BACKLOG_DONE.md`.
 
 ## Keeping tests and docs in sync
 
@@ -38,8 +41,9 @@ before assuming a known gap (e.g. plaintext PIN storage) is unintentional or unr
 - **Architecture or behavior changes** (new screens, shared/per-profile fields, panels, data flow)
   need the relevant pointer in this file **and** the matching `docs/` file updated in the same
   change — both are read to understand the system, so stale text misleads future work.
-- **Closing/opening a tracked gap** needs `BACKLOG.md` updated to match (strikethrough + `DONE`, or a
-  new entry), following the existing format.
+- **Closing/opening a tracked gap** needs the backlog updated: a done/decided item **moves out of
+  `BACKLOG.md` into `BACKLOG_DONE.md` as a one-liner** (what + outcome + key file/PR/migration, under
+  the same epic heading); a new gap gets an entry in `BACKLOG.md`, following the existing format.
 
 ## Architecture
 
