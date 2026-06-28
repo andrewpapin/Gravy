@@ -1,7 +1,7 @@
 # Data Handling
 
 A short note on what Gravy collects, where it lives, and how to delete it.
-Tracked as an Epic 1 backlog item (`BACKLOG.md`) — written for transparency
+Tracked as an Epic 1 backlog item (`BACKLOG_DONE.md`) — written for transparency
 ahead of any wider distribution, not as a formal legal document. A polished
 privacy policy/ToS page is a separate, contingent item (`BACKLOG.md` Epic 6).
 
@@ -100,4 +100,4 @@ ownership instead of "anyone with the 6-character code can read and write it":
   unbounded — there's still no scheduled job, so a long stretch with no
   lookups at all would leave stale rows until the next lookup happens.
 
-This is tracked as a closed-out item in `BACKLOG.md` Epic 1.
+This is tracked as a closed-out item in `BACKLOG_DONE.md` Epic 1.

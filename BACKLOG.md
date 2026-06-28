@@ -3,7 +3,12 @@
 This is the living backlog for Gravy, written during a project takeover after the
 previous build phase went heads-down on features with no roadmap, no tests, and
 two PRs left open-ended. It's grounded in a fresh audit of the codebase (engineering,
-PWA/infra/accessibility, security/privacy) and the full PR history (93 PRs).
+PWA/infra/accessibility, security/privacy) and the full PR history.
+
+> **Completed, decided, and superseded items live in `BACKLOG_DONE.md`** — a
+> condensed decision record kept out of this file so this list stays scannable.
+> This file holds only open work and standing principles. When an item closes,
+> move it there as a one-liner rather than leaving a strikethrough here.
 
 ## How to read this
 
@@ -12,224 +17,30 @@ PWA/infra/accessibility, security/privacy) and the full PR history (93 PRs).
 - **Size**: `S` = under a day · `M` = a few days · `L` = a real project.
 - Items reference the evidence behind them (PR numbers, file paths) so priority
   calls can be re-checked later instead of taken on faith.
+- Epic numbers are kept stable across the split (some epics — 1, 3, 8 — are fully
+  done and now appear only in `BACKLOG_DONE.md`, so the numbering has gaps here).
 
 ## Snapshot — what's already built
 
-Goals (daily/one-time/multi-step) + streaks, a reward store with parent approval,
-61 badges across 6 groups, a 24-tier rank ladder, 4 educational mini-games
+Goals (daily/bonus/multi-step) + streaks, a reward store with parent approval,
+71 badges across 7 groups, a 24-tier rank ladder, 4 educational mini-games
 (Hangman, Math Facts, Word Scramble, Memory Match), multi-kid profiles per
-household, 5 visual themes, full-screen onboarding, a PIN-gated parent dashboard
-(Approvals/Goals/Calendar/Store/Badges/Settings), and optional real-time Supabase
+household, 5 visual themes, full-screen onboarding, optional parent accounts
+(Supabase Auth), a PIN-gated parent dashboard
+(Approvals/Goals/Calendar/Store/Badges/Admin-Log), and optional real-time Supabase
 sync via a 6-character household code. This is a mature, feature-complete product
 surface — the gaps below are about durability (security, tests, accessibility,
-process), not missing features.
-
-## Epic 1 — Security & Trust
-
-- ~~**Revive PR #93**~~ — **DONE.** Rebased and merged as PR #97
-  (`Hash PIN and recovery answer; add brute-force lockout`). PIN and recovery
-  answer are now salted-SHA-256 hashes (`src/state/hash.ts`), with a per-device
-  exponential-backoff lockout after 5 failed attempts (`src/state/pinLockout.ts`).
-  Plaintext fields are migrated to hashes on load and deleted.
-- ~~**Decide the fate of PR #92** (rank-ladder reorder)~~ — **DECIDED: stays
-  closed, won't merge.** The diff only reshuffles rank *names* across the same
-  placeholder point thresholds from PR #90 ("exact balance will be revisited
-  later") — no stated rationale ties the new order to any difficulty curve or
-  theme, and it doesn't touch the actual flagged problem (the thresholds
-  themselves are still the placeholder quadratic curve from PR #90). Merging it
-  would just rename which animal a kid currently holds at a given point total,
-  with no game-balance benefit, and would need re-deciding anyway once the real
-  rank-curve design pass (Epic 4) happens. Re-open only as part of that design
-  pass, not as a standalone reorder.
-- ~~**Add real access control to the Supabase `households` table.**~~ —
-  **DONE.** `supabase/migrations/20260623000000_scope_household_mutations.sql`
-  revokes the unscoped anon INSERT/UPDATE grants and replaces them with three
-  `SECURITY DEFINER` RPCs (`gravy_create_household`, `gravy_upsert_household_state`,
-  `gravy_rename_household`) that each only touch the one row matching the
-  caller-supplied code. SELECT is intentionally still open (required for
-  Supabase Realtime sync under the shared anon key — there's no per-household
-  auth claim to scope it by). Decision: accept the remaining read exposure for
-  now given single/few-household scope; revisit if the household-code space is
-  ever opened to the public.
-- ~~**Rate-limit household-code lookups**~~ — **DONE.**
-  `supabase/migrations/20260623184956_rate_limit_household_lookup.sql` adds a
-  `gravy_lookup_household` `SECURITY DEFINER` RPC (and a backing
-  `household_lookup_attempts` table) that throttles join-by-code lookups to 10
-  per 5-minute window per source IP (read from PostgREST's `request.headers`
-  GUC, falling back to a single shared bucket if no IP is available) before
-  returning a code's state. `fetchHousehold()` (`src/state/sync.ts`) now calls
-  this RPC instead of querying the table directly; `joinHousehold` surfaces the
-  rate-limit error as a toast. Residual risk, same class as the one already
-  accepted above: the table's SELECT grant must stay open for `anon` for
-  Realtime, so a client that bypasses this RPC and queries the REST endpoint
-  directly isn't blocked by it — this closes the documented, discoverable
-  join-flow path, not direct REST access. *(P1, S–M.)*
-- ~~**Write a short data-handling note**~~ — **DONE.** See `DATA_HANDLING.md`:
-  what's collected (child name + hashed PIN/recovery answer only — no email,
-  accounts, or analytics), where it lives (`localStorage` + optional Supabase
-  household row), and how to delete it.
-- ~~**Close two gaps found while writing that note**~~ — **DONE.**
-  (1) `supabase/migrations/20260623225331_delete_household_everywhere.sql`
-  adds a `gravy_delete_household` SECURITY DEFINER RPC, scoped to one code
-  like the other three; `SyncPanel` now has a "Delete household everywhere"
-  action distinct from "Turn off cloud sync" — leaving still only disconnects
-  this device (other devices may depend on the row), but a parent can now
-  explicitly delete it for everyone. (2)
-  `supabase/migrations/20260623225536_cleanup_lookup_attempts.sql` has
-  `gravy_lookup_household` opportunistically delete other buckets whose
-  rate-limit window has lapsed on every call, bounding
-  `household_lookup_attempts` to roughly the IPs seen in the last window
-  instead of growing forever, without needing a separate scheduled job.
-  *(P2, S.)*
+process) and the next wave of capability (cloud-first sync, native app), not
+missing core features.
 
 ## Epic 2 — Engineering Foundation & Quality
 
-- ~~**Stand up Vitest** and write unit tests for the state logic that actually
-  moves points: `awardPoints`/`awardPointsForDay`, streak rollover
-  (`applyDayRollover`), badge triggers (`findNewlyEarnedBadges`), and bonus-item
-  forgiveness/exact-undo.~~ **DONE.** Added `vitest` + `npm test`; the award/
-  forgiveness/exact-undo arithmetic was extracted out of `GravyContext.tsx`'s
-  `useCallback` closures into a pure `src/state/points.ts` (same behavior, now
-  independently testable) with `src/state/points.test.ts` covering it,
-  `src/state/defaultState.test.ts` covering `applyDayRollover`/
-  `backfillStreaksFromLogs`, and `src/state/badges.test.ts` covering
-  `findNewlyEarnedBadges`/`getBadgeProgress`/`getBadgeDisplay`. *(P0, M.)*
-- ~~**Fix the `todayGoals` rollover bug**~~ caught while writing the tests
-  above: `applyDayRollover` only cleared `todayGoals` of ids that no longer
-  matched a *current* daily goal, instead of clearing it outright, so a daily
-  goal's id stayed there forever once logged once — permanently tripping
-  `incrementGoal`'s "already awarded today" guard and silently killing its
-  payout from day 2 onward, while the UI (driven by `todayGoalCounts`,
-  correctly reset daily) kept showing it as completable. **DONE** —
-  `todayGoals` is now unconditionally cleared (`= []`) at rollover, same as
-  `todayGoalCounts`. Exactly the kind of regression standing up tests was
-  meant to catch.
-- ~~**Fix UTC/local day-boundary mismatch in day rollover**~~ — reported as
-  "the day at the top says today, but items I selected last night are still
-  selected." `todayStr()`/`applyDayRollover()` keyed "today" off **UTC**
-  date fields (by original deliberate design, so every device in a synced
-  household agreed on "today" regardless of timezone) while the date shown
-  in the UI (`Greeting.tsx`, `CalendarPanel.tsx`) used the device's
-  **local** date. For any timezone west of UTC (all of North/South America),
-  UTC midnight lands hours before local midnight, so an evening goal-check
-  could already land on the next UTC day; by the next local morning, the
-  local calendar had rolled over but the UTC date — and thus
-  `lastActiveDate` — hadn't, so rollover silently no-op'd and last night's
-  selections stayed checked. **DONE** — `dateStrUTC()` is now
-  `dateStrLocal()`, built from local date fields, matching the UI; all call
-  sites (`todayStr()`, `applyDayRollover()`'s yesterday calc,
-  `backfillStreaksFromLogs()`) and their `setUTCDate`/`setDate` arithmetic
-  were updated to match. `vitest.config.ts` pins `TZ=UTC` for the test
-  process so the existing UTC-suffixed test fixtures stay deterministic;
-  `src/state/defaultState.test.ts` adds a regression test that fails
-  against the old UTC-keyed implementation. Tradeoff: a household synced
-  across timezones may now briefly disagree on "today" near midnight
-  instead of agreeing on the wrong "today" for everyone.
-- ~~**Add a household-wide configurable time zone**~~ — resolves the
-  tradeoff noted at the end of the entry above: with day-boundary logic
-  keyed off each device's own local clock, a household synced across
-  timezones could briefly disagree on "today" near midnight, and any
-  device's own system timezone (not necessarily where the kid actually
-  lives) silently decided streak/rollover behavior. **DONE** —
-  `Settings.timezone` (an IANA zone id, default `'America/New_York'`) is now
-  a shared field (`SHARED_SETTING_KEYS` in `defaultState.ts`) editable by a
-  parent via the new `TimezonePanel` in the Settings screen. `todayStr()`,
-  `applyDayRollover()`, and `backfillStreaksFromLogs()` (`defaultState.ts`)
-  no longer read any local `Date` field at all — they take/derive an
-  explicit zone and use `Intl.DateTimeFormat` (and a UTC-anchored
-  `addDaysToDateStr()` helper for date-string arithmetic), so every device
-  in a household now agrees on "today" by using the same configured zone,
-  not whichever zone each device's clock happens to be set to.
-  `src/data/timezones.ts` holds the default, the full IANA list (via
-  `Intl.supportedValuesOf('timeZone')`, with a static fallback for older
-  runtimes), and `isValidTimezone()` validation used by both
-  `sanitizeState()` and `saveSetting()`.
-- ~~**Add a CI gate**~~ — **DONE.** `deploy.yml` now runs `npm run lint` then
-  `npm test` before `npm run build`, so a lint or test failure blocks deploy.
-  *(P0, S.)*
-- ~~**Harden error handling**: wrap `localStorage` writes in try/catch with a
-  user-visible fallback for quota-exceeded or disabled storage (e.g. iOS private
-  browsing), and validate the shape of incoming Supabase realtime payloads
-  before trusting them.~~ — **DONE.** Every `localStorage` call in `src/`
-  now goes through `safeGetItem`/`safeSetItem`/`safeRemoveItem`
-  (`src/state/storage.ts`), which catch the exception `localStorage` throws
-  when disabled or full instead of letting it propagate. `saveState`/
-  `saveRoot` (`src/state/defaultState.ts`) return a boolean; `GravyProvider`'s
-  autosave effect shows a one-time "Couldn't save" toast on failure (deduped
-  on repeat failures, reset once a write succeeds again) so a kid's progress
-  isn't silently lost. `subscribeToHousehold` (`src/state/sync.ts`) now
-  validates an incoming realtime payload has a `profiles` array
-  (`isValidHouseholdStatePayload`) before handing it to the app, on top of
-  the existing per-field `hydrateState`/`sanitizeState` validation. *(P1, M.)*
-- ~~**Add an "update available" prompt** for the PWA.~~ — **DONE.**
-  `src/components/UpdatePrompt.tsx` (using `virtual:pwa-register/react`'s
-  `useRegisterSW()`) checks for a new service worker every 60s while the app
-  is open and again on every `visibilitychange` to visible, then auto-applies
-  and reloads immediately (no manual click, no dismiss) with a brief status
-  banner — tuned for a rapid-beta-testing phase where missing an update is
-  worse than an unprompted reload.
 - **Refactor `GravyContext.tsx`** (~1240 lines) — extract household/sync logic
   into its own hook/module before it grows further. Pure maintainability, no
   user-facing effect. *(P2, M.)*
 
-## Epic 3 — Accessibility
-
-- ~~**Accessibility hardening pass**~~ — **DONE.** All four sub-items below
-  landed together (interactive tiles, modals/drawers, theme CSS, label
-  sizes), as planned. *(P1, M overall.)*
-  - ~~Add aria-labels / semantic roles to interactive tiles~~ — many were
-    `div`+`onClick` or unlabeled buttons across both kid and parent surfaces.
-    **DONE.**
-  - ~~Add focus trapping / return-focus to modals and drawers~~ (Calendar,
-    Badge popup, Onboarding, PIN screen). **DONE** — `useFocusTrap`
-    (`src/components/useFocusTrap.ts`), wired into `Modal`, `RankScreen`,
-    `GamesScreen`, `BadgePopup`, `ConfirmDialog`, `AccountMenu`,
-    `SyncGateModal`, `Celebration`, and `PinScreen`.
-  - ~~Run a color-contrast pass across all 5 themes~~ (classic / midnight /
-    ocean / bubblegum / cyberpunk). **DONE** — darkened the base `--muted`
-    token for classic and ocean (the two themes where `--bg`/`--card`/
-    `--cream` are all light, so a single token fix covers every
-    muted-text-on-card combination); for midnight/cyberpunk, where `--dark`/
-    `--text`/`--muted` are dual-purposed (flipped light to read on dark
-    surfaces elsewhere), extended the existing scoped per-selector ink
-    overrides in `src/index.css` instead of touching the shared token. Added
-    `.muted-note` and `.empty-state--bare` classes to replace inline
-    `color: 'var(--muted)'` styles and a dual-context shared class, both of
-    which were otherwise unreachable by a CSS theme override.
-  - ~~Audit/raise minimum label font sizes~~ — **DONE.** Raised the
-    `--text-2xs` token from 10px to 11px (the floor used by `.food-label`,
-    `.store-need-more`, `.badge-progress-label`, `.rank-row-points`,
-    `.rank-row-status`, and `.theme-swatch-label`); verified via Playwright
-    screenshots across classic/cyberpunk that none of the six clip or
-    overflow at the new size. Left three single-glyph icon-badge sizes below
-    11px untouched as out of scope — `.sync-warning-icon` (0.6rem),
-    `.nav-badge::after` (0.6rem), and `.food-check-badge` (0.55rem) are
-    decorative counts/glyphs in small fixed circles, not textual labels.
-
 ## Epic 4 — Game Balance & Content Debt
 
-- ~~**Design the points economy in one pass**~~ — **DONE.** Computed the
-  realistic daily point ceiling from current defaults: food (5 groups ×
-  `foodPts` + the one-time full-tray `bonusPts`) = 75, all 8 default daily
-  goals = 105, each positive bonus item once = ~60, games capped at
-  `DAILY_GAME_WIN_CAP` (3) × `gamePts` = 45 — a max-engagement day ≈ 285,
-  with a more typical day around 120–200. Decision (confirmed with product
-  owner): bonus items stay uncapped — the parent tapping the button after
-  witnessing the real behavior is the actual gate, not a UI limit, so the
-  ceiling math is sized off realistic engagement rather than a theoretical
-  unbounded one. Against that ceiling, the old rank curve (gaps growing 50/
-  rank, max rank at 13,800 — the placeholder from PR #90) topped out in only
-  ~2-3 months of consistent play, leaving the 24-tier ladder with nothing
-  left to chase for the rest of the app's life. Rescaled gaps 5x (250/rank,
-  `src/data/ranks.ts`, max rank now 69,000) to target roughly 11-15 months
-  to max rank at the typical 150-200 pts/day pace (69,000 / 200 ≈ 345 days,
-  69,000 / 150 ≈ 460 days), while keeping the first rank-up
-  fast (~1-2 days) for early hook. Action point values (food/goal/bonus/game
-  pts, reward costs) were left untouched — they're parent-editable per
-  household already, and the points-badges in `badges.ts` (max 10,000) were
-  also left as-is, intentionally completing earlier in the new ladder as a
-  shorter-arc reward system distinct from the rank ladder's longer arc.
-  *(P1, M.)*
 - **Lock the theme palette.** It was wholesale-replaced once already (4 themes →
   5 new ones in PR #80); avoid a second full swap without a clear signal that
   the current set isn't working. *(P2, decision only.)*
@@ -257,12 +68,9 @@ process), not missing features.
 ## Epic 6 — Distribution & Growth
 
 *(Contingent — only pursue if/when a wider-distribution decision is made;
-scope today is "plan for optionality," not commit.)*
+scope today is "plan for optionality," not commit. App-store packaging moved to
+Epic 10 once the Capacitor decision was made — see `BACKLOG_DONE.md`.)*
 
-- ~~App store packaging (TWA/PWABuilder for Android; iOS wrapper or App
-  Clip).~~ **SUPERSEDED** — the wider-distribution decision this was
-  contingent on has been made (Capacitor wrap, not a TWA/App Clip wrapper);
-  see Epic 10's packaging items instead.
 - Lightweight, privacy-respecting, **opt-in** analytics — no third-party
   trackers exist today by design; if added, keep it self-hosted/aggregate-only
   given the child-data context.
@@ -274,69 +82,22 @@ scope today is "plan for optionality," not commit.)*
 
 ## Epic 7 — Process Hygiene
 
-- ~~**Triage every open/unmerged branch explicitly** (#92, #93 today)~~ —
-  **DONE**: #93 merged as #97, #92 explicitly decided to stay closed (see
-  Epic 1). Standing principle going forward: don't let future work pile up
-  unmerged and unresolved the way these two did.
 - **Keep this `BACKLOG.md` living** — update priorities as items land instead
-  of letting new PRs silently supersede old ones without a record.
-- **Hold a short UI-stabilization window** while Epics 1–3 land: the parent
+  of letting new PRs silently supersede old ones without a record. Closing an
+  item means moving it to `BACKLOG_DONE.md` as a one-liner; opening one means
+  adding it here.
+- **Hold a short UI-stabilization window** while durability work lands: the parent
   dashboard was fully redesigned three times (PRs #71, #73, plus earlier passes)
   and the theme palette fully replaced once (PR #80) in recent history — high
   churn, low durability. Resist a fourth redesign or second palette swap until
   there's a concrete signal (user feedback, data) calling for it.
 
-## Epic 8 — Real Auth & Account Model
-
-*(Supersedes the household-code access control accepted as residual risk in Epic 1 —
-see the "real access control" and rate-limiting items there. Supabase Auth is the
-assumed backend: `@supabase/supabase-js` is already a dependency, and RLS policies keyed
-to `auth.uid()` are only cleanly achievable through it.)*
-
-- ~~**Adopt Supabase Auth for parent accounts**~~ — **DONE.** Email/password + magic-link
-  sign-in via `src/state/auth.ts`, surfaced in `AccountPanel` (Parent Dashboard → Advanced
-  Settings → Parent Account). Session state lives in `GravyContext` (`authUser`/`authReady`).
-  `auth.uid()`-scoped RLS itself is still deferred to Epic 9 (it can only land once enough
-  households have claimed), but the account identity it depends on now exists. *(was P1, L.)*
-- ~~**Keep the household PIN as a local kid-screen lock, decoupled from account auth.**~~ —
-  **DONE.** The PIN/`grownUpUnlocked` lock (`src/state/grownUpUnlock.ts`,
-  `src/state/pinLockout.ts`) is explicitly documented and kept as a per-device kid-screen
-  lock independent of the parent account — neither gates the other. *(was P1, S.)*
-- ~~**Household ownership + invite-by-code model.**~~ — **DONE.**
-  `supabase/migrations/20260627000000_auth_household_ownership.sql` adds `households.owner_id`,
-  a `household_members` (`household_code`, `user_id`, `role`) join table, and rewrites every
-  `SECURITY DEFINER` RPC (`gravy_create_household`, `gravy_upsert_household_state`,
-  `gravy_rename_household`, `gravy_delete_household`, `gravy_lookup_household`, plus new
-  `gravy_claim_household`/`gravy_household_status`) to check membership/ownership. A claimed
-  household restricts writes to members; the 6-char code becomes the join/invite token
-  (entering it while signed in links the account). *(was P1, L.)*
-- ~~**Migration: claim-or-deprecate window for existing PIN-only households.**~~ — **DONE.**
-  Pre-existing households all have `owner_id IS NULL` and keep working anonymously (legacy
-  anon read/write) until a signed-in parent claims them via `gravy_claim_household` — which
-  sets `owner_id` with no data migration (`state` JSONB untouched). The "Secure this
-  household" prompt in `SyncPanel` is the in-app banner driving the window. Tightening the
-  open-`SELECT` residual risk into `auth.uid()`-scoped RLS (the actual close-out) is the
-  Epic 9 RLS-migration item, sequenced after enough households claim. *(was P1, M.)*
-- ~~**Per-parent attribution on `actionLog`.**~~ — **DONE.** `ActionLogEntry` gained
-  `actorUserId`/`actorLabel` (`src/state/types.ts`); `appendActionLog(next, actor, entry)`
-  stamps them from the signed-in account (absent when none), and `LogPanel` shows "· by
-  <email>" on attributed entries. Unit-tested in `actionLog.test.ts`. *(was P2, S.)*
-- ~~**Audit trail for dashboard-level/destructive actions.**~~ — **DONE.** New shared
-  `auditLog` field + `src/state/auditLog.ts` (`appendAuditLog`, cap 300), instrumented across
-  catalog edits, settings (value-change-only; never logs secret values), badge config, profile
-  CRUD, danger-zone resets, and sync/ownership changes — each actor-attributed. Surfaced as a
-  new read-only "Admin Log" `ParentDashboard` destination (`AuditLogPanel`), distinct from the
-  kid-progress action log. Unit-tested in `auditLog.test.ts`. *(was P2, M.)*
-- *(Decision, stated so it isn't silently revisited: kid profiles stay non-authenticated
-  sub-records under a parent-owned household, switched via the existing PIN-gated
-  `ProfileSwitcher` — no kid email/password/OAuth, avoiding COPPA exposure from collecting
-  any kid-direct credential.)*
-
 ## Epic 9 — Cloud-First Storage & Offline Sync
 
-*(The RLS-migration and account-deletion items depend on Epic 8's account/membership model;
-the merge and offline-queue items are valuable regardless, since today's "local cache + LWW
-on reconnect" is already the weakest link for any multi-device household.)*
+*(The RLS-migration and account-deletion items depend on Epic 8's account/membership model
+— see `BACKLOG_DONE.md` Epic 8; the merge and offline-queue items are valuable regardless,
+since today's "local cache + LWW on reconnect" is already the weakest link for any
+multi-device household.)*
 
 - **Replace whole-blob last-write-wins with collection/record-level merge.** Today any write
   anywhere (`pushHouseholdState` in `src/state/sync.ts`) overwrites the entire `state` JSONB
@@ -362,15 +123,15 @@ on reconnect" is already the weakest link for any multi-device household.)*
   becomes a real expectation once accounts exist, and is the easy half of COPPA's
   access-and-deletion requirement. *(P2, S.)*
 - **Account-level data deletion (right-to-delete).** Extends the existing "Delete household
-  everywhere" (`DangerZonePanel`/`SyncPanel`, Epic 1, done) to also delete the account and
-  any auth-table rows, and to define what happens to a multi-member household when the
-  owning account deletes itself. *(P1, S–M.)*
+  everywhere" (`DangerZonePanel`/`SyncPanel`, done — see `BACKLOG_DONE.md` Epic 1) to also
+  delete the account and any auth-table rows, and to define what happens to a multi-member
+  household when the owning account deletes itself. *(P1, S–M.)*
 - **COPPA-specific review of the account signup flow itself.** Narrower and must land
-  *before* Epic 8 ships to real users: verify signup never collects a child's name/data as
+  *before* real accounts ship to users: verify signup never collects a child's name/data as
   part of account creation (only as in-app profile data after a parent is authenticated),
   add explicit parent-only language to the signup screen, and update `DATA_HANDLING.md` to
   cover Supabase Auth's own data (email on file, magic-link token storage) — this is what
-  turns the app from "no PII" to "parent email on file." *(P0 once Epic 8 is scheduled.)*
+  turns the app from "no PII" to "parent email on file." *(P0 once real-account rollout is scheduled.)*
 
 ## Epic 10 — Mobile App & Native Capacities
 
@@ -453,23 +214,22 @@ opinionated changes that need a mockup before committing.
 
 ## Do these next (top 5, in order)
 
-The original top-5 here (PIN/recovery hashing, the PR #92 decision, the lint
-gate, Vitest, and Supabase access control) is now fully done — see the
-strikethroughs in Epics 1, 2, and 7 above. Replacing it with the next five,
-prioritized from what's actually still open:
+The original top-5 (PIN/recovery hashing, the PR #92 decision, the lint gate,
+Vitest, and Supabase access control) is fully done, as is the second wave
+(data-handling note, error hardening, accessibility pass, points economy) — all
+in `BACKLOG_DONE.md`. The current open priorities:
 
-1. ~~Write the data-handling note~~ (Epic 1, P1/S) — **DONE**, see
-   `DATA_HANDLING.md`.
-2. ~~Harden error handling~~ around `localStorage` writes and incoming
-   Supabase realtime payloads (Epic 2, P1/M) — **DONE**, see Epic 2 above.
-3. ~~Run the accessibility hardening pass~~ (Epic 3, P1/M) — **DONE**: all
-   four sub-items (aria-labels, focus trapping, the contrast pass, and the
-   font-size audit) are complete, see Epic 3 above.
-4. ~~Design the points economy in one pass~~ (Epic 4, P1/M) — **DONE**, see
-   Epic 4 above.
-5. **Ship PWA push notifications** (Epic 5, P1/L) — the single biggest lever
-   for retention. Note: with a Capacitor-wrapped iOS app now the planned
-   distribution path (Epic 10), skip the web-push (Notifications API)
-   implementation here — iOS PWA web push is limited and would be partly
-   throwaway. Go straight to native push (APNs/FCM) as Epic 10's distinct
-   P1/M item once the Capacitor wrap ships instead.
+1. **Ship push notifications** (Epic 5/10, P1) — the single biggest retention
+   lever. Skip the web-push (Notifications API) path: with a Capacitor-wrapped
+   iOS app the planned distribution route, iOS PWA web push is limited and would
+   be partly throwaway. Go straight to native push (APNs/FCM) as Epic 10's
+   distinct item, sequenced right after the Capacitor wrap spike below.
+2. **Capacitor wrap spike** (Epic 10, P1/M) — the gate for native push,
+   biometrics, and store distribution; near-zero `src/` rewrite, so it unblocks
+   the most downstream work for the least cost.
+3. **Collection/record-level sync merge** (Epic 9, P1/L) — replace whole-blob
+   last-write-wins before multi-device-per-account becomes the normal case.
+4. **Offline write queue with replay** (Epic 9, P1/M) — pairs with the merge
+   item so a kid can check off chores with no signal and have it land later.
+5. **COPPA review of the signup flow** (Epic 9, P0 once real-account rollout is
+   scheduled) — must land before real accounts ship to users.
