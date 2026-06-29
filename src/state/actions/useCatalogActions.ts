@@ -145,7 +145,7 @@ export function useCatalogActions(deps: CatalogDeps) {
       } else if (key === 'recoveryQuestion') {
         next.settings.recoveryQuestion = val.trim();
       } else if (key === 'theme') {
-        if (val === 'classic' || val === 'midnight' || val === 'ocean' || val === 'bubblegum' || val === 'cyberpunk') {
+        if (val === 'capri' || val === 'classic' || val === 'midnight' || val === 'ocean' || val === 'bubblegum' || val === 'cyberpunk') {
           next.settings.theme = val;
         }
       } else if (key === 'avatarIcon') {

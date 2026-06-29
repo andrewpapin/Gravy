@@ -10,6 +10,7 @@ import { ColorPicker, type ColorOption } from './ColorPicker';
 import { AVATAR_ICONS } from '../data/icons';
 
 const THEME_OPTIONS: { id: Theme; label: string }[] = [
+  { id: 'capri', label: 'Capri' },
   { id: 'classic', label: 'Classic' },
   { id: 'midnight', label: 'Midnight' },
   { id: 'ocean', label: 'Ocean' },

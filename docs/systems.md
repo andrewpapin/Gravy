@@ -57,10 +57,13 @@ profile's avatar icon and colors (`avatarIconColor`/`avatarBgColor`).
 
 ## Theming
 
-`Settings.theme` is one of `'classic' | 'midnight' | 'ocean' | 'bubblegum' | 'cyberpunk'` (renamed
-from the older `light`/`dark`/`rainbow`/`gold` — `migrateLegacyState()` falls back any unrecognized
-saved value to `'classic'`), set per-profile via `ProfilesManager` and applied globally for the
-active profile. Theme CSS lives in `src/index.css`, keyed off `[data-theme="..."]` on `<html>`.
+`Settings.theme` is one of `'capri' | 'classic' | 'midnight' | 'ocean' | 'bubblegum' | 'cyberpunk'`
+(renamed from the older `light`/`dark`/`rainbow`/`gold` — `migrateLegacyState()` falls back any
+unrecognized saved value to `'capri'`), set per-profile via `ProfilesManager` and applied globally
+for the active profile. `'capri'` is the base/default theme (its tokens live on the unmarked
+`:root` in `src/index.css`); `'classic'` is the original default palette, demoted to a selectable
+theme under `:root[data-theme="classic"]`. Theme CSS lives in `src/index.css`, keyed off
+`[data-theme="..."]` on `<html>`.
 
 ## Time Zone
 

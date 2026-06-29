@@ -33,6 +33,7 @@ export { SYNC_SKIPPED_KEY, DAILY_GAME_WIN_CAP };
 export type { SyncStatus };
 
 const THEME_COLORS: Record<Theme, string> = {
+  capri: '#f0ede6',
   classic: '#f4ece4',
   midnight: '#1e1e24',
   ocean: '#e0f7fa',

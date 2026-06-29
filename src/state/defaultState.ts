@@ -83,7 +83,7 @@ export const defaultState: GravyState = {
     recoveryQuestion: '',
     recoveryAnswerHash: '',
     recoveryAnswerSalt: '',
-    theme: 'classic',
+    theme: 'capri',
     avatarIcon: 'faceSmile',
     avatarIconColor: '#2F3E46',
     avatarBgColor: '#FFFFFF',
@@ -198,11 +198,13 @@ export function migrateLegacyState(state: Record<string, unknown>): void {
 
   // Theme ids were replaced (light/dark/rainbow/gold -> classic/midnight/ocean/
   // bubblegum/cyberpunk); fall back to the new default for any unrecognized value.
+  // 'capri' was later introduced as the new base/default theme, with the old
+  // default demoted to a selectable 'classic' theme.
   const settings = state.settings as Record<string, unknown> | undefined;
   if (settings) {
-    const validThemes = ['classic', 'midnight', 'ocean', 'bubblegum', 'cyberpunk'];
+    const validThemes = ['capri', 'classic', 'midnight', 'ocean', 'bubblegum', 'cyberpunk'];
     if (!validThemes.includes(settings.theme as string)) {
-      settings.theme = 'classic';
+      settings.theme = 'capri';
     }
   }
 
