@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFire, faMedal, faChevronRight, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
+import { faFire, faMedal, faChevronRight, faCircleInfo, faCoins, faCloudArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { AppIcon } from './AppIcon';
 import { useGravy } from '../state/GravyContext';
 import { useTodaySnapshot } from '../state/useTodaySnapshot';
@@ -9,13 +9,17 @@ import { useEffect, useRef, useState } from 'react';
 interface StatsCardProps {
   onOpenBadges: () => void;
   onOpenRank: () => void;
+  onOpenStore?: () => void;
 }
 
-export function StatsCard({ onOpenBadges, onOpenRank }: StatsCardProps) {
-  const { state } = useGravy();
+export function StatsCard({ onOpenBadges, onOpenRank, onOpenStore }: StatsCardProps) {
+  const { state, householdCode, syncStatus } = useGravy();
   const { rank, xpText, pct, streakAtRisk } = useTodaySnapshot();
   const earnedCount = state.earnedBadges.length;
   const totalBadgeCount = getEnabledBadgeCount(state);
+  const syncError = !!householdCode && syncStatus === 'error';
+  // The internal balance can dip below zero after a large deduction; never show negative.
+  const displayPoints = Math.max(0, state.points);
 
   const prevPointsRef = useRef(state.totalPoints);
   const [xpPulse, setXpPulse] = useState(false);
@@ -31,6 +35,27 @@ export function StatsCard({ onOpenBadges, onOpenRank }: StatsCardProps) {
 
   return (
     <div className="stats-card">
+      <button
+        type="button"
+        className="stats-coins-bar"
+        onClick={onOpenStore}
+        aria-label={`${displayPoints} points — open Reward Store`}
+      >
+        <span className="stats-coins-bar-label">
+          <FontAwesomeIcon icon={faCoins} /> {displayPoints} Coins
+          {syncError && (
+            <span
+              className="sync-warning-icon"
+              title="Sync issue — your progress is saved here and will sync once connection is back"
+              aria-label="Sync issue — progress saved locally"
+              role="img"
+            >
+              <FontAwesomeIcon icon={faCloudArrowUp} aria-hidden="true" />
+            </span>
+          )}
+        </span>
+        <FontAwesomeIcon icon={faChevronRight} />
+      </button>
       <div className="stats-rank">
         <button className="stats-rank-info-btn" onClick={onOpenRank} aria-label="View rank ladder and stats" type="button">
           <FontAwesomeIcon icon={faCircleInfo} />

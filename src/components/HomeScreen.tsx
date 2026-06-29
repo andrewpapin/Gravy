@@ -37,14 +37,13 @@ export function HomeScreen({ onOpenAccountMenu, onOpenStore, onOpenBadges, onOpe
       <TopBar
         dateStr={dateStr}
         onOpenAccountMenu={onOpenAccountMenu}
-        onOpenStore={onOpenStore}
         onOpenHistory={() => setHistoryOpen(true)}
       />
       <div className="scroll-area">
         {!isToday && (
           <div className="home-history-banner">Viewing {formatShortDate(dateStr)} — not today</div>
         )}
-        <StatsCard onOpenBadges={onOpenBadges} onOpenRank={onOpenRank} />
+        <StatsCard onOpenBadges={onOpenBadges} onOpenRank={onOpenRank} onOpenStore={onOpenStore} />
         <GamesCard onOpen={onOpenGames} />
         <FoodTray dateStr={dateStr} editable={isToday} />
         <DailyGoals dateStr={dateStr} editable={isToday} />

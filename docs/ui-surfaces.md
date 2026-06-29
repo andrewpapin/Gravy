@@ -10,8 +10,10 @@ there is no router, just boolean open/close state per drawer.
 ## Kid view (`src/components/`)
 
 `HomeScreen` (rank/streak/badge stats card, Games hub card, food tray, daily goals, bonus items)
-plus drawers for the reward store, badges, games, and the rank ladder. Tapping the avatar icon in
-`TopBar` opens **`AccountMenu`**, a menu with up to six destinations:
+plus drawers for the reward store, badges, games, and the rank ladder. The coin balance and Reward
+Store entry point live in `StatsCard`'s coins row (the top row of the stacked rank/badges card), not
+in `TopBar` — `TopBar` only holds the avatar, greeting, grown-up lock, and history calendar icon.
+Tapping the avatar icon in `TopBar` opens **`AccountMenu`**, a menu with up to six destinations:
 
 - **Reward Store** — no PIN, always tappable.
 - **Grown-Up Access** — a single lock row, not a destination. Locked, it shows `faLock` and "Locked
