@@ -43,8 +43,8 @@ export interface HouseholdDeps {
 }
 
 // Cloud-sync household lifecycle (create/join/leave/delete/rename) and parent-account auth
-// (sign up/in/out, magic link, claim). The realtime push/subscribe wiring stays in GravyContext's
-// effects; these are the imperative one-shot actions the Sync/Account panels call.
+// (sign up/in/out, magic link, claim). The realtime push/subscribe wiring lives in
+// `../useHouseholdSync.ts`; these are the imperative one-shot actions the Sync/Account panels call.
 export function useHouseholdActions(deps: HouseholdDeps) {
   const {
     setState, setRoot, stateRef, rootRef, showToast, actorRef, setSyncStatus,

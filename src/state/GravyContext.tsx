@@ -1,32 +1,25 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faTriangleExclamation, faStar } from '@fortawesome/free-solid-svg-icons';
-import type { ActionLogEntry, DayLog, Goal, GravyRoot, GravyState, ProfileEntry, Reward, Theme } from './types';
+import type { ActionLogEntry, DayLog, Goal, GravyRoot, GravyState, Reward, Theme } from './types';
 import {
   applyDayRollover,
   loadRoot,
   saveRoot,
-  hydrateState,
-  mirrorSharedFields,
 } from './defaultState';
-import { type LogActor } from './actionLog';
 import { resolveToastIcon } from '../data/icons';
 import { findNewlyEarnedBadges, getBadgeDisplay } from './badges';
 import { applyAward, applyAwardForDay } from './points';
 import { getRank, RANKS } from '../data/ranks';
-import { pushHouseholdState, subscribeToHousehold } from './sync';
-import { mergeRoots } from './merge';
-import { safeGetItem } from './storage';
 import { readGrownUpUnlocked, writeGrownUpUnlocked } from './grownUpUnlock';
 import {
   type AuthResult,
   type AuthUser,
   type HouseholdStatus,
-  getHouseholdStatus,
-  onAuthChange,
 } from './auth';
-import { HOUSEHOLD_CODE_KEY, SYNC_SKIPPED_KEY, DAILY_GAME_WIN_CAP, activeStateOf, buildMergedRoot, clone } from './actions/shared';
+import { SYNC_SKIPPED_KEY, DAILY_GAME_WIN_CAP, activeStateOf, buildMergedRoot, clone } from './actions/shared';
 import type { ProfilePatch, SettableSettingKey, SyncStatus } from './actions/types';
+import { useHouseholdSync } from './useHouseholdSync';
 import { useKidProgressActions } from './actions/useKidProgressActions';
 import { useDayEditActions } from './actions/useDayEditActions';
 import { useRewardActions } from './actions/useRewardActions';
@@ -151,10 +144,6 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [celebration, setCelebration] = useState<CelebrationData | null>(null);
   const [confettiTrigger, setConfettiTrigger] = useState(0);
-  const [householdCode, setHouseholdCode] = useState<string | null>(() =>
-    safeGetItem(HOUSEHOLD_CODE_KEY),
-  );
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [grownUpUnlocked, setGrownUpUnlocked] = useState(() => readGrownUpUnlocked());
   const unlockGrownUpAccess = useCallback(() => {
     writeGrownUpUnlocked(true);
@@ -164,44 +153,20 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     writeGrownUpUnlocked(false);
     setGrownUpUnlocked(false);
   }, []);
-  // Parent account (Epic 8). Independent of the kid-screen PIN/grownUpUnlocked lock above —
-  // signing in identifies a parent for household ownership, the PIN keeps a kid out of the
-  // dashboard on a shared device. authReady gates UI until the initial session check resolves.
-  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
-  const [authReady, setAuthReady] = useState(false);
-  const [householdStatus, setHouseholdStatus] = useState<HouseholdStatus | null>(null);
-  const lastSyncedRef = useRef<string | null>(null);
   const pendingTimersRef = useRef<number[]>([]);
   const storageWarnedRef = useRef(false);
-  // Read synchronously by the log-append helpers so every entry is stamped with the parent
-  // account that performed it without re-creating those callbacks on each sign-in (Epic 8 item 5/6).
-  const actorRef = useRef<LogActor | undefined>(undefined);
 
-  // Track the signed-in parent account. Fires once on mount with the current session (or null)
-  // and again on every sign-in/out.
-  useEffect(() => {
-    const unsub = onAuthChange((user) => {
-      setAuthUser(user);
-      setAuthReady(true);
-      actorRef.current = user ? { userId: user.id, label: user.email ?? undefined } : undefined;
-    });
-    return unsub;
-  }, []);
-
-  // Refresh whether the current household is claimed whenever the code or the signed-in account
-  // changes — drives the "secure this household" prompt. Failures (offline) leave status null.
-  useEffect(() => {
-    if (!householdCode) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setHouseholdStatus(null);
-      return;
-    }
-    let cancelled = false;
-    getHouseholdStatus(householdCode)
-      .then((s) => { if (!cancelled) setHouseholdStatus(s); })
-      .catch(() => { if (!cancelled) setHouseholdStatus(null); });
-    return () => { cancelled = true; };
-  }, [householdCode, authUser]);
+  // Cloud-sync + parent-account reactive layer: householdCode/syncStatus/authUser/authReady/
+  // householdStatus state plus the Supabase realtime push/subscribe, auth-tracking, and
+  // ownership-status effects. `actorRef` (stamped here on sign-in) and `lastSyncedRef` are owned by
+  // this hook and forwarded to the imperative action hooks below.
+  const {
+    householdCode, setHouseholdCode,
+    syncStatus, setSyncStatus,
+    authUser, authReady,
+    householdStatus, setHouseholdStatus,
+    lastSyncedRef, actorRef,
+  } = useHouseholdSync({ root, state, setRoot, setState });
 
   // Applies the parent-selected theme to the whole app. useLayoutEffect (rather than
   // useEffect) so the attribute is set before paint, avoiding a flash of the light theme.
@@ -209,61 +174,6 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.theme = state.settings.theme;
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLORS[state.settings.theme]);
   }, [state.settings.theme]);
-
-  // Push local changes to Supabase when in a synced household. The whole root (all profiles +
-  // shared config) is the synced payload, so every device shares every kid.
-  useEffect(() => {
-    if (!householdCode) return;
-    const merged = buildMergedRoot(root, state);
-    const json = JSON.stringify(merged);
-    if (json === lastSyncedRef.current) return;
-    setSyncStatus('syncing');
-    const timeout = setTimeout(() => {
-      pushHouseholdState(householdCode, merged)
-        .then(() => {
-          lastSyncedRef.current = json;
-          setSyncStatus('idle');
-        })
-        .catch(() => setSyncStatus('error'));
-    }, 800);
-    return () => clearTimeout(timeout);
-  }, [state, root, householdCode]);
-
-  // Receive remote changes from other devices in the household
-  useEffect(() => {
-    if (!householdCode) return;
-    return subscribeToHousehold(householdCode, (remoteRoot) => {
-      try {
-        const incomingJson = JSON.stringify(remoteRoot);
-        if (incomingJson === lastSyncedRef.current) return;
-        const remoteProfiles: ProfileEntry[] = (remoteRoot.profiles || [])
-          .filter((p) => p && p.state)
-          .map((p) => ({ id: p.id, state: hydrateState(p.state) }));
-        if (remoteProfiles.length === 0) return;
-        const hydratedRemote: GravyRoot = {
-          version: 2,
-          activeProfileId: remoteRoot.activeProfileId,
-          profiles: remoteProfiles,
-        };
-        // Merge the arriving snapshot into the *current* local root (via refs, since this effect
-        // only re-subscribes on householdCode) rather than replacing it — so id-keyed collections
-        // (goals/rewards/badges/logs) edited locally but not yet pushed survive the remote update
-        // instead of being clobbered. Scalars/counters still take the remote value (last-write-wins).
-        const finalRoot = mergeRoots(buildMergedRoot(rootRef.current, stateRef.current), hydratedRemote);
-        mirrorSharedFields(finalRoot);
-        // Mark the *incoming* snapshot as seen so an identical re-delivery is ignored. We
-        // deliberately don't mark `finalRoot`: when the merge folded in local-only collection
-        // items the peer hasn't got yet, finalRoot != incoming, and the outgoing-push effect
-        // should re-send that merged result so the peer converges. The merge is idempotent, so
-        // this settles rather than echoing forever.
-        lastSyncedRef.current = incomingJson;
-        setRoot(finalRoot);
-        setState(activeStateOf(finalRoot));
-      } catch {
-        // Ignore malformed realtime payloads rather than crashing the whole app.
-      }
-    });
-  }, [householdCode]);
 
   // Re-check the day rollover whenever the tab regains focus — for every profile, not just the
   // active one, so a kid not opened in days still has correct streaks/cleared "today" when picked.

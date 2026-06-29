@@ -84,8 +84,9 @@ A parent can optionally create an account (email/password or magic link) via `Ac
 `src/state/auth.ts` is the only module that touches `supabase.auth` — it exposes
 `signUpWithPassword`/`signInWithPassword`/`sendMagicLink`/`signOut`, an `onAuthChange` subscription,
 and the ownership RPC wrappers (`claimHousehold`/`getHouseholdStatus`, plus the pure
-`normalizeHouseholdStatus` covered by `auth.test.ts`). `GravyContext` tracks `authUser`/`authReady`
-and re-checks `householdStatus` on code/account change. Once signed in, `createHousehold`
+`normalizeHouseholdStatus` covered by `auth.test.ts`). `useHouseholdSync`
+(`src/state/useHouseholdSync.ts`, the sync/auth reactive hook GravyContext calls) tracks
+`authUser`/`authReady` and re-checks `householdStatus` on code/account change. Once signed in, `createHousehold`
 automatically sets `owner_id` (supabase-js sends the JWT to the RPC); an already-synced legacy
 household is secured via the "Secure this household" banner in `SyncPanel` → `claimHousehold()`. The
 account is **only** a parent identity for household ownership — it is deliberately decoupled from the

@@ -37,6 +37,11 @@ work lives in `BACKLOG.md`.
 - **Vitest + `points.ts` extraction** — award/forgiveness/exact-undo arithmetic
   pulled out of `GravyContext.tsx` into pure `src/state/points.ts`; tests in
   `points.test.ts`, `defaultState.test.ts`, `badges.test.ts`.
+- **`useHouseholdSync` extraction** — the cloud-sync + parent-account reactive
+  layer (household code/sync-status/auth/ownership state + the Supabase realtime
+  push/subscribe, `onAuthChange`, and `getHouseholdStatus` effects) moved out of
+  `GravyContext.tsx` into `src/state/useHouseholdSync.ts`; behavior-preserving,
+  `actorRef`/`lastSyncedRef` now owned by the hook and forwarded to the action hooks.
 - **`todayGoals` rollover bug** — `applyDayRollover` now clears `todayGoals`
   outright; previously a logged daily goal's id stuck forever, killing its payout
   from day 2 while the UI still showed it completable.

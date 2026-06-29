@@ -41,8 +41,8 @@ All state flows through a single React Context in `src/state/GravyContext.tsx`, 
 - Parent account / Supabase Auth state (`authUser`, `authReady`) and actions
   (`signUp`/`signIn`/`sendSignInLink`/`signOutAccount`, plus `claimHousehold` and
   `householdStatus`) — see `docs/persistence-and-sync.md`. `src/state/auth.ts` wraps the Supabase
-  Auth client so nothing else imports it directly; the context subscribes via `onAuthChange` and
-  refreshes `householdStatus` whenever the code or signed-in account changes.
+  Auth client so nothing else imports it directly; `useHouseholdSync` (see below) subscribes via
+  `onAuthChange` and refreshes `householdStatus` whenever the code or signed-in account changes.
 
 ### Action hooks (`src/state/actions/`)
 
@@ -67,9 +67,21 @@ The provider's imperative actions are split into per-domain custom hooks, each c
 `HOUSEHOLD_CODE_KEY`/`SYNC_SKIPPED_KEY`/`DAILY_GAME_WIN_CAP` constants (the latter two re-exported
 from `GravyContext` so consumer import paths are unchanged). `src/state/actions/types.ts` holds
 `SyncStatus`, the dependency function-signature aliases, `SettableSettingKey`, and `ProfilePatch`.
-GravyContext keeps the `useState`/`useRef` declarations, all `useEffect`/`useLayoutEffect` blocks,
-the toast/celebration/award/badge/rank helper callbacks, the `profiles` derivation, the assembled
-`value`, and `useGravy`. The pure point arithmetic still lives in `src/state/points.ts`.
+
+The cloud-sync + parent-account **reactive** layer is its own hook, `src/state/useHouseholdSync.ts`
+(beside `GravyContext`, not under `actions/`, since that folder is imperative action groups and this
+is effects + state). It owns the `householdCode`/`syncStatus`/`authUser`/`authReady`/`householdStatus`
+state, `lastSyncedRef`, and `actorRef`, plus the four effects that wire Supabase realtime
+push/subscribe, `onAuthChange` auth tracking, and `getHouseholdStatus` ownership refresh. It takes
+`{ root, state, setRoot, setState }` and returns those state values/setters/refs; `GravyContext`
+forwards `actorRef`/`lastSyncedRef`/the setters into the action hooks. The imperative
+create/join/leave/claim actions stay in `useHouseholdActions.ts` — that hook and this one share state
+through the refs/setters returned here.
+
+GravyContext keeps the local `useState`/`useRef` declarations, the theme/day-rollover/persist
+effects (the sync/auth effects moved to `useHouseholdSync`), the toast/celebration/award/badge/rank
+helper callbacks, the `profiles` derivation, the assembled `value`, and `useGravy`. The pure point
+arithmetic still lives in `src/state/points.ts`.
 
 ## Profiles (multi-kid households)
 

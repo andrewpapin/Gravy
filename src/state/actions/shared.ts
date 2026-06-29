@@ -1,6 +1,6 @@
-// Shared constants and pure root/state helpers used by both GravyContext (its effects) and the
-// per-domain action hooks under this folder. Kept here (not in GravyContext) so the hooks can
-// import them without a circular dependency back into the provider module.
+// Shared constants and pure root/state helpers used by GravyContext, the `useHouseholdSync` sync
+// engine, and the per-domain action hooks under this folder. Kept here (not in GravyContext) so the
+// hooks can import them without a circular dependency back into the provider module.
 import type { GravyRoot, GravyState } from '../types';
 import { mirrorSharedFields } from '../defaultState';
 

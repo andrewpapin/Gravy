@@ -55,8 +55,10 @@ sync. Entry point: `index.html` → `src/main.tsx` → `src/App.tsx`. There is n
 beyond `HomeScreen` is an overlay drawer/modal toggled by boolean state in `AppShell`.
 
 All state flows through one React Context (`src/state/GravyContext.tsx`), consumed via `useGravy()`.
-It owns the multi-profile `GravyRoot`, the active profile's `GravyState`, persistence/sync effects,
-theming, toasts/celebrations, and badge detection. The provider's imperative actions are split into
+It owns the multi-profile `GravyRoot`, the active profile's `GravyState`, local persistence/theme/
+day-rollover effects, toasts/celebrations, and badge detection. The cloud-sync + parent-account
+reactive layer (household code/status, Supabase realtime push/subscribe, auth tracking) lives in its
+own `src/state/useHouseholdSync.ts` hook. The provider's imperative actions are split into
 per-domain custom hooks under `src/state/actions/` (kid-progress, day-edit, rewards, catalog,
 profile, household); the pure point arithmetic lives in `src/state/points.ts`. Persisted shapes are
 in `src/state/types.ts`.

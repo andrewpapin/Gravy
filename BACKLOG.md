@@ -17,7 +17,7 @@ PWA/infra/accessibility, security/privacy) and the full PR history.
 - **Size**: `S` = under a day · `M` = a few days · `L` = a real project.
 - Items reference the evidence behind them (PR numbers, file paths) so priority
   calls can be re-checked later instead of taken on faith.
-- Epic numbers are kept stable across the split (some epics — 1, 3, 8 — are fully
+- Epic numbers are kept stable across the split (some epics — 1, 2, 3, 8 — are fully
   done and now appear only in `BACKLOG_DONE.md`, so the numbering has gaps here).
 
 ## Snapshot — what's already built
@@ -32,12 +32,6 @@ sync via a 6-character household code. This is a mature, feature-complete produc
 surface — the gaps below are about durability (security, tests, accessibility,
 process) and the next wave of capability (cloud-first sync, native app), not
 missing core features.
-
-## Epic 2 — Engineering Foundation & Quality
-
-- **Refactor `GravyContext.tsx`** (~1240 lines) — extract household/sync logic
-  into its own hook/module before it grows further. Pure maintainability, no
-  user-facing effect. *(P2, M.)*
 
 ## Epic 4 — Game Balance & Content Debt
 
