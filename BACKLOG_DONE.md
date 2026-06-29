@@ -113,3 +113,18 @@ work lives in `BACKLOG.md`.
 - **Decision (don't silently revisit):** kid profiles stay non-authenticated
   sub-records under a parent-owned household, switched via the PIN-gated
   `ProfileSwitcher` — no kid email/password/OAuth, avoiding COPPA exposure.
+
+## Epic 9 — Cloud-First Storage & Offline Sync
+
+- **Collection/record-level sync merge** (replaced whole-blob last-write-wins) —
+  `src/state/merge.ts` (`mergeRoots`/`mergeStates`, pure, `merge.test.ts`).
+  `GravyContext`'s realtime-receive effect now `mergeRoots(localRoot, remoteRoot)`
+  against the current local root (via `rootRef`/`stateRef`) instead of replacing
+  it: profiles union by id, and per-profile id-keyed collections union
+  (goals/rewards by id; badgeConfig/dayLogs by key; earnedBadges as a set;
+  action/audit logs by entry id). Live progress scalars/counters + pendingRewards
+  keep last-write-wins (remote snapshot wins). Idempotent, so the receive effect
+  marks the incoming snapshot seen and lets the push effect re-send local-only
+  additions; devices converge to union-of-collections + last-writer's scalars.
+  Residual (offline-queue/RLS items): server-side push races inside the 800ms
+  debounce, and pendingRewards add/remove tombstones.

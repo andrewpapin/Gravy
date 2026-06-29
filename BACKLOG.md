@@ -89,23 +89,17 @@ Epic 10 once the Capacitor decision was made — see `BACKLOG_DONE.md`.)*
 ## Epic 9 — Cloud-First Storage & Offline Sync
 
 *(The RLS-migration and account-deletion items depend on Epic 8's account/membership model
-— see `BACKLOG_DONE.md` Epic 8; the merge and offline-queue items are valuable regardless,
-since today's "local cache + LWW on reconnect" is already the weakest link for any
-multi-device household.)*
+— see `BACKLOG_DONE.md` Epic 8. The collection/record-level sync merge that replaced whole-blob
+last-write-wins is now done — see `BACKLOG_DONE.md` Epic 9; the offline-queue item below is
+valuable regardless, since today's "local cache + merge on reconnect" still has no write queue
+for a device that's offline at edit time.)*
 
-- **Replace whole-blob last-write-wins with collection/record-level merge.** Today any write
-  anywhere (`pushHouseholdState` in `src/state/sync.ts`) overwrites the entire `state` JSONB
-  column; two parents editing on two devices at once silently drop one's changes with no
-  conflict surfaced. Multi-device-per-account becomes the normal case once real accounts
-  exist, not the edge case it is today. Scope as "merge id-keyed arrays (goals/rewards/
-  badgeConfig) by id+timestamp, last-write-wins only within a single counter field" — not a
-  general CRDT library; full CRDT is real but `XL`, and isn't warranted by the current data
-  shapes. *(P1, L.)*
 - **Offline write queue with replay.** No queue or retry/backoff exists today beyond the
   realtime subscription — a device with no signal just edits `localStorage` and sync
   silently lags until reconnect. Needed regardless of account model so a kid can check off
-  chores with no signal and have it reliably land later; pairs with the merge item above
-  since replay needs something better than "overwrite" to land safely. *(P1, M.)*
+  chores with no signal and have it reliably land later; pairs with the now-done collection/
+  record-level merge (`src/state/merge.ts`), since replay needs that merge rather than a blind
+  overwrite to land queued edits safely. *(P1, M.)*
 - **Migrate `households` RLS from open-SELECT/RPC-gated to `auth.uid()`-scoped policies.**
   Once Epic 8's `household_members` exists, replace the anon-role/open-SELECT model
   (required today only because Realtime has no per-household auth claim to scope by) with
@@ -210,8 +204,9 @@ opinionated changes that need a mockup before committing.
 
 The original top-5 (PIN/recovery hashing, the PR #92 decision, the lint gate,
 Vitest, and Supabase access control) is fully done, as is the second wave
-(data-handling note, error hardening, accessibility pass, points economy) — all
-in `BACKLOG_DONE.md`. The current open priorities:
+(data-handling note, error hardening, accessibility pass, points economy), and
+the collection/record-level sync merge that replaced whole-blob last-write-wins
+(`src/state/merge.ts`) — all in `BACKLOG_DONE.md`. The current open priorities:
 
 1. **Ship push notifications** (Epic 5/10, P1) — the single biggest retention
    lever. Skip the web-push (Notifications API) path: with a Capacitor-wrapped
@@ -221,9 +216,11 @@ in `BACKLOG_DONE.md`. The current open priorities:
 2. **Capacitor wrap spike** (Epic 10, P1/M) — the gate for native push,
    biometrics, and store distribution; near-zero `src/` rewrite, so it unblocks
    the most downstream work for the least cost.
-3. **Collection/record-level sync merge** (Epic 9, P1/L) — replace whole-blob
-   last-write-wins before multi-device-per-account becomes the normal case.
-4. **Offline write queue with replay** (Epic 9, P1/M) — pairs with the merge
-   item so a kid can check off chores with no signal and have it land later.
-5. **COPPA review of the signup flow** (Epic 9, P0 once real-account rollout is
+3. **Offline write queue with replay** (Epic 9, P1/M) — now that receive-side
+   merge has landed, give an offline device a queue so edits made with no signal
+   replay through that merge on reconnect instead of lagging until the next push.
+4. **COPPA review of the signup flow** (Epic 9, P0 once real-account rollout is
    scheduled) — must land before real accounts ship to users.
+5. **Account-level data deletion (right-to-delete)** (Epic 9, P1/S–M) — extend
+   "Delete household everywhere" to also delete the account/auth rows and define
+   what happens to a multi-member household when the owner deletes itself.
