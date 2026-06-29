@@ -58,12 +58,17 @@ customizations (`Info.plist`, `AndroidManifest.xml`, app icons/splash, signing c
 the native folders so those changes are tracked — at that point regenerability stops being the
 point and the folders become source.
 
+## Service worker is disabled under `--mode capacitor`
+
+`vite.config.ts` passes `disable: mode === 'capacitor'` to `VitePWA`, so the native bundle
+emits **no** Workbox service worker — inside a Capacitor WebView a SW is redundant (the shell
+already bundles assets locally) and could cache-fight `UpdatePrompt`'s auto-reload. `disable`
+(rather than dropping the plugin) keeps the `virtual:pwa-register` modules resolvable as no-ops,
+so `UpdatePrompt`'s import and `useRegisterSW` still build; on native they simply never report
+an update. The Pages/PWA build is unaffected and keeps its SW.
+
 ## Known follow-ups (not in this spike)
 
-- **Service worker inside the WebView.** `vite-plugin-pwa` still registers a Workbox SW in the
-  native bundle. Inside a Capacitor WebView that's redundant (the shell already bundles assets
-  locally) and can cache-fight `UpdatePrompt`'s auto-reload. Decide whether to disable the PWA
-  plugin under `--mode capacitor` before shipping a real build.
 - **Signing, store config, native push (APNs/FCM), CI for native builds, OTA policy** — all
   tracked as separate Epic 10 items in `BACKLOG.md`; this spike is their prerequisite, not a
   substitute.

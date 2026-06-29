@@ -138,3 +138,9 @@ work lives in `BACKLOG.md`.
   cleanly; `ios/`/`android/` left gitignored (regenerable) until the shells carry real
   customizations. `docs/capacitor.md`. Remaining Epic 10 items (native push, signing, store
   config, CI, OTA) stay open in `BACKLOG.md`.
+- **Disable the PWA/Workbox service worker under `--mode capacitor`** — `vite.config.ts` now
+  passes `disable: mode === 'capacitor'` to `VitePWA`, so the native bundle emits no Workbox SW
+  (redundant in a WebView, and it could cache-fight `UpdatePrompt`'s auto-reload). `disable`
+  (vs. dropping the plugin) keeps the `virtual:pwa-register` modules resolvable as no-ops so
+  `UpdatePrompt`/`useRegisterSW` still build; the Pages/PWA build keeps its SW. `docs/capacitor.md`.
+  First item on the "Path to first TestFlight build" critical path.
