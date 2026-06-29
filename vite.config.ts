@@ -31,6 +31,12 @@ export default defineConfig(({ command, mode }) => ({
   plugins: [
     react(),
     VitePWA({
+      // A Capacitor WebView already bundles assets locally, so a Workbox SW is
+      // redundant there and can cache-fight UpdatePrompt's auto-reload. `disable`
+      // keeps the `virtual:pwa-register` modules resolvable (as no-ops, so
+      // UpdatePrompt's import and `useRegisterSW` still build) while emitting no
+      // service worker for the native bundle. See docs/capacitor.md.
+      disable: mode === 'capacitor',
       registerType: 'prompt',
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {

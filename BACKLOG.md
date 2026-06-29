@@ -162,11 +162,6 @@ is explicitly *not* blocking the first build.
 
 **Blocks the first internal build:**
 
-- **Disable the PWA/Workbox service worker under `--mode capacitor`.** `vite.config.ts`
-  runs `VitePWA` for *every* build, so the native bundle still registers a Workbox SW inside
-  the Capacitor WebView — redundant (the shell bundles assets locally) and able to cache-fight
-  `UpdatePrompt`'s auto-reload. Flagged in `docs/capacitor.md` as "decide before shipping a
-  real build"; it's unresolved in code. Gate the plugin on `mode !== 'capacitor'`. *(P1, S.)*
 - **Generate native app icons + splash/launch screen.** Only web/PWA icons exist in `public/`;
   a real iOS build needs a native icon set and launch screen. Use `@capacitor/assets` to
   generate both from a source logo. *(P1, S.)*
@@ -243,31 +238,32 @@ in `BACKLOG_DONE.md`. Two more of the prior top-5 are now done as well: the
 
 **Current focus: get a first build into internal TestFlight.** Push notifications
 were the prior #1, but a TestFlight build needs no push — it's a fast-follow once
-on-device, not a blocker. The path below is Epic 10's "Path to first TestFlight
-build (internal testing)" critical path, front-loaded, then the highest-value work
-that pairs with going on-device:
+on-device, not a blocker. The first critical-path item — **disabling the PWA service
+worker under `--mode capacitor`** — is now done (`vite.config.ts`, see
+`BACKLOG_DONE.md` Epic 10). The path below is the rest of Epic 10's "Path to first
+TestFlight build (internal testing)" critical path, front-loaded, then the
+highest-value work that pairs with going on-device:
 
-1. **Disable the PWA service worker under `--mode capacitor`** (Epic 10, P1/S) —
-   smallest, first: the native bundle still registers a Workbox SW that can
-   cache-fight `UpdatePrompt`. Gate `VitePWA` on `mode !== 'capacitor'` in
-   `vite.config.ts` before any real build.
-2. **Native app icons + splash, then graduate `ios/` into the repo** (Epic 10,
+1. **Native app icons + splash, then graduate `ios/` into the repo** (Epic 10,
    P1/S) — generate assets via `@capacitor/assets`, commit the now-customized
    `ios/` shell (per `docs/capacitor.md`'s graduation step).
-3. **Signing + App Store Connect + a build→upload pipeline** (Epic 10, P1/M) —
+2. **Signing + App Store Connect + a build→upload pipeline** (Epic 10, P1/M) —
    Apple Developer membership, App ID for `com.gravyapp.app`, distribution
    cert/profile, the app record (answer export-compliance), and at minimum a
    documented local `xcodebuild archive` + Transporter upload. This is the step
    that actually puts a build in TestFlight; CI/Fastlane is the durable version.
-4. **Native push notifications (APNs/FCM)** (Epic 5/10, P1/M) — the biggest
+3. **Native push notifications (APNs/FCM)** (Epic 5/10, P1/M) — the biggest
    retention lever and the top fast-follow once on-device. Skip web push: with the
    Capacitor route chosen, iOS PWA web push would be partly throwaway.
-5. **Crash reporting (Sentry or equivalent)** (Epic 10, P1/M) — pull in right
+4. **Crash reporting (Sentry or equivalent)** (Epic 10, P1/M) — pull in right
    after the first build lands; on-device, you can't reproduce crashes from a web
    console, and update cadence depends on seeing them.
+5. **Offline write queue with replay** (Epic 9, P1/M) — no write queue exists
+   today beyond the realtime subscription, so a device offline at edit time just
+   lags until reconnect; pairs with the now-done collection/record-level merge
+   (`src/state/merge.ts`) so replay lands queued edits safely.
 
-Holding just off the top-5 but still near-term: **offline write queue with replay**
-(Epic 9, P1/M), and — gated on *external* TestFlight rather than internal — the
-**COPPA signup review** (Epic 9, P0 once real-account rollout is scheduled) and
-**account-level data deletion** (Epic 9, P1/S–M). These move up the moment the
-target shifts from internal to external testers.
+Holding just off the top-5 but still near-term: gated on *external* TestFlight
+rather than internal, the **COPPA signup review** (Epic 9, P0 once real-account
+rollout is scheduled) and **account-level data deletion** (Epic 9, P1/S–M). These
+move up the moment the target shifts from internal to external testers.
