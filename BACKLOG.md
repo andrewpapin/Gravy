@@ -150,24 +150,58 @@ biometrics, camera, widgets, legitimate store-review posture) with near-zero rew
 - **Calendar integration** (push a recurring goal as a device reminder). Two tiers: a `.ics`
   download works even unwrapped *(P2, S)*; two-way native reminders-app integration is
   richer once wrapped *(P2, M)*.
-- **App-store packaging process gaps** — currently 100% absent (today's CI is
-  lint→test→build→GitHub-Pages only):
-  - Developer account setup, signing certificates/provisioning profiles, App Store
-    Connect/Play Console project setup. *(P1, M.)*
-  - CI extension for native builds (Fastlane or equivalent) producing signed builds for
-    TestFlight/internal Play track. *(P1, M.)*
-  - OTA update policy decision (e.g. Capacitor Live Updates vs. accepting store-review-per-
-    release) — a real decision, not just an implementation detail. *(P1, M.)*
-  - Store listing content and the COPPA-relevant store questionnaires (Apple's Kids
-    Category/age rating, Google Play Families program) — both stricter than Epic 6's
-    general privacy-policy item specifically because this targets kids. *(P0 once store
-    submission is scheduled.)*
-  - Crash reporting (Sentry or equivalent) — zero crash/error visibility in production
-    today; much higher-value once native, since store reviewers and update cadence both
-    depend on knowing about crashes you can't reproduce from a web console. *(P1, M.)*
-  - Device-matrix testing — `verify_gravy.mjs` today is a manual, non-CI Playwright script
-    against one browser viewport; native shipping needs real device/OS-version coverage.
-    *(P1, M.)*
+
+### Path to first TestFlight build (internal testing)
+
+The active near-term goal. **Internal TestFlight first** (up to 100 testers on the dev team)
+was chosen over straight-to-external because internal needs **no Beta App Review, no privacy
+nutrition labels, and no COPPA store questionnaire** to get a running build into testers'
+hands — those gate *external* testers and public submission, not the first internal build.
+The items below are the critical path, ordered; the "before external testers" block after it
+is explicitly *not* blocking the first build.
+
+**Blocks the first internal build:**
+
+- **Disable the PWA/Workbox service worker under `--mode capacitor`.** `vite.config.ts`
+  runs `VitePWA` for *every* build, so the native bundle still registers a Workbox SW inside
+  the Capacitor WebView — redundant (the shell bundles assets locally) and able to cache-fight
+  `UpdatePrompt`'s auto-reload. Flagged in `docs/capacitor.md` as "decide before shipping a
+  real build"; it's unresolved in code. Gate the plugin on `mode !== 'capacitor'`. *(P1, S.)*
+- **Generate native app icons + splash/launch screen.** Only web/PWA icons exist in `public/`;
+  a real iOS build needs a native icon set and launch screen. Use `@capacitor/assets` to
+  generate both from a source logo. *(P1, S.)*
+- **Graduate the spike — commit `ios/`.** `docs/capacitor.md` defines this: once the shell
+  carries real customizations (`Info.plist`, app icons/splash, signing), the gitignored
+  native folder becomes source and must be tracked. Commit `ios/` with the first build;
+  `android/` can stay gitignored until an Android track is scheduled. *(P1, S.)*
+- **Apple Developer Program + signing.** Membership, an App ID for `com.gravyapp.app`, and a
+  distribution certificate + provisioning profile. Mostly a human/account task, but nothing
+  uploads without it. *(P1, M.)*
+- **App Store Connect app record.** Create the app (bundle id `com.gravyapp.app`) so a build
+  has somewhere to land; answer the **export-compliance** question (standard "no
+  non-exempt encryption") — required to process any uploaded build. *(P1, S.)*
+- **A build → upload pipeline.** Minimum viable: a documented local `xcodebuild archive` +
+  Transporter/Organizer upload so a build reaches TestFlight at all. The durable version is
+  CI (Fastlane or equivalent) producing signed builds — worth doing early but the manual path
+  unblocks the first build. *(P1, M.)*
+
+**Before external testers / public submission (not first-build blockers):**
+
+- Store listing content + the COPPA-relevant store questionnaires (Apple Kids Category/age
+  rating, and Google Play Families if/when Android ships) — stricter than Epic 6's general
+  privacy-policy item because this targets kids. Pairs with Epic 9's COPPA signup review.
+  *(P0 once external/public submission is scheduled.)*
+- Privacy nutrition labels + Beta App Review prep (only external TestFlight triggers review).
+  *(P1, S–M, before external testers.)*
+- **Crash reporting (Sentry or equivalent)** — zero crash/error visibility today. Not a hard
+  gate on the first internal build, but pull it in right after: once on-device, the update
+  cadence and any reviewer back-and-forth depend on seeing crashes you can't reproduce from a
+  web console. *(P1, M — fast-follow.)*
+- **Device-matrix testing** — `verify_gravy.mjs` is a manual, single-viewport Playwright
+  script; broader device/OS coverage matters before scaling testers, not for the first build.
+  *(P1, M.)*
+- **OTA update policy decision** (Capacitor Live Updates vs. store-review-per-release) — a real
+  decision, but it only bites once you're shipping updates, not on the first build. *(P1, M.)*
 
 ## Epic 11 — Visual Design & Layout Polish
 
@@ -205,19 +239,35 @@ Vitest, and Supabase access control) is fully done, as is the second wave
 in `BACKLOG_DONE.md`. Two more of the prior top-5 are now done as well: the
 **collection/record-level sync merge** that replaced whole-blob last-write-wins
 (`src/state/merge.ts`, Epic 9) and the **Capacitor wrap spike** (Epic 10;
-`docs/capacitor.md`), the latter unblocking native push. The current open
-priorities:
+`docs/capacitor.md`).
 
-1. **Ship push notifications** (Epic 5/10, P1) — the single biggest retention
-   lever. Skip the web-push (Notifications API) path: with a Capacitor-wrapped
-   iOS app the planned distribution route, iOS PWA web push is limited and would
-   be partly throwaway. Go straight to native push (APNs/FCM) as Epic 10's
-   distinct item — now unblocked by the completed wrap spike.
-2. **Offline write queue with replay** (Epic 9, P1/M) — now that receive-side
-   merge has landed, give an offline device a queue so edits made with no signal
-   replay through that merge on reconnect instead of lagging until the next push.
-3. **COPPA review of the signup flow** (Epic 9, P0 once real-account rollout is
-   scheduled) — must land before real accounts ship to users.
-4. **Account-level data deletion (right-to-delete)** (Epic 9, P1/S–M) — extend
-   "Delete household everywhere" to also delete the account/auth rows and define
-   what happens to a multi-member household when the owner deletes itself.
+**Current focus: get a first build into internal TestFlight.** Push notifications
+were the prior #1, but a TestFlight build needs no push — it's a fast-follow once
+on-device, not a blocker. The path below is Epic 10's "Path to first TestFlight
+build (internal testing)" critical path, front-loaded, then the highest-value work
+that pairs with going on-device:
+
+1. **Disable the PWA service worker under `--mode capacitor`** (Epic 10, P1/S) —
+   smallest, first: the native bundle still registers a Workbox SW that can
+   cache-fight `UpdatePrompt`. Gate `VitePWA` on `mode !== 'capacitor'` in
+   `vite.config.ts` before any real build.
+2. **Native app icons + splash, then graduate `ios/` into the repo** (Epic 10,
+   P1/S) — generate assets via `@capacitor/assets`, commit the now-customized
+   `ios/` shell (per `docs/capacitor.md`'s graduation step).
+3. **Signing + App Store Connect + a build→upload pipeline** (Epic 10, P1/M) —
+   Apple Developer membership, App ID for `com.gravyapp.app`, distribution
+   cert/profile, the app record (answer export-compliance), and at minimum a
+   documented local `xcodebuild archive` + Transporter upload. This is the step
+   that actually puts a build in TestFlight; CI/Fastlane is the durable version.
+4. **Native push notifications (APNs/FCM)** (Epic 5/10, P1/M) — the biggest
+   retention lever and the top fast-follow once on-device. Skip web push: with the
+   Capacitor route chosen, iOS PWA web push would be partly throwaway.
+5. **Crash reporting (Sentry or equivalent)** (Epic 10, P1/M) — pull in right
+   after the first build lands; on-device, you can't reproduce crashes from a web
+   console, and update cadence depends on seeing them.
+
+Holding just off the top-5 but still near-term: **offline write queue with replay**
+(Epic 9, P1/M), and — gated on *external* TestFlight rather than internal — the
+**COPPA signup review** (Epic 9, P0 once real-account rollout is scheduled) and
+**account-level data deletion** (Epic 9, P1/S–M). These move up the moment the
+target shifts from internal to external testers.
