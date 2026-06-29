@@ -4,20 +4,16 @@ import { useGravy } from '../../state/GravyContext';
 import { RootMenu, type RootDest } from './RootMenu';
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { GoalsPanel } from './GoalsPanel';
-import { CalendarPanel } from './CalendarPanel';
 import { StorePanel } from './StorePanel';
 import { BadgesPanel } from './BadgesPanel';
-import { AuditLogPanel } from './AuditLogPanel';
 
 type Root = 'menu' | RootDest;
 
 const ROOT_TITLES: Record<Exclude<Root, 'menu'>, string> = {
   approvals: 'Approvals',
   goals: 'Goals',
-  calendar: 'Calendar',
   store: 'Store',
   badges: 'Badges',
-  audit: 'Admin Log',
 };
 
 interface ParentDashboardProps {
@@ -44,8 +40,6 @@ export function ParentDashboard({ onHeaderChange }: ParentDashboardProps) {
   }
   if (root === 'approvals') return <ApprovalsPanel />;
   if (root === 'goals') return <GoalsPanel />;
-  if (root === 'calendar') return <CalendarPanel onHeaderChange={onHeaderChange} goToRoot={goToRoot} />;
   if (root === 'store') return <StorePanel />;
-  if (root === 'audit') return <AuditLogPanel />;
   return <BadgesPanel />;
 }

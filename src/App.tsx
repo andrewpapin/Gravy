@@ -22,6 +22,7 @@ const ProfileSwitcher = lazy(() => import('./components/ProfileSwitcher').then((
 const ProfilesManager = lazy(() => import('./components/ProfilesManager').then((m) => ({ default: m.ProfilesManager })));
 const AdvancedSettingsDrawer = lazy(() => import('./components/parent/AdvancedSettingsDrawer').then((m) => ({ default: m.AdvancedSettingsDrawer })));
 const LogDrawer = lazy(() => import('./components/parent/LogDrawer').then((m) => ({ default: m.LogDrawer })));
+const CalendarDrawer = lazy(() => import('./components/parent/CalendarDrawer').then((m) => ({ default: m.CalendarDrawer })));
 const SyncGateModal = lazy(() => import('./components/SyncGateModal').then((m) => ({ default: m.SyncGateModal })));
 const Onboarding = lazy(() => import('./components/Onboarding').then((m) => ({ default: m.Onboarding })));
 
@@ -62,6 +63,7 @@ function AppShell() {
   const [profilesOpen, setProfilesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   // Returning users who already had saved progress before this feature shipped
   // shouldn't suddenly see the walkthrough — only brand-new installs get it.
   const [onboarded, setOnboarded] = useState(
@@ -102,19 +104,47 @@ function AppShell() {
           onOpenProfiles={() => { setAccountMenuOpen(false); setProfilesOpen(true); }}
           onOpenSettings={() => { setAccountMenuOpen(false); setSettingsOpen(true); }}
           onOpenLog={() => { setAccountMenuOpen(false); setLogOpen(true); }}
+          onOpenCalendar={() => { setAccountMenuOpen(false); setCalendarOpen(true); }}
         />
-        <GrownUpsDrawer open={grownUpsOpen} onClose={() => setGrownUpsOpen(false)} />
+        <GrownUpsDrawer
+          open={grownUpsOpen}
+          onClose={() => setGrownUpsOpen(false)}
+          onBack={() => { setGrownUpsOpen(false); setAccountMenuOpen(true); }}
+        />
         <Suspense fallback={null}>
-          <ProfileSwitcher open={switchProfileOpen} onClose={() => setSwitchProfileOpen(false)} />
+          <ProfileSwitcher
+            open={switchProfileOpen}
+            onClose={() => setSwitchProfileOpen(false)}
+            onBack={() => { setSwitchProfileOpen(false); setAccountMenuOpen(true); }}
+          />
         </Suspense>
         <Suspense fallback={null}>
-          <ProfilesManager open={profilesOpen} onClose={() => setProfilesOpen(false)} />
+          <ProfilesManager
+            open={profilesOpen}
+            onClose={() => setProfilesOpen(false)}
+            onBack={() => { setProfilesOpen(false); setAccountMenuOpen(true); }}
+          />
         </Suspense>
         <Suspense fallback={null}>
-          <AdvancedSettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+          <AdvancedSettingsDrawer
+            open={settingsOpen}
+            onClose={() => setSettingsOpen(false)}
+            onBack={() => { setSettingsOpen(false); setAccountMenuOpen(true); }}
+          />
         </Suspense>
         <Suspense fallback={null}>
-          <LogDrawer open={logOpen} onClose={() => setLogOpen(false)} />
+          <LogDrawer
+            open={logOpen}
+            onClose={() => setLogOpen(false)}
+            onBack={() => { setLogOpen(false); setAccountMenuOpen(true); }}
+          />
+        </Suspense>
+        <Suspense fallback={null}>
+          <CalendarDrawer
+            open={calendarOpen}
+            onClose={() => setCalendarOpen(false)}
+            onBack={() => { setCalendarOpen(false); setAccountMenuOpen(true); }}
+          />
         </Suspense>
       </div>
 

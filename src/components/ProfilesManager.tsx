@@ -35,9 +35,10 @@ const AVATAR_COLORS: ColorOption[] = [
 interface ProfilesManagerProps {
   open: boolean;
   onClose: () => void;
+  onBack: () => void;
 }
 
-export function ProfilesManager({ open, onClose }: ProfilesManagerProps) {
+export function ProfilesManager({ open, onClose, onBack }: ProfilesManagerProps) {
   const { profiles, addProfile, updateProfile, deleteProfile } = useGravy();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
@@ -66,7 +67,8 @@ export function ProfilesManager({ open, onClose }: ProfilesManagerProps) {
       open={open}
       onClose={onClose}
       closeLabel="Close profiles"
-      title={<span className="calendar-modal-title">Profiles</span>}
+      title="Profiles"
+      onBack={onBack}
     >
       <div className="section-label">Kids</div>
       {profiles.map((p) => (

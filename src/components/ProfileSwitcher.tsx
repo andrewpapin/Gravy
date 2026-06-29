@@ -7,9 +7,10 @@ import { Modal } from './Modal';
 interface ProfileSwitcherProps {
   open: boolean;
   onClose: () => void;
+  onBack: () => void;
 }
 
-export function ProfileSwitcher({ open, onClose }: ProfileSwitcherProps) {
+export function ProfileSwitcher({ open, onClose, onBack }: ProfileSwitcherProps) {
   const { profiles, activeProfileId, switchProfile } = useGravy();
 
   const pick = (id: string) => {
@@ -22,7 +23,8 @@ export function ProfileSwitcher({ open, onClose }: ProfileSwitcherProps) {
       open={open}
       onClose={onClose}
       closeLabel="Close switch profile"
-      title={<span className="calendar-modal-title">Switch Profile</span>}
+      title="Switch Profile"
+      onBack={onBack}
     >
       <div className="profile-list">
         {profiles.map((p) => (

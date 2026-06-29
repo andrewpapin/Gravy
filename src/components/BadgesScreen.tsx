@@ -20,7 +20,7 @@ export function BadgesScreen({ open, onClose, onShowBadge }: BadgesScreenProps) 
       open={open}
       onClose={onClose}
       closeLabel="Close badges"
-      title={<span className="calendar-modal-title">My Badges</span>}
+      title="My Badges"
     >
       {visible.length === 0 ? (
         <div className="empty-state empty-state--bare" style={{ gridColumn: '1 / -1' }}>

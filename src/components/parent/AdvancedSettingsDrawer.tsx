@@ -4,15 +4,17 @@ import { SettingsPanel } from './SettingsPanel';
 interface AdvancedSettingsDrawerProps {
   open: boolean;
   onClose: () => void;
+  onBack: () => void;
 }
 
-export function AdvancedSettingsDrawer({ open, onClose }: AdvancedSettingsDrawerProps) {
+export function AdvancedSettingsDrawer({ open, onClose, onBack }: AdvancedSettingsDrawerProps) {
   return (
     <Modal
       open={open}
       onClose={onClose}
       closeLabel="Close advanced settings"
-      title={<span className="calendar-modal-title">Advanced Settings</span>}
+      title="Advanced Settings"
+      onBack={onBack}
     >
       <SettingsPanel />
     </Modal>

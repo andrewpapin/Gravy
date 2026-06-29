@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { useFocusTrap } from './useFocusTrap';
 
 interface ModalProps {
@@ -8,10 +8,11 @@ interface ModalProps {
   onClose: () => void;
   closeLabel: string;
   title: ReactNode;
+  onBack?: () => void;
   children: ReactNode;
 }
 
-export function Modal({ open, onClose, closeLabel, title, children }: ModalProps) {
+export function Modal({ open, onClose, closeLabel, title, onBack, children }: ModalProps) {
   const sheetRef = useFocusTrap<HTMLDivElement>(open, onClose);
   return (
     <div
@@ -27,7 +28,16 @@ export function Modal({ open, onClose, closeLabel, title, children }: ModalProps
         tabIndex={-1}
       >
         <div className="calendar-modal-header">
-          {title}
+          {onBack ? (
+            <div className="calendar-modal-header-titles">
+              <button className="calendar-modal-back" onClick={onBack} aria-label="Back" type="button">
+                <FontAwesomeIcon icon={faChevronLeft} />
+              </button>
+              <span className="calendar-modal-title">{title}</span>
+            </div>
+          ) : (
+            <span className="calendar-modal-title">{title}</span>
+          )}
           <button className="calendar-modal-close" onClick={onClose} aria-label={closeLabel} type="button">
             <FontAwesomeIcon icon={faXmark} />
           </button>

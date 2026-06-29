@@ -25,7 +25,7 @@ export function StoreScreen({ open, onClose }: StoreScreenProps) {
       open={open}
       onClose={onClose}
       closeLabel="Close store"
-      title={<span className="calendar-modal-title">Reward Store</span>}
+      title="Reward Store"
     >
       <div className="muted-note" style={{ fontSize: '0.8rem', marginBottom: 14, textAlign: 'center' }}>
         Tap a reward to ask for it — a grown-up will need to say yes!
