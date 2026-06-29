@@ -136,14 +136,6 @@ export function formatFriendlyDate(dateStr: string): string {
   });
 }
 
-export function formatShortDate(dateStr: string): string {
-  const [y, m, day] = dateStr.split('-').map(Number);
-  return new Date(y, m - 1, day).toLocaleDateString(undefined, {
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
 // Migrates saved state that was written by an older version of the app
 // (when the data model used "chores"/"todayChores"/"choreIds" terminology).
 // Safe to call multiple times — checks before overwriting.

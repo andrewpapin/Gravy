@@ -8,10 +8,9 @@ import { triggerHaptic } from '../lib/haptics';
 
 interface BonusPointsProps {
   dateStr?: string;
-  editable?: boolean;
 }
 
-export function BonusPoints({ dateStr, editable = true }: BonusPointsProps = {}) {
+export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
   const { state, logBonusItem, undoBonusItem, logBonusItemForDay, undoBonusItemForDay } = useGravy();
   const today = todayStr(state.settings.timezone);
   const day = dateStr ?? today;
@@ -60,7 +59,7 @@ export function BonusPoints({ dateStr, editable = true }: BonusPointsProps = {})
                       triggerHaptic();
                       if (isToday) undoBonusItem(g.id); else undoBonusItemForDay(day, g.id);
                     }}
-                    disabled={!editable || count === 0}
+                    disabled={count === 0}
                     aria-label={`Undo ${g.name}`}
                   >−</button>
                   <span className="stepper-count">{count}</span>
@@ -71,7 +70,6 @@ export function BonusPoints({ dateStr, editable = true }: BonusPointsProps = {})
                       triggerHaptic();
                       if (isToday) logBonusItem(g.id); else logBonusItemForDay(day, g.id);
                     }}
-                    disabled={!editable}
                     aria-label={`Log ${g.name}`}
                   >+</button>
                 </div>

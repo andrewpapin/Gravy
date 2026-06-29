@@ -12,39 +12,49 @@ there is no router, just boolean open/close state per drawer.
 `HomeScreen` (rank/streak/badge stats card, Games hub card, food tray, daily goals, bonus items)
 plus drawers for the reward store, badges, games, and the rank ladder. The coin balance and Reward
 Store entry point live in `StatsCard`'s coins row (the top row of the stacked rank/badges card), not
-in `TopBar` — `TopBar` only holds the avatar, greeting, grown-up lock, and history calendar icon.
-Tapping the avatar icon in `TopBar` opens **`AccountMenu`**, a menu with up to six destinations:
+in `TopBar` — `TopBar` only holds the avatar, greeting, and the grown-up lock icon. There is no
+kid-facing calendar/history icon or screen; the only calendar surface is the PIN-gated parent
+`CalendarPanel` (see below), reached via `AccountMenu` → "Grown ups".
 
-- **Reward Store** — no PIN, always tappable.
-- **Grown-Up Access** — a single lock row, not a destination. Locked, it shows `faLock` and "Locked
-  — tap to unlock"; tapping opens `PinScreen` inline (in place of the menu list) and, on success,
-  calls `unlockGrownUpAccess()`. Unlocked, it shows `faLockOpen` and "Unlocked for this session —
-  tap to lock"; tapping again calls `lockGrownUpAccess()` and re-locks immediately. This one lock
-  gates all five items below — there's no per-item PIN screen.
-- **Switch Profile** — only shown when there's more than one profile; disabled until the lock is
-  unlocked. Opens `ProfileSwitcher`, a read-only quick-switch list (tap → `switchProfile(id)`).
-- **Grown ups** — disabled until unlocked. Opens `GrownUpsDrawer` → `ParentDashboard` directly.
-- **Log** — disabled until unlocked. Opens `LogDrawer` (`src/components/parent/LogDrawer.tsx`), a
-  thin `Modal` wrapper around `LogPanel` (`src/components/parent/LogPanel.tsx`). Lists every entry in
-  the active profile's `actionLog` (newest first) — kid-progress and reward actions only (food
-  logged/removed, daily-goal steps, bonus-item taps, game wins, reward requested/approved/declined,
-  plus the Calendar's `*ForDay` equivalents), each with label, signed point delta, and timestamp.
+Tapping the lock icon in `TopBar` opens **`AccountMenu`**, styled like every other drawer (the
+shared `Modal` bottom-sheet — header with title + close button, scrollable body). Its content is
+derived directly from `grownUpUnlocked` rather than a separate stage: while locked, the drawer's
+body renders `PinScreen` immediately (no intermediate "tap to unlock" row); on a correct PIN,
+`onSuccess` calls `unlockGrownUpAccess()` and the same drawer re-renders as the full menu, with
+every item always enabled (there's nothing to disable — the menu only ever exists once unlocked):
+
+- **Reward Store** — no PIN, always tappable (its entry point is on `StatsCard`, not this menu).
+- **Lock** — shows `faLockOpen` and "Unlocked for this session — tap to lock"; tapping calls
+  `lockGrownUpAccess()` then closes the drawer, dropping back to the kid view. This is the only
+  item that's a toggle rather than a destination.
+- **Switch Profile** — only shown when there's more than one profile. Opens `ProfileSwitcher`, a
+  read-only quick-switch list (tap → `switchProfile(id)`).
+- **Grown ups** — opens `GrownUpsDrawer` → `ParentDashboard` directly, which includes the
+  `CalendarPanel` for viewing/editing past days.
+- **Log** — opens `LogDrawer` (`src/components/parent/LogDrawer.tsx`), a thin `Modal` wrapper
+  around `LogPanel` (`src/components/parent/LogPanel.tsx`). Lists every entry in the active
+  profile's `actionLog` (newest first) — kid-progress and reward actions only (food logged/removed,
+  daily-goal steps, bonus-item taps, game wins, reward requested/approved/declined, plus the
+  Calendar's `*ForDay` equivalents), each with label, signed point delta, and timestamp.
   `food`/`goal`/`bonus` entries get an "Undo" button when they're the most-recent non-undone entry
   for their (type, item, day) key — tapping calls `undoActionLogEntry(entry)`, which dispatches to
   the same exact-inverse context function (`removeFood`/`decrementGoal`/`undoBonusItem` or their
   `*ForDay` variants) used by the live UI. Game and reward entries are informational-only — never
   undoable. Parent catalog edits are deliberately excluded from the Log.
-- **Profiles** — disabled until unlocked. Opens `ProfilesManager`, full CRUD for kid profiles
-  (add/edit name, avatar icon+colors, theme; delete with confirm; never deletes the last profile).
-- **Advanced Settings** — disabled until unlocked. Opens `AdvancedSettingsDrawer`
+- **Profiles** — opens `ProfilesManager`, full CRUD for kid profiles (add/edit name, avatar
+  icon+colors, theme; delete with confirm; never deletes the last profile).
+- **Advanced Settings** — opens `AdvancedSettingsDrawer`
   (`src/components/parent/AdvancedSettingsDrawer.tsx`) directly — a thin `Modal` wrapper around
   `SettingsPanel`. It's a top-level `AccountMenu` item, sibling to Profiles, since it's account-level
   config rather than day-to-day parenting tasks.
 
+A `pinNonce` key on `PinScreen`, bumped whenever the drawer transitions from closed to open, forces
+a fresh `PinScreen` instance on every open so a half-entered PIN never lingers across opens/closes.
+
 The unlocked state (`grownUpUnlocked` in `GravyContext`, backed by `src/state/grownUpUnlock.ts`) is
 stored in `sessionStorage`, not `localStorage` — so it follows the current browser tab/PWA window and
 resets to locked whenever that session ends, even though everything else persists indefinitely.
-`GrownUpsDrawer`/`ProfilesManager`/`ProfileSwitcher`/`AdvancedSettingsDrawer`/`LogDrawer` no longer
+`GrownUpsDrawer`/`ProfilesManager`/`ProfileSwitcher`/`AdvancedSettingsDrawer`/`LogDrawer` don't
 render `PinScreen` themselves; they assume they're only opened from `AccountMenu` once unlocked.
 
 There is no longer a no-PIN "kid settings" screen — theme and child name are now per-profile fields

@@ -152,21 +152,11 @@ single-profile save by wrapping it as a one-entry root.
   Tray!'`, `'All Goals Done!'`) — a toast covers the bonus award on past days instead. Multi-step
   goals (`target > 1`) only track step counts for today — past days store goal completion as a
   boolean (`goalIds` membership), so `DailyGoals` renders past-day multi-step goals as a simple
-  toggle tile rather than a stepper.
-- **Viewing (not editing) past days from the kid view** — `HomeScreen` tracks a `viewedDate: string
-  | null` (`null` = "follow today live"; a concrete date string once the kid navigates away, back to
-  `null` on return, so midnight rollover never leaves it on a stale "today"). `TopBar`
-  (`src/components/TopBar.tsx`) is the single merged header row (3-column grid `auto 1fr auto`):
-  the avatar button (`onOpenAvatarMenu`, opens `AccountMenu`) left, `Greeting`
-  (`src/components/Greeting.tsx`) middle, points pill + calendar-icon button (`faCalendarDays`,
-  `onOpenHistory`) right. There's no chevron date nav — the calendar icon (opening `HistoryScreen`,
-  a `Modal` wrapping the shared `CalendarGrid`) is the only way to a different day; picking a day
-  sets `viewedDate` and closes the modal. While viewing a non-today date, `HomeScreen` renders a
-  full-width `.home-history-banner` ("Viewing June 25 — not today") above `StatsCard` and a fixed
-  `.return-today-fab` ("Return to Today") resetting `viewedDate` to `null`. This kid path is
-  **read-only**: `FoodTray`/`DailyGoals`/`BonusPoints` each take an `editable?: boolean` prop
-  (default `true`, so `CalendarPanel` is unaffected); `HomeScreen` passes `editable={isToday}`.
-  `src/components/CalendarGrid.tsx` is the month-grid UI shared by both surfaces; it disables/mutes
-  any day cell whose date string is greater than today's so neither surface navigates to a future
-  date. `formatFriendlyDate()`/`formatShortDate()` (`src/state/defaultState.ts`, alongside
-  `todayStr`/`addDaysToDateStr`) are the shared date-label formatters.
+  toggle tile rather than a stepper. There's no kid-facing calendar/history view — the Calendar is
+  reached only through the PIN-gated parent dashboard described above. `TopBar`
+  (`src/components/TopBar.tsx`) is just the avatar, `Greeting` (`src/components/Greeting.tsx`), and
+  the grown-up lock icon (opens `AccountMenu`); it carries no date nav. `src/components/
+  CalendarGrid.tsx` is the month-grid UI used by `CalendarPanel`; it disables/mutes any day cell
+  whose date string is greater than today's so it can't navigate to a future date.
+  `formatFriendlyDate()` (`src/state/defaultState.ts`, alongside `todayStr`/`addDaysToDateStr`) is
+  the date-label formatter `CalendarPanel` uses.

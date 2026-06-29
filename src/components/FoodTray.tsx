@@ -9,10 +9,9 @@ import { triggerHaptic } from '../lib/haptics';
 
 interface FoodTrayProps {
   dateStr?: string;
-  editable?: boolean;
 }
 
-export function FoodTray({ dateStr, editable = true }: FoodTrayProps = {}) {
+export function FoodTray({ dateStr }: FoodTrayProps = {}) {
   const { state, logFood, removeFood, logFoodForDay, removeFoodForDay } = useGravy();
   const today = todayStr(state.settings.timezone);
   const day = dateStr ?? today;
@@ -42,7 +41,6 @@ export function FoodTray({ dateStr, editable = true }: FoodTrayProps = {}) {
               key={f.id}
               type="button"
               className={`food-tile ${logged ? 'checked' : ''}`}
-              disabled={!editable}
               onClick={() => {
                 triggerHaptic();
                 if (isToday) {
@@ -51,7 +49,7 @@ export function FoodTray({ dateStr, editable = true }: FoodTrayProps = {}) {
                   if (logged) removeFoodForDay(day, f.id); else logFoodForDay(day, f.id);
                 }
               }}
-              aria-label={editable ? (logged ? `${f.label}, logged. Tap to undo.` : `${f.label}. Tap to log.`) : `${f.label}${logged ? ', logged' : ', not logged'}`}
+              aria-label={logged ? `${f.label}, logged. Tap to undo.` : `${f.label}. Tap to log.`}
             >
               {logged && (
                 <span className="tile-check-badge" aria-hidden="true">

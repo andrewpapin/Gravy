@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCalendarDays, faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import { AppIcon } from './AppIcon';
 import { Greeting } from './Greeting';
@@ -7,10 +7,9 @@ import { Greeting } from './Greeting';
 interface TopBarProps {
   dateStr: string;
   onOpenAccountMenu?: () => void;
-  onOpenHistory?: () => void;
 }
 
-export function TopBar({ dateStr, onOpenAccountMenu, onOpenHistory }: TopBarProps) {
+export function TopBar({ dateStr, onOpenAccountMenu }: TopBarProps) {
   const { state, grownUpUnlocked } = useGravy();
   const pendingCount = state.pendingRewards.length;
 
@@ -39,16 +38,6 @@ export function TopBar({ dateStr, onOpenAccountMenu, onOpenHistory }: TopBarProp
             >
               <FontAwesomeIcon icon={grownUpUnlocked ? faLockOpen : faLock} />
             </span>
-          </button>
-        )}
-        {onOpenHistory && (
-          <button
-            className="topbar-icon-btn"
-            onClick={onOpenHistory}
-            aria-label="View history calendar"
-            type="button"
-          >
-            <FontAwesomeIcon icon={faCalendarDays} />
           </button>
         )}
       </div>
