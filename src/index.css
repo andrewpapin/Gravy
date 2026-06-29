@@ -143,7 +143,7 @@
 /* --yellow stays a bright accent in midnight/cyberpunk (the other themes keep it
    muted enough for --dark to still read on it), so the same ink fix applies anywhere
    --yellow is used as a background fill with --dark text/icons on top. */
-:root[data-theme="midnight"] .points-pill,
+:root[data-theme="midnight"] .stats-coins-bar,
 :root[data-theme="midnight"] .card-title-icon.icon-yellow,
 :root[data-theme="midnight"] .btn-primary,
 :root[data-theme="midnight"] .btn-yellow,
@@ -161,7 +161,7 @@
 :root[data-theme="midnight"] .game-result-btn.primary {
   color: #0f0f13;
 }
-:root[data-theme="cyberpunk"] .points-pill,
+:root[data-theme="cyberpunk"] .stats-coins-bar,
 :root[data-theme="cyberpunk"] .card-title-icon.icon-yellow,
 :root[data-theme="cyberpunk"] .btn-primary,
 :root[data-theme="cyberpunk"] .btn-yellow,
@@ -236,26 +236,6 @@ body {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 8px;
-}
-.points-pill {
-  background: var(--yellow);
-  color: var(--dark);
-  font-weight: 900;
-  font-size: 1rem;
-  padding: 7px 12px;
-  border-radius: 50px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: var(--border-width-lg) solid var(--dark);
-  box-shadow: 2px 2px 0 var(--dark);
-  cursor: pointer;
-  transition: background var(--transition), color var(--transition);
-}
-.points-pill:hover { background: var(--sage); color: var(--card); }
-.points-pill:active {
-  transform: translate(2px, 2px);
-  box-shadow: 0 0 0 var(--dark);
 }
 .topbar-icon-btn {
   justify-self: end;
@@ -469,6 +449,24 @@ button.calendar-day {
   box-shadow: var(--shadow-lg);
   border: var(--border-width-xl) solid var(--dark);
 }
+.stats-coins-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  background: var(--yellow);
+  border: none;
+  border-bottom: var(--border-width-xl) solid var(--dark);
+  padding: 10px 16px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 0.9rem;
+  color: var(--dark);
+  cursor: pointer;
+}
+.stats-coins-bar-label { display: inline-flex; align-items: center; gap: 8px; }
+.stats-coins-bar:active { transform: translate(1px, 1px); }
 .stats-rank {
   background: var(--coral);
   color: white;
