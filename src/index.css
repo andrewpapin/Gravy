@@ -203,7 +203,6 @@
 :root[data-theme="midnight"] .game-result-btn.primary {
   color: #0f0f13;
 }
-:root[data-theme="cyberpunk"] .stats-coins-bar,
 :root[data-theme="cyberpunk"] .card-title-icon.icon-yellow,
 :root[data-theme="cyberpunk"] .btn-primary,
 :root[data-theme="cyberpunk"] .btn-yellow,
@@ -489,14 +488,14 @@ button.calendar-day {
   gap: 8px;
   flex: 1;
   min-width: 0;
-  background: var(--yellow);
+  background: var(--coral);
   border: none;
   border-right: var(--border-width-xl) solid var(--dark);
   padding: 10px 16px;
   font-family: var(--font-display);
   font-weight: 900;
   font-size: 0.9rem;
-  color: var(--dark);
+  color: #fff;
   cursor: pointer;
 }
 .stats-coins-bar-label { display: inline-flex; align-items: center; gap: 8px; }
@@ -675,16 +674,12 @@ button.calendar-day {
 }
 .food-tile:active { transform: scale(0.96); }
 .food-tile.checked {
-  border-color: var(--dark);
-  background: var(--success);
+  border-color: var(--success);
+  background: var(--cream);
   box-shadow: 3px 3px 0 var(--dark);
-  transform: scale(1.03);
 }
-.food-tile.checked:active { transform: scale(0.99); }
 .food-tile:disabled { cursor: default; }
-.food-tile:disabled:active,
-.food-tile.checked:disabled:active { transform: none; }
-.food-tile.checked:disabled { transform: scale(1.03); }
+.food-tile:disabled:active { transform: none; }
 .food-count-badge {
   position: absolute;
   top: -6px; left: -6px;
@@ -702,8 +697,9 @@ button.calendar-day {
 }
 .food-emoji { font-size: 1.6rem; line-height: 1; color: var(--dark); }
 .food-label { font-size: var(--text-2xs); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: var(--dark); }
-.food-tile.checked .food-emoji { color: #fff; animation: icon-pop 0.28s ease; }
-.food-tile.checked .food-label { color: rgba(255,255,255,0.9); }
+.food-tile.checked .food-emoji { animation: icon-pop 0.28s ease; }
+.food-tile.checked .food-emoji,
+.food-tile.checked .food-label { opacity: 0.6; }
 .tile-check-badge {
   position: absolute;
   top: -6px; right: -6px;
@@ -860,12 +856,9 @@ button.calendar-day {
 }
 button.goal-tile { cursor: pointer; color: inherit; }
 button.goal-tile:active { transform: scale(0.97); }
-.goal-tile.checked { background: var(--success); transform: scale(1.03); }
-button.goal-tile.checked:active { transform: scale(0.99); }
+.goal-tile.checked { background: var(--cream); border-color: var(--success); }
 button.goal-tile:disabled { cursor: default; }
-button.goal-tile:disabled:active,
-button.goal-tile.checked:disabled:active { transform: none; }
-button.goal-tile.checked:disabled { transform: scale(1.03); }
+button.goal-tile:disabled:active { transform: none; }
 .goal-tile-top {
   display: flex;
   align-items: flex-start;
@@ -873,7 +866,9 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   gap: 6px;
 }
 .goal-tile-emoji { font-size: 1.5rem; line-height: 1; color: var(--dark); }
-.goal-tile.checked .goal-tile-emoji { color: #fff; animation: icon-pop 0.28s ease; }
+.goal-tile.checked .goal-tile-emoji { animation: icon-pop 0.28s ease; }
+.goal-tile.checked .goal-tile-emoji,
+.goal-tile.checked .goal-tile-name { opacity: 0.6; }
 .goal-tile-name {
   font-size: 0.85rem;
   font-weight: 800;
@@ -883,7 +878,6 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.goal-tile.checked .goal-tile-name { color: white; }
 .goal-tile .goal-stepper {
   align-self: flex-end;
   margin-top: auto;
