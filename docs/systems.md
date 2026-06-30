@@ -57,7 +57,8 @@ profile's avatar icon and colors (`avatarIconColor`/`avatarBgColor`).
 
 ## Theming
 
-`Settings.theme` is one of `'capri' | 'classic' | 'midnight' | 'ocean' | 'bubblegum' | 'cyberpunk'`
+`Settings.theme` is one of
+`'capri' | 'classic' | 'midnight' | 'ocean' | 'bubblegum' | 'cyberpunk' | 'ranger'`
 (renamed from the older `light`/`dark`/`rainbow`/`gold` — `migrateLegacyState()` falls back any
 unrecognized saved value to `'capri'`), set per-profile via `ProfilesManager` and applied globally
 for the active profile. `'capri'` is the base/default theme (its tokens live on the unmarked

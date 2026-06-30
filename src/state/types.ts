@@ -43,7 +43,7 @@ export interface BadgeOverride {
   icon?: string;       // registered icon key (see data/icons.ts)
 }
 
-export type Theme = 'capri' | 'classic' | 'midnight' | 'ocean' | 'bubblegum' | 'cyberpunk';
+export type Theme = 'capri' | 'classic' | 'midnight' | 'ocean' | 'bubblegum' | 'cyberpunk' | 'ranger';
 
 export interface Settings {
   foodPts: number;

@@ -116,6 +116,17 @@
   --coral: #ff003c;
   --sage: #b300ff;
 }
+:root[data-theme="ranger"] {
+  --bg: #f1eef4;
+  --card: #fbfbfb;
+  --cream: #ece6ef;
+  --text: #2b252c;
+  --muted: #6d6471;
+  --dark: #2b252c;
+  --yellow: #8dac50;
+  --coral: #613b6f;
+  --sage: #1a48a0;
+}
 /* midnight and cyberpunk pair a dark --card with --dark flipped light (above) so
    on-card text/icons stay legible. That flip breaks the few spots where --dark is
    used as a literal background fill paired with hardcoded white text — restore a
@@ -2204,6 +2215,7 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
 .theme-swatch-preview--ocean { background: linear-gradient(135deg, #e0f7fa 50%, #ffb703 50%); }
 .theme-swatch-preview--bubblegum { background: linear-gradient(135deg, #ffe5ec 50%, #ffb703 50%); }
 .theme-swatch-preview--cyberpunk { background: linear-gradient(135deg, #fcee0a 50%, #00f0ff 50%); }
+.theme-swatch-preview--ranger { background: linear-gradient(135deg, #f1eef4 50%, #8dac50 50%); }
 
 .settings-row {
   background: var(--card);

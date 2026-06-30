@@ -202,7 +202,7 @@ export function migrateLegacyState(state: Record<string, unknown>): void {
   // default demoted to a selectable 'classic' theme.
   const settings = state.settings as Record<string, unknown> | undefined;
   if (settings) {
-    const validThemes = ['capri', 'classic', 'midnight', 'ocean', 'bubblegum', 'cyberpunk'];
+    const validThemes = ['capri', 'classic', 'midnight', 'ocean', 'bubblegum', 'cyberpunk', 'ranger'];
     if (!validThemes.includes(settings.theme as string)) {
       settings.theme = 'capri';
     }
