@@ -66,6 +66,17 @@ for the active profile. `'capri'` is the base/default theme (its tokens live on 
 theme under `:root[data-theme="classic"]`. Theme CSS lives in `src/index.css`, keyed off
 `[data-theme="..."]` on `<html>`.
 
+Each theme defines two groups of color tokens: **decorative** (`--yellow`/`--cream`/`--sage`/
+`--coral`/`--dark`/`--card`/`--bg`/`--text`/`--muted`) reused freely for accents, icon tints, and
+the rank/streak banner; and **semantic** (`--success`/`--danger`), which always mean "done/correct"
+and "alarming/destructive" respectively, in every theme. `--success`/`--danger` exist specifically
+because `--sage`/`--coral` aren't reliably green/red across themes (e.g. `--sage` is purple in
+Midnight, blue in Ocean) — using them for "done"/"danger" state CSS broke that signal when switching
+themes. When adding a new "done"/"correct"/"earned" or "danger"/"destructive"/"error" UI state, use
+`var(--success)`/`var(--danger)`, not `var(--sage)`/`var(--coral)` directly — reserve the latter for
+purely decorative use (icon tints, banners, accents) where hue consistency with green/red doesn't
+matter.
+
 ## Time Zone
 
 `Settings.timezone` is a single household-wide IANA zone id (e.g. `'America/New_York'`), defaulting
