@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { useGravy } from '../../state/GravyContext';
 import { RootMenu, type RootDest } from './RootMenu';
-import { ApprovalsPanel } from './ApprovalsPanel';
 import { GoalsPanel } from './GoalsPanel';
 import { StorePanel } from './StorePanel';
 import { BadgesPanel } from './BadgesPanel';
@@ -10,7 +8,6 @@ import { BadgesPanel } from './BadgesPanel';
 type Root = 'menu' | RootDest;
 
 const ROOT_TITLES: Record<Exclude<Root, 'menu'>, string> = {
-  approvals: 'Approvals',
   goals: 'Goals',
   store: 'Store',
   badges: 'Badges',
@@ -21,24 +18,21 @@ interface ParentDashboardProps {
 }
 
 export function ParentDashboard({ onHeaderChange }: ParentDashboardProps) {
-  const { state } = useGravy();
   const [root, setRoot] = useState<Root>('menu');
-  const pendingCount = state.pendingRewards.length;
 
   const goToRoot = () => setRoot('menu');
 
   useEffect(() => {
     if (root === 'menu') {
-      onHeaderChange({ title: 'Grown-Up Mode' });
+      onHeaderChange({ title: 'Game Settings' });
     } else {
       onHeaderChange({ title: ROOT_TITLES[root], onBack: goToRoot });
     }
   }, [root, onHeaderChange]);
 
   if (root === 'menu') {
-    return <RootMenu pendingCount={pendingCount} onNavigate={setRoot} />;
+    return <RootMenu onNavigate={setRoot} />;
   }
-  if (root === 'approvals') return <ApprovalsPanel />;
   if (root === 'goals') return <GoalsPanel />;
   if (root === 'store') return <StorePanel />;
   return <BadgesPanel />;

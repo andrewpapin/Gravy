@@ -23,6 +23,7 @@ const ProfilesManager = lazy(() => import('./components/ProfilesManager').then((
 const AdvancedSettingsDrawer = lazy(() => import('./components/parent/AdvancedSettingsDrawer').then((m) => ({ default: m.AdvancedSettingsDrawer })));
 const LogDrawer = lazy(() => import('./components/parent/LogDrawer').then((m) => ({ default: m.LogDrawer })));
 const CalendarDrawer = lazy(() => import('./components/parent/CalendarDrawer').then((m) => ({ default: m.CalendarDrawer })));
+const ApprovalsDrawer = lazy(() => import('./components/parent/ApprovalsDrawer').then((m) => ({ default: m.ApprovalsDrawer })));
 const SyncGateModal = lazy(() => import('./components/SyncGateModal').then((m) => ({ default: m.SyncGateModal })));
 const Onboarding = lazy(() => import('./components/Onboarding').then((m) => ({ default: m.Onboarding })));
 
@@ -64,6 +65,7 @@ function AppShell() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [approvalsOpen, setApprovalsOpen] = useState(false);
   // Returning users who already had saved progress before this feature shipped
   // shouldn't suddenly see the walkthrough — only brand-new installs get it.
   const [onboarded, setOnboarded] = useState(
@@ -105,6 +107,7 @@ function AppShell() {
           onOpenSettings={() => { setAccountMenuOpen(false); setSettingsOpen(true); }}
           onOpenLog={() => { setAccountMenuOpen(false); setLogOpen(true); }}
           onOpenCalendar={() => { setAccountMenuOpen(false); setCalendarOpen(true); }}
+          onOpenApprovals={() => { setAccountMenuOpen(false); setApprovalsOpen(true); }}
         />
         <GrownUpsDrawer
           open={grownUpsOpen}
@@ -144,6 +147,13 @@ function AppShell() {
             open={calendarOpen}
             onClose={() => setCalendarOpen(false)}
             onBack={() => { setCalendarOpen(false); setAccountMenuOpen(true); }}
+          />
+        </Suspense>
+        <Suspense fallback={null}>
+          <ApprovalsDrawer
+            open={approvalsOpen}
+            onClose={() => setApprovalsOpen(false)}
+            onBack={() => { setApprovalsOpen(false); setAccountMenuOpen(true); }}
           />
         </Suspense>
       </div>

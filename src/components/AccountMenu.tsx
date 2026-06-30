@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faLockOpen, faRightLeft, faUsers, faUserShield, faGear, faClockRotateLeft, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faLockOpen, faRightLeft, faUsers, faUserShield, faGear, faClockRotateLeft, faCalendarDays, faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import { Modal } from './Modal';
 import { PinScreen } from './PinScreen';
@@ -15,6 +15,7 @@ interface AccountMenuProps {
   onOpenSettings: () => void;
   onOpenLog: () => void;
   onOpenCalendar: () => void;
+  onOpenApprovals: () => void;
 }
 
 export function AccountMenu({
@@ -26,8 +27,10 @@ export function AccountMenu({
   onOpenSettings,
   onOpenLog,
   onOpenCalendar,
+  onOpenApprovals,
 }: AccountMenuProps) {
-  const { profiles, grownUpUnlocked, unlockGrownUpAccess, lockGrownUpAccess } = useGravy();
+  const { state, profiles, grownUpUnlocked, unlockGrownUpAccess, lockGrownUpAccess } = useGravy();
+  const pendingCount = state.pendingRewards.length;
   // Re-prompt the PIN on every fresh open, adjusted during render (not an effect) — this
   // component never unmounts (only its inner JSX is conditionally rendered below), so a
   // half-finished PIN attempt would otherwise linger across opens/closes.
@@ -67,6 +70,15 @@ export function AccountMenu({
         <PinScreen key={pinNonce} onSuccess={() => { unlockGrownUpAccess(); setPinPromptOpen(false); }} />
       ) : (
         <div className="account-menu">
+          <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenApprovals)}>
+            <span className="account-menu-option-icon nav-badge" data-count={pendingCount}><FontAwesomeIcon icon={faCircleCheck} /></span>
+            <span className="account-menu-option-text">
+              <span className="account-menu-option-title">Approvals</span>
+              <span className="account-menu-option-sub">
+                {pendingCount > 0 ? `${pendingCount} request${pendingCount === 1 ? '' : 's'} waiting` : 'Reward requests to approve'}
+              </span>
+            </span>
+          </button>
           {profiles.length > 1 && (
             <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenSwitchProfile)}>
               <span className="account-menu-option-icon"><FontAwesomeIcon icon={faRightLeft} /></span>
@@ -79,8 +91,8 @@ export function AccountMenu({
           <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenGrownUps)}>
             <span className="account-menu-option-icon"><FontAwesomeIcon icon={faUserShield} /></span>
             <span className="account-menu-option-text">
-              <span className="account-menu-option-title">Grown ups</span>
-              <span className="account-menu-option-sub">Parent dashboard</span>
+              <span className="account-menu-option-title">Game Settings</span>
+              <span className="account-menu-option-sub">Goals, rewards, and badges</span>
             </span>
           </button>
           <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenCalendar)}>

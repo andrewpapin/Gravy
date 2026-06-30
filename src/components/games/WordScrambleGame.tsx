@@ -146,7 +146,7 @@ export function WordScrambleGame({ onExit }: WordScrambleGameProps) {
               Play Again
             </button>
             <button className="game-result-btn" onClick={onExit} type="button">
-              Back to Games
+              Back to Arcade
             </button>
           </div>
         </div>

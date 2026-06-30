@@ -38,19 +38,19 @@ export function GamesScreen({ open, onClose }: GamesScreenProps) {
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
-        aria-label={activeGameDef ? activeGameDef.name : 'Games'}
+        aria-label={activeGameDef ? activeGameDef.name : 'Arcade'}
         tabIndex={-1}
       >
         <div className="calendar-modal-header">
           <div className="calendar-modal-header-titles">
             {activeGameDef && (
-              <button className="calendar-modal-back" onClick={() => setActiveGame(null)} aria-label="Back to Games" type="button">
+              <button className="calendar-modal-back" onClick={() => setActiveGame(null)} aria-label="Back to Arcade" type="button">
                 <FontAwesomeIcon icon={faChevronLeft} />
               </button>
             )}
-            <span className="calendar-modal-title">{activeGameDef ? activeGameDef.name : 'Games'}</span>
+            <span className="calendar-modal-title">{activeGameDef ? activeGameDef.name : 'Arcade'}</span>
           </div>
-          <button className="calendar-modal-close" onClick={handleClose} aria-label="Close games" type="button">
+          <button className="calendar-modal-close" onClick={handleClose} aria-label="Close arcade" type="button">
             <FontAwesomeIcon icon={faXmark} />
           </button>
         </div>

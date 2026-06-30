@@ -65,7 +65,7 @@ export function PointsPanel() {
         />
       </div>
 
-      <div className="section-label">Games</div>
+      <div className="section-label">Arcade</div>
       <div className="settings-row">
         <div>
           <div className="settings-label">

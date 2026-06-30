@@ -8,13 +8,13 @@ devices via Supabase.
 Kids log food groups eaten and complete daily goals to earn points, climb a
 24-tier rank ladder, build streaks, play mini-games, and unlock badges.
 Points can be redeemed for rewards from a parent-managed store, with a
-PIN-protected "Grown-ups" dashboard for approvals and configuration.
+PIN-protected parent menu for approvals and configuration.
 
 ## Features
 
 - **Home** — rank progress, streak/badge stats, food tray tracker, daily
   goals (including multi-step goals), and repeatable bonus-point items
-- **Games hub** — Hangman, Math Facts, Word Scramble, and Memory Match;
+- **Arcade** — Hangman, Math Facts, Word Scramble, and Memory Match;
   winning earns points up to a daily cap so kids can't farm easy rounds
 - **Rank ladder** — a 24-tier progression (Noob → Sonic Snail) with a
   kid-facing screen showing locked/current/achieved tiers and progress
@@ -25,14 +25,14 @@ PIN-protected "Grown-ups" dashboard for approvals and configuration.
   with independent progress/streaks but shared goals, rewards, badge
   config, and points settings; switch between them from a PIN-gated
   quick-switch list
-- **Grown-ups dashboard** (PIN-protected, default `1234`)
-  - Approve or decline reward requests
-  - Manage daily goals, bonus items, and per-action point values
-  - View and edit past days on a calendar
-  - Manage store rewards
-  - Customize badge names/emoji/icons/visibility
-  - Manage PIN, recovery question, and household sync code
-  - Reset today's progress or everything
+- **Parent menu** (PIN-protected, default `1234`)
+  - **Approvals** — approve or decline reward requests
+  - **Game Settings** — manage daily goals, bonus items, per-action point
+    values, store rewards, and badge names/emoji/icons/visibility
+  - **Calendar** — view and edit past days
+  - **Log** — history of every action, including admin changes
+  - **Advanced Settings** — PIN, recovery question, household sync code,
+    and reset today's progress or everything
 - **Cloud sync** (optional) — create or join a household with a short code
   to sync the whole household's data across devices in real time via
   Supabase
@@ -68,9 +68,9 @@ manual via the browser.
 src/
   data/             static data: ranks, foods, games, badge definitions, icons
   state/            Gravy state, localStorage persistence, Supabase sync, badge logic, React context
-  components/       kid-facing screens and widgets (Home, Store, Badges, Games, Rank ladder, etc.)
+  components/       kid-facing screens and widgets (Home, Store, Badges, Arcade, Rank ladder, etc.)
   components/games/ individual mini-game components
-  components/parent/ PIN-gated parent dashboard panels (approvals, goals, calendar, store, badges, settings)
+  components/parent/ PIN-gated parent panels (approvals, goals, calendar, store, badges, settings)
 ```
 
 ## Deployment

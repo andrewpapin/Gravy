@@ -81,10 +81,12 @@ Deep detail lives in `docs/`. Read the linked file when working in that area.
   Parent Accounts (`src/state/auth.ts`) and the salted-SHA-256 PIN (`src/state/hash.ts`,
   `src/state/pinLockout.ts`).
 - **UI surfaces** (`docs/ui-surfaces.md`) — kid view + `AccountMenu` (the single `grownUpUnlocked`
-  lock gating Profiles/Grown ups/Log/Advanced Settings); `ParentDashboard` two-level router and its
-  panels (`ApprovalsPanel`/`GoalsPanel`/`CalendarPanel`/`StorePanel`/`BadgesPanel`/`AuditLogPanel`,
-  plus `SettingsPanel` reached via `AdvancedSettingsDrawer`); `Onboarding` phase machine.
-- **Subsystems** (`docs/systems.md`) — Games hub (`src/data/games.ts`, `completeGameRound`,
+  lock gating Approvals/Profiles/Game Settings/Calendar/Log/Advanced Settings); the "Game Settings"
+  dashboard (`ParentDashboard` component, formerly labeled "Grown ups") two-level router and its
+  panels (`GoalsPanel`/`StorePanel`/`BadgesPanel`); `ApprovalsPanel`/`CalendarPanel` reached
+  directly from `AccountMenu` via `ApprovalsDrawer`/`CalendarDrawer`, plus `SettingsPanel` reached
+  via `AdvancedSettingsDrawer`; `Onboarding` phase machine.
+- **Subsystems** (`docs/systems.md`) — Arcade/games hub (`src/data/games.ts`, `completeGameRound`,
   `DAILY_GAME_WIN_CAP`); Rank ladder (`src/data/ranks.ts`, `getRank`, `useTodaySnapshot`); 71 Badges
   (`src/data/badges.ts`, `src/state/badges.ts`, `badgeConfig`); Icon system (`src/data/icons.ts`,
   `AppIcon`); Theming (`Settings.theme`, `src/index.css`); Time zone (`Settings.timezone`,

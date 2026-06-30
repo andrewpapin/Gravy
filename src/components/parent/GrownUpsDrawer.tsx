@@ -19,7 +19,7 @@ interface GrownUpsDrawerProps {
 }
 
 export function GrownUpsDrawer({ open, onClose, onBack }: GrownUpsDrawerProps) {
-  const [header, setHeader] = useState<HeaderState>({ title: 'Grown-Up Mode' });
+  const [header, setHeader] = useState<HeaderState>({ title: 'Game Settings' });
 
   return (
     <Modal

@@ -9,12 +9,16 @@ there is no router, just boolean open/close state per drawer.
 
 ## Kid view (`src/components/`)
 
-`HomeScreen` (rank/streak/badge stats card, Games hub card, food tray, daily goals, bonus items)
-plus drawers for the reward store, badges, games, and the rank ladder. The coin balance and Reward
-Store entry point live in `StatsCard`'s coins row (the top row of the stacked rank/badges card), not
-in `TopBar` — `TopBar` only holds the avatar, greeting, and the grown-up menu (hamburger) icon. There
-is no kid-facing calendar/history icon or screen; the only calendar surface is the PIN-gated parent
-`CalendarPanel` (see below), reached via `AccountMenu` → "Calendar".
+`HomeScreen` (rank/streak/badge stats card, Arcade hub card, food tray, daily goals, bonus items)
+plus drawers for the reward store, badges, the Arcade (games), and the rank ladder. The user-facing
+label for the games hub is "Arcade" (`GamesCard`, `GamesScreen`) — kept distinct from the parent
+dashboard's "Game Settings" label (see below) so the two aren't confused; the underlying
+component/file names (`GamesCard`, `GamesScreen`, `onOpenGames`, `gamesOpen`, `src/data/games.ts`)
+are unchanged. The coin balance and Reward Store entry point live in `StatsCard`'s coins row (the
+top row of the stacked rank/badges card), not in `TopBar` — `TopBar` only holds the avatar,
+greeting, and the grown-up menu (hamburger) icon. There is no kid-facing calendar/history icon or
+screen; the only calendar surface is the PIN-gated parent `CalendarPanel` (see below), reached via
+`AccountMenu` → "Calendar".
 
 Tapping the hamburger icon in `TopBar` always opens **`AccountMenu`**, whether locked or unlocked —
 it's a single "open the menu" button, not a lock/unlock toggle, so closing the menu (e.g. after
@@ -36,12 +40,21 @@ whenever the drawer transitions from closed to open (see the `pinNonce` note bel
 always opens to the greyed item list rather than mid-PIN-entry.
 
 - **Reward Store** — no PIN, always tappable (its entry point is on `StatsCard`, not this menu).
+- **Approvals** — the first item in the list. Opens `ApprovalsDrawer`
+  (`src/components/parent/ApprovalsDrawer.tsx`), a thin `Modal` wrapper around `ApprovalsPanel`
+  (approve/decline pending reward requests) — a first-class `AccountMenu` item, no longer nested
+  inside the Game Settings dashboard (it used to be the dashboard's `RootMenu` "Approvals" card).
+  The icon span reuses the `nav-badge` CSS class (`src/index.css`) with `data-count={pendingCount}`
+  to show the same pending-request count badge `TopBar`'s hamburger icon already shows.
 - **Switch Profile** — only shown when there's more than one profile. Opens `ProfileSwitcher`, a
   read-only quick-switch list (tap → `switchProfile(id)`).
-- **Grown ups** — opens `GrownUpsDrawer` → `ParentDashboard` directly.
+- **Game Settings** (formerly "Grown ups") — opens `GrownUpsDrawer` → `ParentDashboard` directly.
+  Renamed because, with Approvals/Calendar/Log/Advanced Settings all graduated to top-level items
+  (see below and this list), all that's left inside is gamification config (Goals/Store/Badges) —
+  "Game Settings" describes that scope more accurately than the old catch-all "Grown ups" label.
 - **Calendar** — opens `CalendarDrawer` (`src/components/parent/CalendarDrawer.tsx`), a thin
   `Modal` wrapper around `CalendarPanel` (view/edit past days) — a first-class `AccountMenu` item,
-  sibling to "Grown ups", rather than nested inside the Grown-Ups dashboard.
+  sibling to "Game Settings", rather than nested inside the Game Settings dashboard.
 - **Log** — opens `LogDrawer` (`src/components/parent/LogDrawer.tsx`), a thin `Modal` wrapper
   around `LogPanel` (`src/components/parent/LogPanel.tsx`). Merges and time-sorts (newest first)
   two separate fields for display: the active profile's `actionLog` — kid-progress and reward
@@ -70,33 +83,42 @@ The unlocked state (`grownUpUnlocked` in `GravyContext`, backed by `src/state/gr
 stored in `sessionStorage`, not `localStorage` — so it follows the current browser tab/PWA window and
 resets to locked whenever that session ends, even though everything else persists indefinitely.
 `GrownUpsDrawer`/`ProfilesManager`/`ProfileSwitcher`/`AdvancedSettingsDrawer`/`LogDrawer`/
-`CalendarDrawer` don't render `PinScreen` themselves; they assume they're only opened from
-`AccountMenu` once unlocked.
+`CalendarDrawer`/`ApprovalsDrawer` don't render `PinScreen` themselves; they assume they're only
+opened from `AccountMenu` once unlocked.
 
-Every drawer reached directly from `AccountMenu` (the six above) is a first-level drawer and gets a
-working back button via the shared `Modal` component's optional `onBack` prop — `Modal` renders a
+Every drawer reached directly from `AccountMenu` (the seven above) is a first-level drawer and gets
+a working back button via the shared `Modal` component's optional `onBack` prop — `Modal` renders a
 back-chevron button ahead of the title when `onBack` is passed. Each of these drawers' `onBack`
 closes itself and reopens `AccountMenu` (wired in `AppShell`, `src/App.tsx`). Nested panels inside a
-drawer (e.g. `ApprovalsPanel` inside `GrownUpsDrawer`, or the picked-date view inside
-`CalendarPanel`) use their own existing `onHeaderChange`/`goToRoot` mechanism instead, which takes
-precedence — `GrownUpsDrawer`/`CalendarDrawer` pass `onBack={header.onBack ?? onBack}`, so back
-goes to the nested panel's own root first, and only falls through to `AccountMenu` once you're at
-that drawer's own top level.
+drawer (e.g. the picked-date view inside `CalendarPanel`) use their own existing
+`onHeaderChange`/`goToRoot` mechanism instead, which takes precedence — `GrownUpsDrawer`/
+`CalendarDrawer` pass `onBack={header.onBack ?? onBack}`, so back goes to the nested panel's own
+root first, and only falls through to `AccountMenu` once you're at that drawer's own top level.
 
 There is no longer a no-PIN "kid settings" screen — theme and child name are now per-profile fields
 edited through the PIN-gated `ProfilesManager`.
 
-## Parent dashboard (`src/components/parent/`)
+## Game Settings dashboard (`src/components/parent/`, `ParentDashboard` component)
 
-`ParentDashboard` is a two-level router: a local `root` state
-(`'menu' | 'approvals' | 'goals' | 'store' | 'badges'`). At `'menu'` it renders `RootMenu` (a card
-list, not tabs); picking a card drills into one panel with a back button:
+User-facing label is "Game Settings" (the `AccountMenu` item and `GrownUpsDrawer`/`ParentDashboard`
+header both read "Game Settings"); the component/file names (`ParentDashboard`, `GrownUpsDrawer`,
+`RootMenu`) are unchanged — only user-facing copy was renamed, since those symbols also represent
+the PIN-gated access tier shared by every parent-only feature, not just this dashboard.
 
-- `ApprovalsPanel` — approve/decline pending reward requests.
+`ParentDashboard` is a two-level router: a local `root` state (`'menu' | 'goals' | 'store' |
+'badges'`). At `'menu'` it renders `RootMenu` (a card list, not tabs); picking a card drills into
+one panel with a back button:
+
 - `GoalsPanel` — goal/bonus-item CRUD, and (nested at the bottom) `PointsPanel` for the per-action
-  point values (`foodPts`, `bonusPts`, `gamePts`).
+  point values (`foodPts`, `bonusPts`, `gamePts` — the latter's section is labeled "Arcade" to match
+  the kid-facing hub name).
 - `StorePanel` — reward CRUD.
 - `BadgesPanel` — customize badge name/emoji/icon/visibility.
+
+`ApprovalsPanel` (approve/decline pending reward requests) is no longer nested here — it's reached
+directly from `AccountMenu`'s top-level "Approvals" item (the first item in the list) via the
+standalone `ApprovalsDrawer`, the same graduation pattern already applied to Calendar and Advanced
+Settings below.
 
 `CalendarPanel` (view/edit past days) is no longer nested here — it's reached directly from
 `AccountMenu`'s top-level "Calendar" item via the standalone `CalendarDrawer` (see above). The old
@@ -108,7 +130,7 @@ merged into the top-level `LogPanel` reached via `AccountMenu` → "Log" (see ab
 (household code create/join/change/leave, plus the "Secure this household" claim banner) +
 `DangerZonePanel` (reset today / reset everything) in sequence — is **not** one of
 `ParentDashboard`'s root-menu panels. It's reached directly from `AccountMenu`'s "Advanced Settings"
-item via `AdvancedSettingsDrawer`, not nested inside the Grown ups dashboard.
+item via `AdvancedSettingsDrawer`, not nested inside the Game Settings dashboard.
 
 ## Onboarding
 

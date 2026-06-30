@@ -95,7 +95,7 @@ export function MathFactsGame({ onExit }: MathFactsGameProps) {
               Play Again
             </button>
             <button className="game-result-btn" onClick={onExit} type="button">
-              Back to Games
+              Back to Arcade
             </button>
           </div>
         </div>

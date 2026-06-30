@@ -1,33 +1,17 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faCircleCheck, faListCheck, faCartShopping, faMedal, faChevronRight,
+  faListCheck, faCartShopping, faMedal, faChevronRight,
 } from '@fortawesome/free-solid-svg-icons';
 
-export type RootDest = 'approvals' | 'goals' | 'store' | 'badges';
+export type RootDest = 'goals' | 'store' | 'badges';
 
 interface RootMenuProps {
-  pendingCount: number;
   onNavigate: (dest: RootDest) => void;
 }
 
-export function RootMenu({ pendingCount, onNavigate }: RootMenuProps) {
+export function RootMenu({ onNavigate }: RootMenuProps) {
   return (
     <div>
-      <button
-        className="menu-card nav-badge"
-        data-count={pendingCount}
-        onClick={() => onNavigate('approvals')}
-        type="button"
-      >
-        <span className="menu-card-icon"><FontAwesomeIcon icon={faCircleCheck} /></span>
-        <div className="menu-card-body">
-          <div className="menu-card-title">Approvals</div>
-          <div className="menu-card-sub">
-            {pendingCount > 0 ? `${pendingCount} request${pendingCount === 1 ? '' : 's'} waiting` : 'No pending requests'}
-          </div>
-        </div>
-        <FontAwesomeIcon icon={faChevronRight} className="menu-card-chevron" />
-      </button>
       <button className="menu-card" onClick={() => onNavigate('goals')} type="button">
         <span className="menu-card-icon"><FontAwesomeIcon icon={faListCheck} /></span>
         <div className="menu-card-body">

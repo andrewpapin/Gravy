@@ -3,7 +3,12 @@
 Deep reference for games, ranks, badges, icons, theming, time zone, deployment, versioning, and the
 PWA update mechanism. CLAUDE.md links here; read the relevant section when touching those areas.
 
-## Games Hub
+## Arcade (Games Hub)
+
+User-facing label is "Arcade" (`GamesCard`'s title, `GamesScreen`'s header/aria-labels) — kept
+distinct from the parent dashboard's "Game Settings" label so the two aren't confused; the
+underlying component/file/prop names (`GamesCard`, `GamesScreen`, `onOpenGames`, `gamesOpen`,
+`src/data/games.ts`, `completeGameRound`) are unchanged.
 
 `GamesScreen` (opened from `HomeScreen`'s `GamesCard`) is a hub listing the catalog in
 `src/data/games.ts` (`GAMES: GameDef[]` — currently Hangman, Math Facts, Word Scramble, Memory
