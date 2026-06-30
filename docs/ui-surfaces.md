@@ -12,20 +12,21 @@ there is no router, just boolean open/close state per drawer.
 `HomeScreen` (rank/streak/badge stats card, Games hub card, food tray, daily goals, bonus items)
 plus drawers for the reward store, badges, games, and the rank ladder. The coin balance and Reward
 Store entry point live in `StatsCard`'s coins row (the top row of the stacked rank/badges card), not
-in `TopBar` — `TopBar` only holds the avatar, greeting, and the grown-up lock icon. There is no
-kid-facing calendar/history icon or screen; the only calendar surface is the PIN-gated parent
+in `TopBar` — `TopBar` only holds the avatar, greeting, and the grown-up menu (hamburger) icon. There
+is no kid-facing calendar/history icon or screen; the only calendar surface is the PIN-gated parent
 `CalendarPanel` (see below), reached via `AccountMenu` → "Calendar".
 
-Tapping the lock icon in `TopBar` opens **`AccountMenu`** when locked; when already unlocked
-(`grownUpUnlocked`), tapping it instead calls `lockGrownUpAccess()` directly — there's no menu item
-for locking (see below), so the lock icon is the only way to re-lock. `AccountMenu` is styled like
-every other drawer (the shared `Modal` bottom-sheet — header with title + close button, scrollable
-body). Its content is derived directly from `grownUpUnlocked` rather than a separate stage: while
-locked, the drawer's body renders `PinScreen` immediately (no intermediate "tap to unlock" row); on
-a correct PIN, `onSuccess` calls `unlockGrownUpAccess()` and the same drawer re-renders as the full
-menu, with every item always enabled (there's nothing to disable — the menu only ever exists once
-unlocked):
+Tapping the hamburger icon in `TopBar` always opens **`AccountMenu`**, whether locked or unlocked —
+it's a single "open the menu" button, not a lock/unlock toggle, so closing the menu (e.g. after
+using an item) and tapping the icon again reopens the menu rather than re-locking. `AccountMenu` is
+styled like every other drawer (the shared `Modal` bottom-sheet — header with title + close button,
+scrollable body). Its content is derived directly from `grownUpUnlocked` rather than a separate
+stage: while locked, the drawer's body renders `PinScreen` immediately (no intermediate "tap to
+unlock" row); on a correct PIN, `onSuccess` calls `unlockGrownUpAccess()` and the same drawer
+re-renders as the full menu, with every item always enabled (there's nothing to disable — the menu
+only ever exists once unlocked):
 
+- **Lock** — the only way to re-lock; calls `lockGrownUpAccess()` and closes the menu.
 - **Reward Store** — no PIN, always tappable (its entry point is on `StatsCard`, not this menu).
 - **Switch Profile** — only shown when there's more than one profile. Opens `ProfileSwitcher`, a
   read-only quick-switch list (tap → `switchProfile(id)`).

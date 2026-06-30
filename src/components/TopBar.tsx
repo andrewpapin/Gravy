@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
+import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import { AppIcon } from './AppIcon';
 import { Greeting } from './Greeting';
@@ -10,7 +10,7 @@ interface TopBarProps {
 }
 
 export function TopBar({ dateStr, onOpenAccountMenu }: TopBarProps) {
-  const { state, grownUpUnlocked, lockGrownUpAccess } = useGravy();
+  const { state, grownUpUnlocked } = useGravy();
   const pendingCount = state.pendingRewards.length;
 
   return (
@@ -27,8 +27,8 @@ export function TopBar({ dateStr, onOpenAccountMenu }: TopBarProps) {
         {onOpenAccountMenu && (
           <button
             className="topbar-icon-btn"
-            onClick={grownUpUnlocked ? lockGrownUpAccess : onOpenAccountMenu}
-            aria-label={grownUpUnlocked ? 'Lock grown-up access' : 'Open grown-up menu'}
+            onClick={onOpenAccountMenu}
+            aria-label={grownUpUnlocked ? 'Open grown-up menu' : 'Unlock grown-up menu'}
             type="button"
           >
             <span
@@ -36,7 +36,7 @@ export function TopBar({ dateStr, onOpenAccountMenu }: TopBarProps) {
               data-count={pendingCount}
               title={pendingCount > 0 ? `${pendingCount} request${pendingCount === 1 ? '' : 's'} waiting for approval` : undefined}
             >
-              <FontAwesomeIcon icon={grownUpUnlocked ? faLockOpen : faLock} />
+              <FontAwesomeIcon icon={faBars} />
             </span>
           </button>
         )}

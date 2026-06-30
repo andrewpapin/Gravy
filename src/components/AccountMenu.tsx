@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRightLeft, faUsers, faUserShield, faGear, faClockRotateLeft, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
+import { faLockOpen, faRightLeft, faUsers, faUserShield, faGear, faClockRotateLeft, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import { Modal } from './Modal';
 import { PinScreen } from './PinScreen';
@@ -27,7 +27,7 @@ export function AccountMenu({
   onOpenLog,
   onOpenCalendar,
 }: AccountMenuProps) {
-  const { profiles, grownUpUnlocked, unlockGrownUpAccess } = useGravy();
+  const { profiles, grownUpUnlocked, unlockGrownUpAccess, lockGrownUpAccess } = useGravy();
   // Re-prompt the PIN on every fresh open, adjusted during render (not an effect) — this
   // component never unmounts (only its inner JSX is conditionally rendered below), so a
   // half-finished PIN attempt would otherwise linger across opens/closes.
@@ -47,6 +47,13 @@ export function AccountMenu({
     >
       {grownUpUnlocked ? (
         <div className="account-menu">
+          <button type="button" className="account-menu-option" onClick={() => { lockGrownUpAccess(); onClose(); }}>
+            <span className="account-menu-option-icon"><FontAwesomeIcon icon={faLockOpen} /></span>
+            <span className="account-menu-option-text">
+              <span className="account-menu-option-title">Lock</span>
+              <span className="account-menu-option-sub">Unlocked for this session — tap to lock</span>
+            </span>
+          </button>
           {profiles.length > 1 && (
             <button type="button" className="account-menu-option" onClick={onOpenSwitchProfile}>
               <span className="account-menu-option-icon"><FontAwesomeIcon icon={faRightLeft} /></span>
