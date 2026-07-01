@@ -41,7 +41,6 @@ export function AccountPanel() {
   if (!authReady) {
     return (
       <div>
-        <div className="section-label">Parent Account</div>
         <div className="settings-sub">Checking…</div>
       </div>
     );
@@ -50,7 +49,6 @@ export function AccountPanel() {
   if (authUser) {
     return (
       <div>
-        <div className="section-label">Parent Account</div>
         <div className="settings-row settings-row--col">
           <div>
             <div className="settings-label">
@@ -68,7 +66,6 @@ export function AccountPanel() {
 
   return (
     <div>
-      <div className="section-label">Parent Account</div>
       <div className="settings-row settings-row--col">
         <div>
           <div className="settings-label">

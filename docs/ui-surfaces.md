@@ -72,9 +72,10 @@ always opens to the greyed item list rather than mid-PIN-entry.
 - **Profiles** — opens `ProfilesManager`, full CRUD for kid profiles (add/edit name, avatar
   icon+colors, theme; delete with confirm; never deletes the last profile).
 - **Advanced Settings** — opens `AdvancedSettingsDrawer`
-  (`src/components/parent/AdvancedSettingsDrawer.tsx`) directly — a thin `Modal` wrapper around
-  `SettingsPanel`. It's a top-level `AccountMenu` item, sibling to Profiles, since it's account-level
-  config rather than day-to-day parenting tasks.
+  (`src/components/parent/AdvancedSettingsDrawer.tsx`) directly — a `Modal` wrapper around
+  `SettingsPanel`, which is itself a two-level menu/drill-down router (see below). It's a top-level
+  `AccountMenu` item, sibling to Profiles, since it's account-level config rather than day-to-day
+  parenting tasks.
 
 A `pinNonce` key on `PinScreen`, bumped whenever the drawer transitions from closed to open, forces
 a fresh `PinScreen` instance on every open so a half-entered PIN never lingers across opens/closes.
@@ -90,10 +91,11 @@ Every drawer reached directly from `AccountMenu` (the seven above) is a first-le
 a working back button via the shared `Modal` component's optional `onBack` prop — `Modal` renders a
 back-chevron button ahead of the title when `onBack` is passed. Each of these drawers' `onBack`
 closes itself and reopens `AccountMenu` (wired in `AppShell`, `src/App.tsx`). Nested panels inside a
-drawer (e.g. the picked-date view inside `CalendarPanel`) use their own existing
-`onHeaderChange`/`goToRoot` mechanism instead, which takes precedence — `GrownUpsDrawer`/
-`CalendarDrawer` pass `onBack={header.onBack ?? onBack}`, so back goes to the nested panel's own
-root first, and only falls through to `AccountMenu` once you're at that drawer's own top level.
+drawer (e.g. the picked-date view inside `CalendarPanel`, or the settings menu inside `SettingsPanel`)
+use their own existing `onHeaderChange`/`goToRoot` mechanism instead, which takes precedence —
+`GrownUpsDrawer`/`CalendarDrawer`/`AdvancedSettingsDrawer` pass `onBack={header.onBack ?? onBack}`,
+so back goes to the nested panel's own root first, and only falls through to `AccountMenu` once
+you're at that drawer's own top level.
 
 There is no longer a no-PIN "kid settings" screen — theme and child name are now per-profile fields
 edited through the PIN-gated `ProfilesManager`.
@@ -125,12 +127,24 @@ Settings below.
 "Admin Log" panel (`AuditLogPanel`) was deleted; its content (the shared `auditLog` field) is now
 merged into the top-level `LogPanel` reached via `AccountMenu` → "Log" (see above).
 
-`SettingsPanel` — a thin composer that renders `TimezonePanel` (account time zone) + `AccountPanel`
-(parent account sign up/in/out + magic link) + `SecurityPanel` (PIN + recovery Q&A) + `SyncPanel`
-(household code create/join/change/leave, plus the "Secure this household" claim banner) +
-`DangerZonePanel` (reset today / reset everything) in sequence — is **not** one of
-`ParentDashboard`'s root-menu panels. It's reached directly from `AccountMenu`'s "Advanced Settings"
-item via `AdvancedSettingsDrawer`, not nested inside the Game Settings dashboard.
+`SettingsPanel` (`src/components/parent/SettingsPanel.tsx`) is **not** one of `ParentDashboard`'s
+root-menu panels — it's reached directly from `AccountMenu`'s "Advanced Settings" item via
+`AdvancedSettingsDrawer`, not nested inside the Game Settings dashboard. It follows the same
+two-level menu/drill-down router shape as `ParentDashboard`: a local `root` state (`'menu' |
+SettingsDest` where `SettingsDest` is `'timezone' | 'account' | 'security' | 'sync' | 'reset'`) that
+renders `SettingsMenu` (a `menu-card` list, mirroring `RootMenu`) at `'menu'`, and drills into one
+panel with a back button otherwise:
+
+- `TimezonePanel` — household time zone.
+- `AccountPanel` — parent account sign up/in/out + magic link.
+- `SecurityPanel` — PIN + recovery Q&A.
+- `SyncPanel` — household code create/join/change/leave, plus the "Secure this household" claim
+  banner.
+- `DangerZonePanel` — reset today / reset everything (surfaced as "Reset" on the menu card).
+
+`AdvancedSettingsDrawer` owns the `header` state and passes `onHeaderChange` into `SettingsPanel`,
+the same wiring `GrownUpsDrawer` uses for `ParentDashboard` — so the Modal title/back button track
+which settings section (if any) is drilled into.
 
 ## Onboarding
 

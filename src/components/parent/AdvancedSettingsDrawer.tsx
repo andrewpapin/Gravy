@@ -1,5 +1,11 @@
+import { useState } from 'react';
 import { Modal } from '../Modal';
 import { SettingsPanel } from './SettingsPanel';
+
+interface HeaderState {
+  title: string;
+  onBack?: () => void;
+}
 
 interface AdvancedSettingsDrawerProps {
   open: boolean;
@@ -8,15 +14,17 @@ interface AdvancedSettingsDrawerProps {
 }
 
 export function AdvancedSettingsDrawer({ open, onClose, onBack }: AdvancedSettingsDrawerProps) {
+  const [header, setHeader] = useState<HeaderState>({ title: 'Advanced Settings' });
+
   return (
     <Modal
       open={open}
       onClose={onClose}
       closeLabel="Close advanced settings"
-      title="Advanced Settings"
-      onBack={onBack}
+      title={header.title}
+      onBack={header.onBack ?? onBack}
     >
-      <SettingsPanel />
+      <SettingsPanel onHeaderChange={setHeader} />
     </Modal>
   );
 }

@@ -29,6 +29,7 @@ export function PointsPanel() {
           <div className="settings-sub">Awarded when {state.settings.childName} taps each food group</div>
         </div>
         <input
+          className="settings-input-compact"
           type="number"
           min={1}
           max={100}
@@ -51,6 +52,7 @@ export function PointsPanel() {
           <div className="settings-sub">Bonus for eating all 5 food groups</div>
         </div>
         <input
+          className="settings-input-compact"
           type="number"
           min={0}
           max={500}
@@ -75,6 +77,7 @@ export function PointsPanel() {
           <div className="settings-sub">Awarded when {state.settings.childName} wins a game (up to 3 wins/day)</div>
         </div>
         <input
+          className="settings-input-compact"
           type="number"
           min={0}
           max={500}

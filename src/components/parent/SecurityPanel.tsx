@@ -22,7 +22,6 @@ export function SecurityPanel() {
 
   return (
     <div>
-      <div className="section-label">PIN</div>
       <div className="settings-row">
         <div>
           <div className="settings-label">
@@ -32,6 +31,7 @@ export function SecurityPanel() {
           <div className="settings-sub">Enter a new 4-digit PIN</div>
         </div>
         <input
+          className="settings-input-compact"
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
@@ -51,7 +51,7 @@ export function SecurityPanel() {
           }}
         />
       </div>
-      <div className="settings-row">
+      <div className="settings-row settings-row--col">
         <div>
           <div className="settings-label">
             Recovery question
@@ -71,7 +71,7 @@ export function SecurityPanel() {
           }}
         />
       </div>
-      <div className="settings-row">
+      <div className="settings-row settings-row--col">
         <div>
           <div className="settings-label">
             Recovery answer

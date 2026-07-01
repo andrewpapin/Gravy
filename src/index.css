@@ -2325,6 +2325,9 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
 }
 .settings-sub { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
 .settings-row input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
   border: var(--border-width-lg) solid var(--dark);
   border-radius: 10px;
   padding: 6px 10px;
@@ -2333,11 +2336,12 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   font-weight: 800;
   background: var(--cream);
   outline: none;
-  width: 70px;
-  text-align: center;
   color: var(--text);
 }
 .settings-row select {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
   border: var(--border-width-lg) solid var(--dark);
   border-radius: 10px;
   padding: 6px 10px;
@@ -2346,8 +2350,12 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   font-weight: 800;
   background: var(--cream);
   outline: none;
-  max-width: 150px;
   color: var(--text);
+}
+.settings-row input.settings-input-compact {
+  flex: none;
+  width: 70px;
+  text-align: center;
 }
 .section-label {
   font-size: 0.7rem;
@@ -2583,7 +2591,7 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   .input-row input.pts-input {
     width: 90px;
   }
-  .settings-row input {
+  .settings-row input.settings-input-compact {
     width: 90px;
   }
 }

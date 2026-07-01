@@ -12,7 +12,6 @@ export function DangerZonePanel() {
 
   return (
     <div>
-      <div className="section-label">Reset</div>
       <button className="btn btn-primary btn-pink mt-8" onClick={() => setConfirmStep('resetToday')}>
         <FontAwesomeIcon icon={faRotate} /> Reset Today's Progress
       </button>
