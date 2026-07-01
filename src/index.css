@@ -225,7 +225,6 @@
 /* cyberpunk's --cream is a bright accent too (midnight's stays dark, consistent with
    its own flipped --dark/--text), so the same ink fix applies again here, scoped to
    cyberpunk only, anywhere --cream is used as a background fill under --dark/--text ink. */
-:root[data-theme="cyberpunk"] .stats-badges-bar:active,
 :root[data-theme="cyberpunk"] .food-emoji,
 :root[data-theme="cyberpunk"] .food-label,
 :root[data-theme="cyberpunk"] .stepper-btn,
@@ -502,8 +501,8 @@ button.calendar-day {
 .stats-coins-bar-label { display: inline-flex; align-items: center; gap: 8px; }
 .stats-coins-bar:active { transform: translate(1px, 1px); }
 .stats-rank {
-  background: var(--coral);
-  color: white;
+  background: var(--card);
+  color: var(--dark);
   padding: 14px 16px;
   position: relative;
 }
@@ -514,9 +513,9 @@ button.calendar-day {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  border: var(--border-width-md) solid rgba(255, 255, 255, 0.5);
-  color: #fff;
+  background: rgba(0, 0, 0, 0.06);
+  border: var(--border-width-md) solid var(--dark);
+  color: var(--dark);
   font-size: 0.8rem;
   cursor: pointer;
   display: flex;
@@ -530,7 +529,7 @@ button.calendar-day {
   position: absolute;
   inset: -9px;
 }
-.stats-rank-info-btn:active { background: rgba(255, 255, 255, 0.35); }
+.stats-rank-info-btn:active { background: rgba(0, 0, 0, 0.12); }
 .stats-badges-bar {
   display: flex;
   align-items: center;
@@ -538,17 +537,17 @@ button.calendar-day {
   gap: 8px;
   flex: 1;
   min-width: 0;
-  background: var(--card);
+  background: var(--coral);
   border: none;
   padding: 10px 16px;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 0.8rem;
-  color: var(--dark);
+  color: white;
   cursor: pointer;
 }
 .stats-badges-bar-label { display: inline-flex; align-items: center; gap: 8px; }
-.stats-badges-bar:active { background: var(--cream); }
+.stats-badges-bar:active { transform: translate(1px, 1px); }
 
 /* ===== HOME SCREEN: GAMES CARD ===== */
 .games-card {
@@ -593,8 +592,8 @@ button.calendar-day {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  border: var(--border-width-md) solid rgba(255, 255, 255, 0.5);
+  background: var(--coral);
+  border: var(--border-width-md) solid rgba(255, 255, 255, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -613,8 +612,8 @@ button.calendar-day {
   margin-top: 8px;
   font-size: 0.72rem;
   font-weight: 800;
-  color: #fff;
-  background: rgba(255,255,255,0.18);
+  color: var(--dark);
+  background: rgba(0, 0, 0, 0.06);
   border-radius: 10px;
   padding: 6px 10px;
   display: flex;
@@ -630,7 +629,7 @@ button.calendar-day {
   margin-left: auto;
 }
 .xp-bar-track {
-  background: rgba(255,255,255,0.25);
+  background: rgba(0, 0, 0, 0.10);
   border-radius: 50px;
   height: 8px;
   margin-top: 6px;
