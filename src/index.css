@@ -479,7 +479,6 @@ button.calendar-day {
 .stats-top-row {
   display: flex;
   align-items: stretch;
-  border-bottom: var(--border-width-xl) solid var(--dark);
 }
 .stats-coins-bar {
   display: flex;
@@ -505,6 +504,7 @@ button.calendar-day {
   color: var(--dark);
   padding: 14px 16px;
   position: relative;
+  border-bottom: var(--border-width-xl) solid var(--dark);
 }
 .stats-rank-info-btn {
   position: absolute;

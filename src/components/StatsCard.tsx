@@ -35,6 +35,30 @@ export function StatsCard({ onOpenBadges, onOpenRank, onOpenStore }: StatsCardPr
 
   return (
     <div className="stats-card">
+      <div className="stats-rank">
+        <button className="stats-rank-info-btn" onClick={onOpenRank} aria-label="View rank ladder and stats" type="button">
+          <FontAwesomeIcon icon={faCircleInfo} />
+        </button>
+        <div className="stats-rank-header">
+          <div className="stats-rank-icon-circle">
+            <AppIcon iconKey={rank.icon} emojiFallback={rank.emoji} className="stats-rank-emoji" />
+          </div>
+          <div className="stats-rank-info">
+            <div className="stats-rank-name-row">
+              <span className="stats-rank-name">{rank.name}</span>
+              <span className="stats-rank-xp">{xpText}</span>
+            </div>
+            <div className={`xp-bar-track ${xpPulse ? 'xp-pulse' : ''}`}>
+              <div className="xp-bar-fill" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        </div>
+        {streakAtRisk && (
+          <div className="streak-risk-nudge">
+            <FontAwesomeIcon icon={faFire} /> Log something today to keep your streak going!
+          </div>
+        )}
+      </div>
       <div className="stats-top-row">
         <button
           type="button"
@@ -63,30 +87,6 @@ export function StatsCard({ onOpenBadges, onOpenRank, onOpenStore }: StatsCardPr
           </span>
           <FontAwesomeIcon icon={faChevronRight} />
         </button>
-      </div>
-      <div className="stats-rank">
-        <button className="stats-rank-info-btn" onClick={onOpenRank} aria-label="View rank ladder and stats" type="button">
-          <FontAwesomeIcon icon={faCircleInfo} />
-        </button>
-        <div className="stats-rank-header">
-          <div className="stats-rank-icon-circle">
-            <AppIcon iconKey={rank.icon} emojiFallback={rank.emoji} className="stats-rank-emoji" />
-          </div>
-          <div className="stats-rank-info">
-            <div className="stats-rank-name-row">
-              <span className="stats-rank-name">{rank.name}</span>
-              <span className="stats-rank-xp">{xpText}</span>
-            </div>
-            <div className={`xp-bar-track ${xpPulse ? 'xp-pulse' : ''}`}>
-              <div className="xp-bar-fill" style={{ width: `${pct}%` }} />
-            </div>
-          </div>
-        </div>
-        {streakAtRisk && (
-          <div className="streak-risk-nudge">
-            <FontAwesomeIcon icon={faFire} /> Log something today to keep your streak going!
-          </div>
-        )}
       </div>
     </div>
   );
