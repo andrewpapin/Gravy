@@ -48,8 +48,7 @@ export function TimezonePanel() {
 
   return (
     <div>
-      <div className="section-label">Time Zone</div>
-      <div className="settings-row">
+      <div className="settings-row settings-row--col">
         <div>
           <div className="settings-label">
             Household time zone

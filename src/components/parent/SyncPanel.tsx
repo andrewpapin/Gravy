@@ -52,7 +52,6 @@ export function SyncPanel() {
 
   return (
     <div>
-      <div className="section-label">Cloud Sync</div>
       {householdCode ? (
         <div className="settings-row settings-row--col">
           <div>
