@@ -1,4 +1,4 @@
-import type { ActionLogEntry, AuditLogEntry, GravyState, GravyRoot, ProfileEntry, Settings, Theme, Goal, Reward, PendingReward } from './types';
+import type { ActionLogEntry, AuditLogEntry, GravyState, GravyRoot, ProfileEntry, Settings, Theme, Goal, Reward, PendingReward, PendingPointsAward, PendingPointsKind } from './types';
 import { FOODS } from '../data/foods';
 import { safeGetItem, safeSetItem } from './storage';
 import { DEFAULT_TIMEZONE, isValidTimezone } from '../data/timezones';
@@ -24,6 +24,7 @@ export const defaultState: GravyState = {
   todayGameWins: 0,
   dayLogs: {},
   pendingRewards: [],
+  pendingPointsAwards: [],
   earnedBadges: [],
   actionLog: [],
   auditLog: [],
@@ -289,6 +290,22 @@ function sanitizePendingRewards(v: unknown): PendingReward[] {
     : [];
 }
 
+const PENDING_POINTS_KINDS: PendingPointsKind[] = ['goal', 'food', 'bonus', 'game'];
+
+function sanitizePendingPointsAwards(v: unknown): PendingPointsAward[] {
+  return Array.isArray(v)
+    ? v.filter(
+        (p): p is PendingPointsAward =>
+          !!p && typeof p === 'object' &&
+          typeof (p as PendingPointsAward).id === 'string' &&
+          PENDING_POINTS_KINDS.includes((p as PendingPointsAward).kind) &&
+          (typeof (p as PendingPointsAward).itemId === 'number' || typeof (p as PendingPointsAward).itemId === 'string') &&
+          typeof (p as PendingPointsAward).pts === 'number' &&
+          typeof (p as PendingPointsAward).label === 'string',
+      )
+    : [];
+}
+
 function sanitizeActionLog(v: unknown): ActionLogEntry[] {
   return Array.isArray(v)
     ? v.filter(
@@ -332,6 +349,7 @@ function sanitizeState(state: GravyState): void {
   state.todayGoals = asNumberArray(state.todayGoals);
   state.earnedBadges = asStringArray(state.earnedBadges);
   state.pendingRewards = sanitizePendingRewards(state.pendingRewards);
+  state.pendingPointsAwards = sanitizePendingPointsAwards(state.pendingPointsAwards);
   state.goals = sanitizeGoals(state.goals);
   state.rewards = sanitizeRewards(state.rewards);
   state.actionLog = sanitizeActionLog(state.actionLog);

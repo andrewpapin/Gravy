@@ -15,10 +15,19 @@ label for the games hub is "Arcade" (`GamesCard`, `GamesScreen`) — kept distin
 dashboard's "Game Settings" label (see below) so the two aren't confused; the underlying
 component/file names (`GamesCard`, `GamesScreen`, `onOpenGames`, `gamesOpen`, `src/data/games.ts`)
 are unchanged. The coin balance and Reward Store entry point live in `StatsCard`'s coins row (the
-top row of the stacked rank/badges card), not in `TopBar` — `TopBar` only holds the avatar,
-greeting, and the grown-up menu (hamburger) icon. There is no kid-facing calendar/history icon or
+top row of the stacked rank/badges card), not in `TopBar` — `TopBar` holds the avatar, greeting, a
+bell icon, and the grown-up menu (hamburger) icon. There is no kid-facing calendar/history icon or
 screen; the only calendar surface is the PIN-gated parent `CalendarPanel` (see below), reached via
 `AccountMenu` → "Calendar".
+
+The bell icon opens `ApprovalsDrawer` directly — Approvals is no longer an `AccountMenu` item (it
+used to be the first one); it's its own top-level entry point next to the hamburger, badged via the
+same `nav-badge` CSS class with `data-count={pendingRewards.length + pendingPointsAwards.length}`.
+Since it's no longer reached only through an already-unlocked `AccountMenu`, `ApprovalsDrawer` gates
+itself: it reads `grownUpUnlocked` directly and renders `SignInPrompt` (title "Sign In") in place of
+`ApprovalsPanel` whenever locked, falling back to the panel on its own once sign-in flips
+`grownUpUnlocked` true (same mechanic as `AccountMenu`'s own sign-in swap, including a `signInNonce`
+remount) — a kid tapping the bell on a locked device sees a sign-in prompt, not the pending list.
 
 Tapping the hamburger icon in `TopBar` always opens **`AccountMenu`**, whether locked or unlocked —
 it's a single "open the menu" button, not a lock/unlock toggle, so closing the menu (e.g. after
@@ -41,12 +50,7 @@ separate "lock without signing out." A `signInNonce` flag remounts a fresh `Sign
 open (mirroring the old `pinNonce` idea) so a half-finished sign-in attempt never lingers.
 
 - **Reward Store** — no PIN, always tappable (its entry point is on `StatsCard`, not this menu).
-- **Approvals** — the first item in the list. Opens `ApprovalsDrawer`
-  (`src/components/parent/ApprovalsDrawer.tsx`), a thin `Modal` wrapper around `ApprovalsPanel`
-  (approve/decline pending reward requests) — a first-class `AccountMenu` item, no longer nested
-  inside the Game Settings dashboard (it used to be the dashboard's `RootMenu` "Approvals" card).
-  The icon span reuses the `nav-badge` CSS class (`src/index.css`) with `data-count={pendingCount}`
-  to show the same pending-request count badge `TopBar`'s hamburger icon already shows.
+  Approvals also isn't in this menu anymore — see the `TopBar` bell icon above.
 - **Switch Profile** — only shown when there's more than one profile. Opens `ProfileSwitcher`, a
   read-only quick-switch list (tap → `switchProfile(id)`).
 - **Game Settings** (formerly "Grown ups") — opens `GrownUpsDrawer` → `ParentDashboard` directly.
@@ -60,16 +64,21 @@ open (mirroring the old `pinNonce` idea) so a half-finished sign-in attempt neve
   around `LogPanel` (`src/components/parent/LogPanel.tsx`). Merges and time-sorts (newest first)
   two separate fields for display: the active profile's `actionLog` — kid-progress and reward
   actions only (food logged/removed, daily-goal steps, bonus-item taps, game wins, reward
-  requested/approved/declined, plus the Calendar's `*ForDay` equivalents), each with label, signed
-  point delta, and timestamp — and the shared `auditLog` — household admin/destructive actions
-  (catalog edits, settings, profile CRUD, danger-zone resets, sync/ownership changes), each
-  attributed to the parent account that made it. Only `food`/`goal`/`bonus` action entries get an
-  "Undo" button, shown when they're the most-recent non-undone entry for their (type, item, day)
-  key — tapping calls `undoActionLogEntry(entry)`, which dispatches to the same exact-inverse
-  context function (`removeFood`/`decrementGoal`/`undoBonusItem` or their `*ForDay` variants) used
-  by the live UI. Game/reward entries and all audit entries are informational-only — never
-  undoable. The two fields stay separate in state (`actionLog` is per-profile, `auditLog` is
-  shared/mirrored); the merge happens only at render time in `LogPanel`.
+  requested/approved/declined, points approved/declined, plus the Calendar's `*ForDay`
+  equivalents), each with label, signed point delta, and timestamp — and the shared `auditLog` —
+  household admin/destructive actions (catalog edits, settings, profile CRUD, danger-zone resets,
+  sync/ownership changes), each attributed to the parent account that made it. Only `food`/`goal`/
+  `bonus` action entries get an "Undo" button, shown when they're the most-recent non-undone entry
+  for their (type, item, day) key — tapping calls `undoActionLogEntry(entry)`, which dispatches to
+  the same exact-inverse context function (`removeFood`/`decrementGoal`/`undoBonusItem` or their
+  `*ForDay` variants) used by the live UI. On a kid-only device, that original `food`/`goal`/`bonus`
+  entry logs `pts: 0` (the points are pending, not yet real) until a parent resolves it from
+  Approvals, which appends its own `pointsApproved`/`pointsDeclined` entry carrying the actual point
+  delta — mirroring how `rewardRequested` logs `pts: 0` and `rewardApproved`/`rewardDeclined` carry
+  the real delta. Game/reward/points entries and all audit entries are informational-only — never
+  undoable here (declining or self-cancelling a still-pending item is done from Approvals or the
+  live UI, not the Log). The two fields stay separate in state (`actionLog` is per-profile,
+  `auditLog` is shared/mirrored); the merge happens only at render time in `LogPanel`.
 - **Profiles** — opens `ProfilesManager`, full CRUD for kid profiles (add/edit name, avatar
   icon+colors, theme; delete with confirm; never deletes the last profile).
 - **Advanced Settings** — opens `AdvancedSettingsDrawer`
@@ -84,13 +93,16 @@ every render from `authUser` (the Supabase Auth session, which persists across t
 stays unlocked across reopens as long as the parent stays signed in and synced to a household they
 belong to; it only re-locks when they sign out (or this device's household membership changes).
 `GrownUpsDrawer`/`ProfilesManager`/`ProfileSwitcher`/`AdvancedSettingsDrawer`/`LogDrawer`/
-`CalendarDrawer`/`ApprovalsDrawer` don't render `SignInPrompt` themselves; they assume they're only
-opened from `AccountMenu` once unlocked.
+`CalendarDrawer` don't render `SignInPrompt` themselves; they assume they're only opened from
+`AccountMenu` once unlocked. `ApprovalsDrawer` is the one exception — it's reached from the `TopBar`
+bell, not `AccountMenu`, so it gates itself (see above) rather than assuming.
 
-Every drawer reached directly from `AccountMenu` (the seven above) is a first-level drawer and gets
+Every drawer reached directly from `AccountMenu` (the six above) is a first-level drawer and gets
 a working back button via the shared `Modal` component's optional `onBack` prop — `Modal` renders a
 back-chevron button ahead of the title when `onBack` is passed. Each of these drawers' `onBack`
-closes itself and reopens `AccountMenu` (wired in `AppShell`, `src/App.tsx`). Nested panels inside a
+closes itself and reopens `AccountMenu` (wired in `AppShell`, `src/App.tsx`). `ApprovalsDrawer` has
+no `onBack` — reached directly from the bell rather than nested under `AccountMenu`, it has nothing
+to go "back" to, so it only shows a close (X) button. Nested panels inside a
 drawer (e.g. the picked-date view inside `CalendarPanel`, or the settings menu inside `SettingsPanel`)
 use their own existing `onHeaderChange`/`goToRoot` mechanism instead, which takes precedence —
 `GrownUpsDrawer`/`CalendarDrawer`/`AdvancedSettingsDrawer` pass `onBack={header.onBack ?? onBack}`,
@@ -117,10 +129,9 @@ one panel with a back button:
 - `StorePanel` — reward CRUD.
 - `BadgesPanel` — customize badge name/emoji/icon/visibility.
 
-`ApprovalsPanel` (approve/decline pending reward requests) is no longer nested here — it's reached
-directly from `AccountMenu`'s top-level "Approvals" item (the first item in the list) via the
-standalone `ApprovalsDrawer`, the same graduation pattern already applied to Calendar and Advanced
-Settings below.
+`ApprovalsPanel` (approve/decline pending points and pending reward requests) is no longer nested
+here — it's reached directly from the `TopBar` bell icon via the standalone, self-gating
+`ApprovalsDrawer` (see above), not from `AccountMenu` at all.
 
 `CalendarPanel` (view/edit past days) is no longer nested here — it's reached directly from
 `AccountMenu`'s top-level "Calendar" item via the standalone `CalendarDrawer` (see above). The old

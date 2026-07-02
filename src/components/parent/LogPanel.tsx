@@ -31,6 +31,8 @@ const ACTION_TYPE_ICON: Record<ActionLogType, IconDefinition> = {
   rewardRequested: faEnvelope,
   rewardApproved: faCircleCheck,
   rewardDeclined: faCircleXmark,
+  pointsApproved: faCircleCheck,
+  pointsDeclined: faCircleXmark,
 };
 
 const AUDIT_TYPE_ICON: Record<AuditLogType, IconDefinition> = {

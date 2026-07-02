@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faBell } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import { AppIcon } from './AppIcon';
 import { Greeting } from './Greeting';
@@ -7,11 +7,12 @@ import { Greeting } from './Greeting';
 interface TopBarProps {
   dateStr: string;
   onOpenAccountMenu?: () => void;
+  onOpenApprovals?: () => void;
 }
 
-export function TopBar({ dateStr, onOpenAccountMenu }: TopBarProps) {
-  const { state, grownUpUnlocked } = useGravy();
-  const pendingCount = state.pendingRewards.length;
+export function TopBar({ dateStr, onOpenAccountMenu, onOpenApprovals }: TopBarProps) {
+  const { state } = useGravy();
+  const pendingCount = state.pendingRewards.length + state.pendingPointsAwards.length;
 
   return (
     <div className="topbar">
@@ -24,11 +25,11 @@ export function TopBar({ dateStr, onOpenAccountMenu }: TopBarProps) {
       </div>
       <Greeting dateStr={dateStr} />
       <div className="topbar-pills">
-        {onOpenAccountMenu && (
+        {onOpenApprovals && (
           <button
             className="topbar-icon-btn"
-            onClick={onOpenAccountMenu}
-            aria-label={grownUpUnlocked ? 'Open grown-up menu' : 'Unlock grown-up menu'}
+            onClick={onOpenApprovals}
+            aria-label="Open approvals"
             type="button"
           >
             <span
@@ -36,8 +37,18 @@ export function TopBar({ dateStr, onOpenAccountMenu }: TopBarProps) {
               data-count={pendingCount}
               title={pendingCount > 0 ? `${pendingCount} request${pendingCount === 1 ? '' : 's'} waiting for approval` : undefined}
             >
-              <FontAwesomeIcon icon={faBars} />
+              <FontAwesomeIcon icon={faBell} />
             </span>
+          </button>
+        )}
+        {onOpenAccountMenu && (
+          <button
+            className="topbar-icon-btn"
+            onClick={onOpenAccountMenu}
+            aria-label="Open grown-up menu"
+            type="button"
+          >
+            <FontAwesomeIcon icon={faBars} />
           </button>
         )}
       </div>

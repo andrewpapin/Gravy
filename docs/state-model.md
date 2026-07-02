@@ -52,10 +52,19 @@ The provider's imperative actions are split into per-domain custom hooks, each c
 `maybeCelebrateRankUp`/`actorRef`) as explicit deps:
 
 - `useKidProgressActions.ts` — live "today" actions: `logFood`, `removeFood`, `incrementGoal`,
-  `decrementGoal`, `logBonusItem`, `undoBonusItem`, `completeGameRound`.
+  `decrementGoal`, `logBonusItem`, `undoBonusItem`, `completeGameRound`, `declineGameWin`. Takes a
+  `requiresApproval` boolean dep (`!authUser` — see "Pending points" below): every award-side action
+  still completes immediately, but queues the points instead of crediting them when true; every
+  inverse action (`decrementGoal`/`removeFood`/`undoBonusItem`/`declineGameWin`) cancels a
+  still-pending award instead of touching the balance when one exists for that item.
 - `useDayEditActions.ts` — the five `*ForDay` Calendar edits + `undoActionLogEntry` (takes the three
-  kid-progress today-inverses as deps to dispatch today-vs-`*ForDay`).
+  kid-progress today-inverses as deps to dispatch today-vs-`*ForDay`). Calendar is reached only once
+  `grownUpUnlocked`, so these always post immediately — never gated by `requiresApproval`.
 - `useRewardActions.ts` — `requestReward`, `approveReward`, `declineReward`.
+- `usePendingPointsActions.ts` — `approvePendingPointsAward`, `declinePendingPointsAward`. Takes
+  `decrementGoal`/`removeFood`/`undoBonusItem`/`declineGameWin` from `useKidProgressActions` as deps
+  (via `stateRef`, the same dispatch-by-kind pattern `undoActionLogEntry` uses) so decline reuses
+  their revert logic rather than duplicating it.
 - `useCatalogActions.ts` — goal/reward CRUD, `saveSetting`, `resetToday`, `resetAll`,
   `updateBadgeConfig` (+ the `SETTING_LABELS` map for audit labels).
 - `useProfileActions.ts` — `switchProfile`, `addProfile`, `updateProfile`, `deleteProfile`.
@@ -137,6 +146,24 @@ single-profile save by wrapping it as a one-entry root.
 - **Pending rewards** — kids request via `requestReward` (which reserves points already promised to
   other pending requests so a kid can't queue more than their balance covers); they sit in
   `pendingRewards` until a parent calls `approveReward`/`declineReward` from `ApprovalsPanel`.
+- **Pending points** — on a device with no signed-in account (`requiresApproval = !authUser` in
+  `GravyContext`, i.e. a kid device joined via family code only — see `docs/persistence-and-sync.md`
+  for the account model), every point-earning action (`logFood`/`incrementGoal`/`logBonusItem`/
+  `completeGameRound`) still completes live — the goal checks off, the food entry logs, counters/
+  streaks/badges update — but the points are queued as a `PendingPointsAward` in
+  `pendingPointsAwards` (`src/state/pendingPoints.ts`'s `queuePendingPoints`) instead of touching
+  `points`/`totalPoints`/`todayPoints`. A parent approves (`approvePendingPointsAward` credits the
+  points — via `applyBonusItem` for a Bonus item, so forgiveness is computed against the balance at
+  approval time, not log time — then re-runs `checkBadges`/`maybeCelebrateRankUp` since crediting can
+  newly cross a threshold) or declines (`declinePendingPointsAward` dispatches to the matching
+  exact-inverse action — `decrementGoal`/`removeFood`/`undoBonusItem`/`declineGameWin` — which fully
+  reverts the completion, exactly as if the kid had undone it themselves) from `ApprovalsPanel`. If
+  the kid cancels their own still-pending action first (unchecking a goal, tapping a Bonus item back
+  down), `takeMostRecentPending` finds and drops the queued award instead of subtracting from a
+  balance that was never credited — the same code path decline uses. On a signed-in device
+  `requiresApproval` is always false, so none of this changes existing behavior there; `authUser`
+  presence (not the momentary `grownUpUnlocked` lock) is what decides it, so a parent temporarily
+  locking their own signed-in device doesn't suddenly gate their kid's taps.
 - **Editing past days** — the Calendar lives in the account-gated parent dashboard (`CalendarPanel`),
   since past-day edits affect real points. Picking a day renders `FoodTray`/`DailyGoals`/
   `BonusPoints` with a `dateStr` prop; when it's not today they read/write that day's log via
@@ -154,8 +181,10 @@ single-profile save by wrapping it as a one-entry root.
   boolean (`goalIds` membership), so `DailyGoals` renders past-day multi-step goals as a simple
   toggle tile rather than a stepper. There's no kid-facing calendar/history view — the Calendar is
   reached only through the account-gated parent dashboard described above. `TopBar`
-  (`src/components/TopBar.tsx`) is just the avatar, `Greeting` (`src/components/Greeting.tsx`), and
-  the grown-up menu (hamburger) icon (opens `AccountMenu`); it carries no date nav. `src/components/
+  (`src/components/TopBar.tsx`) holds the avatar, `Greeting` (`src/components/Greeting.tsx`), a bell
+  icon (opens `ApprovalsDrawer` directly, badged with `pendingRewards.length +
+  pendingPointsAwards.length`), and the grown-up menu (hamburger) icon (opens `AccountMenu`); it
+  carries no date nav. `src/components/
   CalendarGrid.tsx` is the month-grid UI used by `CalendarPanel`; it disables/mutes any day cell
   whose date string is greater than today's so it can't navigate to a future date.
   `formatFriendlyDate()` (`src/state/defaultState.ts`, alongside `todayStr`/`addDaysToDateStr`) is

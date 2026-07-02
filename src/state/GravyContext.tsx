@@ -23,6 +23,7 @@ import { useHouseholdSync } from './useHouseholdSync';
 import { useKidProgressActions } from './actions/useKidProgressActions';
 import { useDayEditActions } from './actions/useDayEditActions';
 import { useRewardActions } from './actions/useRewardActions';
+import { usePendingPointsActions } from './actions/usePendingPointsActions';
 import { useCatalogActions } from './actions/useCatalogActions';
 import { useProfileActions } from './actions/useProfileActions';
 import { useHouseholdActions } from './actions/useHouseholdActions';
@@ -94,6 +95,8 @@ interface GravyContextValue {
   requestReward: (id: number) => void;
   approveReward: (prId: string) => void;
   declineReward: (prId: string) => void;
+  approvePendingPointsAward: (id: string) => void;
+  declinePendingPointsAward: (id: string) => void;
   addGoal: (goal: Omit<Goal, 'id'>) => void;
   removeGoal: (id: number) => void;
   updateGoal: (id: number, patch: Partial<Omit<Goal, 'id'>>) => void;
@@ -162,6 +165,12 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   } = useHouseholdSync({ root, state, setRoot, setState });
 
   const grownUpUnlocked = isGrownUpUnlocked(authUser, householdStatus);
+  // True on a device that's never signed in with a real account — i.e. a "kid device" joined
+  // via family code only (see Onboarding's "just enter a family code" fork). Unlike
+  // grownUpUnlocked this doesn't flip back on when the app is merely locked again; it's a
+  // property of the device's auth state, not the momentary lock. Every point-earning action
+  // gates on it — see useKidProgressActions.
+  const requiresApproval = !authUser;
 
   // Applies the parent-selected theme to the whole app. useLayoutEffect (rather than
   // useEffect) so the attribute is set before paint, avoiding a flash of the light theme.
@@ -304,6 +313,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   // They receive the shared state setters/refs and the helper callbacks above as dependencies.
   const kidProgress = useKidProgressActions({
     setState, showToast, showCelebration, awardPoints, checkBadges, maybeCelebrateRankUp, actorRef,
+    requiresApproval,
   });
   const dayEdit = useDayEditActions({
     setState, stateRef, showToast, awardPointsForDay, checkBadges, maybeCelebrateRankUp, actorRef,
@@ -312,6 +322,13 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     undoBonusItem: kidProgress.undoBonusItem,
   });
   const rewards = useRewardActions({ setState, showToast, checkBadges, actorRef });
+  const pendingPoints = usePendingPointsActions({
+    setState, stateRef, showToast, checkBadges, maybeCelebrateRankUp, actorRef,
+    decrementGoal: kidProgress.decrementGoal,
+    removeFood: kidProgress.removeFood,
+    undoBonusItem: kidProgress.undoBonusItem,
+    declineGameWin: kidProgress.declineGameWin,
+  });
   const catalog = useCatalogActions({
     setState, showToast, actorRef, pendingTimersRef, setHouseholdCode, lastSyncedRef, setSyncStatus,
   });
@@ -354,6 +371,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     ...kidProgress,
     ...dayEdit,
     ...rewards,
+    ...pendingPoints,
     ...catalog,
     ...profile,
     ...household,

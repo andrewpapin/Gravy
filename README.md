@@ -20,14 +20,21 @@ account — there's no PIN.
 - **Rank ladder** — a 24-tier progression (Noob → Sonic Snail) with a
   kid-facing screen showing locked/current/achieved tiers and progress
 - **Store** — spend points on parent-defined rewards (pending approval)
+- **Pending points** — on a device that's never signed in with a parent
+  account (joined via family code only), a kid's chores/food/bonus
+  items/games still complete live, but the points sit pending until a
+  parent approves or declines them from Approvals; a signed-in parent's
+  own device posts points immediately, same as before
 - **Badges** — 71 unlockable badges across food, chores, points, streaks,
   store, combo, and games categories
 - **Multi-profile households** — multiple kid profiles per device, each
   with independent progress/streaks but shared goals, rewards, badge
   config, and points settings; switch between them from a parent
   account-gated quick-switch list
+- **Approvals** — a bell icon next to the menu (hamburger) icon, badged
+  with the number waiting; approve or decline pending points and reward
+  requests. Tapping it prompts sign-in first if the device isn't unlocked.
 - **Parent menu** (locked to a signed-in parent account)
-  - **Approvals** — approve or decline reward requests
   - **Game Settings** — manage daily goals, bonus items, per-action point
     values, store rewards, and badge names/emoji/icons/visibility
   - **Calendar** — view and edit past days

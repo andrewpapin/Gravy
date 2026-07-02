@@ -24,6 +24,24 @@ export interface PendingReward {
   rewardId: number;
 }
 
+export type PendingPointsKind = 'goal' | 'food' | 'bonus' | 'game';
+
+// A point-earning action taken on a device with no signed-in account (a "kid-only" device
+// joined via family code only — see GravyContext's `requiresApproval`). The completion itself
+// (todayGoals/todayFoodCounts/counters/streaks/badges) applies immediately; only the points sit
+// here, out of the live balance, until a parent approves or declines them from the Approvals
+// screen. `kind`+`itemId` is how the exact-inverse actions (decrementGoal, removeFood,
+// undoBonusItem, declineGameWin) find and cancel a still-pending award instead of touching the
+// balance — see src/state/pendingPoints.ts.
+export interface PendingPointsAward {
+  id: string;
+  kind: PendingPointsKind;
+  itemId: number | string;
+  pts: number;
+  label: string;
+  at: number;
+}
+
 export interface Counters {
   foodLogs: Record<string, number>;
   fullTrayDays: number;
@@ -75,7 +93,9 @@ export type ActionLogType =
   | 'game'
   | 'rewardRequested'
   | 'rewardApproved'
-  | 'rewardDeclined';
+  | 'rewardDeclined'
+  | 'pointsApproved'
+  | 'pointsDeclined';
 
 // One row per kid-progress action (food/goal/bonus/game/reward), shown in the grown-ups-only
 // Log screen. `itemId`/`dateStr` together identify the live item an entry can be undone
@@ -136,6 +156,9 @@ export interface GravyState {
   todayGameWins: number;
   dayLogs: Record<string, DayLog>;
   pendingRewards: PendingReward[];
+  // Points earned on a kid-only device (no signed-in account) awaiting parent approval — see
+  // PendingPointsAward. Per-kid, never mirrored, same as pendingRewards.
+  pendingPointsAwards: PendingPointsAward[];
   earnedBadges: string[];
   counters: Counters;
   badgeConfig: Record<string, BadgeOverride>;

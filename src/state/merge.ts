@@ -67,9 +67,11 @@ function mergeRecord<V>(local: Record<string, V>, remote: Record<string, V>): Re
 }
 
 // Merge one profile's state. Collections union; live progress scalars/counters/settings keep
-// last-write-wins by taking the `remote` snapshot (it spreads in as the base). pendingRewards stays
-// LWW too: it's an add/remove set, and unioning it would resurrect rewards another device already
-// approved — reconciling that safely needs tombstones / the offline-queue work, out of scope here.
+// last-write-wins by taking the `remote` snapshot (it spreads in as the base). pendingRewards (and
+// pendingPointsAwards, the analogous queue for kid-only-device point approvals) stay LWW too:
+// they're add/remove sets, and unioning them would resurrect requests another device already
+// approved/declined — reconciling that safely needs tombstones / the offline-queue work, out of
+// scope here.
 export function mergeStates(local: GravyState, remote: GravyState): GravyState {
   return {
     ...remote,

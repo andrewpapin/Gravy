@@ -77,6 +77,7 @@ function AppShell() {
       <div id="kidApp">
         <HomeScreen
           onOpenAccountMenu={() => setAccountMenuOpen(true)}
+          onOpenApprovals={() => setApprovalsOpen(true)}
           onOpenStore={() => setStoreOpen(true)}
           onOpenBadges={() => setBadgesOpen(true)}
           onOpenGames={() => setGamesOpen(true)}
@@ -107,7 +108,6 @@ function AppShell() {
           onOpenSettings={() => { setAccountMenuOpen(false); setSettingsOpen(true); }}
           onOpenLog={() => { setAccountMenuOpen(false); setLogOpen(true); }}
           onOpenCalendar={() => { setAccountMenuOpen(false); setCalendarOpen(true); }}
-          onOpenApprovals={() => { setAccountMenuOpen(false); setApprovalsOpen(true); }}
         />
         <GrownUpsDrawer
           open={grownUpsOpen}
@@ -153,7 +153,6 @@ function AppShell() {
           <ApprovalsDrawer
             open={approvalsOpen}
             onClose={() => setApprovalsOpen(false)}
-            onBack={() => { setApprovalsOpen(false); setAccountMenuOpen(true); }}
           />
         </Suspense>
       </div>
