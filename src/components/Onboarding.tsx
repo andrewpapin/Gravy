@@ -36,7 +36,7 @@ const STEPS: WalkStep[] = [
   {
     icon: faFire,
     title: 'Build Your Streak',
-    desc: () => 'Come back and log something every day to grow your streak and unlock badges.',
+    desc: () => 'Come back and log something every day to grow your streak.',
   },
   {
     icon: faGift,

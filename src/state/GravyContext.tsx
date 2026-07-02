@@ -8,7 +8,6 @@ import {
   saveRoot,
 } from './defaultState';
 import { resolveToastIcon } from '../data/icons';
-import { findNewlyEarnedBadges, getBadgeDisplay } from './badges';
 import { applyAward, applyAwardForDay } from './points';
 import { getRank, RANKS } from '../data/ranks';
 import {
@@ -106,7 +105,6 @@ interface GravyContextValue {
   saveSetting: (key: SettableSettingKey, val: string) => void;
   resetToday: () => void;
   resetAll: () => void;
-  updateBadgeConfig: (id: string, key: 'enabled' | 'name' | 'emoji' | 'icon', value: string | boolean) => void;
   // The sole gate for parental-control screens — derived from authUser + householdStatus, not
   // stored. See src/state/auth.ts#isGrownUpUnlocked.
   grownUpUnlocked: boolean;
@@ -229,8 +227,6 @@ export function GravyProvider({ children }: { children: ReactNode }) {
 
   const hideCelebration = useCallback(() => setCelebration(null), []);
 
-  const fireConfetti = useCallback(() => setConfettiTrigger((n) => n + 1), []);
-
   // Awards points and mutates the given draft state in place. Used for the positive flows
   // (food, daily goals, full-tray bonus) and their exact-inverse removals; the running
   // balance is intentionally NOT floored here so an award and its later removal cancel out
@@ -283,47 +279,21 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     [showCelebration],
   );
 
-  // Checks for newly-earned badges and announces them with a confetti burst.
-  // When delayMs is set, the announcement is deferred so it doesn't pile up
-  // on top of a celebration overlay shown for the same action.
-  const checkBadges = useCallback(
-    (next: GravyState, delayMs = 0) => {
-      const newlyEarned = findNewlyEarnedBadges(next);
-      newlyEarned.forEach((id) => {
-        next.earnedBadges.push(id);
-        const display = getBadgeDisplay(next, id);
-        if (display && display.enabled !== false) {
-          const announce = () => {
-            showToast(resolveToastIcon(display.icon, display.emoji), `Badge unlocked: ${display.name}!`);
-            fireConfetti();
-          };
-          if (delayMs > 0) {
-            const timer = window.setTimeout(announce, delayMs);
-            pendingTimersRef.current.push(timer);
-          } else {
-            announce();
-          }
-        }
-      });
-    },
-    [showToast, fireConfetti],
-  );
-
   // Per-domain action groups, each relocated verbatim into its own hook (see ./actions/*).
   // They receive the shared state setters/refs and the helper callbacks above as dependencies.
   const kidProgress = useKidProgressActions({
-    setState, showToast, showCelebration, awardPoints, checkBadges, maybeCelebrateRankUp, actorRef,
+    setState, showToast, showCelebration, awardPoints, maybeCelebrateRankUp, actorRef,
     requiresApproval,
   });
   const dayEdit = useDayEditActions({
-    setState, stateRef, showToast, awardPointsForDay, checkBadges, maybeCelebrateRankUp, actorRef,
+    setState, stateRef, showToast, awardPointsForDay, maybeCelebrateRankUp, actorRef,
     removeFood: kidProgress.removeFood,
     decrementGoal: kidProgress.decrementGoal,
     undoBonusItem: kidProgress.undoBonusItem,
   });
-  const rewards = useRewardActions({ setState, showToast, checkBadges, actorRef });
+  const rewards = useRewardActions({ setState, showToast, actorRef });
   const pendingPoints = usePendingPointsActions({
-    setState, stateRef, showToast, checkBadges, maybeCelebrateRankUp, actorRef,
+    setState, stateRef, showToast, maybeCelebrateRankUp, actorRef,
     decrementGoal: kidProgress.decrementGoal,
     removeFood: kidProgress.removeFood,
     undoBonusItem: kidProgress.undoBonusItem,

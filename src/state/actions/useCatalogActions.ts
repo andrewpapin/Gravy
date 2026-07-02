@@ -33,7 +33,7 @@ export interface CatalogDeps {
   setSyncStatus: Dispatch<SetStateAction<SyncStatus>>;
 }
 
-// Parent catalog CRUD (goals, rewards), settings, badge config, and the danger-zone resets.
+// Parent catalog CRUD (goals, rewards), settings, and the danger-zone resets.
 // These append to the shared household auditLog (not the per-kid actionLog) and are never undoable.
 export function useCatalogActions(deps: CatalogDeps) {
   const { setState, showToast, actorRef, pendingTimersRef, setHouseholdCode, lastSyncedRef, setSyncStatus } = deps;
@@ -165,7 +165,7 @@ export function useCatalogActions(deps: CatalogDeps) {
   }, [setState, showToast, actorRef]);
 
   const resetAll = useCallback(() => {
-    // Cancel any deferred celebration/badge toasts queued by an action just before the
+    // Cancel any deferred celebration toasts queued by an action just before the
     // reset — otherwise one could still fire afterward, announcing progress that no longer exists.
     pendingTimersRef.current.forEach((t) => clearTimeout(t));
     pendingTimersRef.current = [];
@@ -177,16 +177,14 @@ export function useCatalogActions(deps: CatalogDeps) {
     lastSyncedRef.current = null;
     setSyncStatus('idle');
     setState((prev) => {
-      const badgeConfig = prev.badgeConfig;
       const next = cloneDefaultState();
-      // "Reset Everything" wipes progress (points, badges, history, goals, rewards) but
+      // "Reset Everything" wipes progress (points, history, goals, rewards) but
       // keeps personalization settings — the kid's name/look.
       next.settings.childName = prev.settings.childName;
       next.settings.theme = prev.settings.theme;
       next.settings.avatarIcon = prev.settings.avatarIcon;
       next.settings.avatarIconColor = prev.settings.avatarIconColor;
       next.settings.avatarBgColor = prev.settings.avatarBgColor;
-      next.badgeConfig = badgeConfig;
       // Preserve the household audit trail across a reset (don't let "reset everything" erase
       // its own evidence), then record the reset itself.
       next.auditLog = prev.auditLog;
@@ -196,15 +194,5 @@ export function useCatalogActions(deps: CatalogDeps) {
     });
   }, [setState, showToast, actorRef, pendingTimersRef, setHouseholdCode, lastSyncedRef, setSyncStatus]);
 
-  const updateBadgeConfig = useCallback((id: string, key: 'enabled' | 'name' | 'emoji' | 'icon', value: string | boolean) => {
-    setState((prev) => {
-      const next = clone(prev);
-      const cfg = next.badgeConfig[id] || {};
-      next.badgeConfig[id] = { ...cfg, [key]: value };
-      appendAuditLog(next, actorRef.current, { type: 'badgeConfigChanged', label: `Updated badge settings (${id})` });
-      return next;
-    });
-  }, [setState, actorRef]);
-
-  return { addGoal, removeGoal, updateGoal, addReward, updateReward, removeReward, saveSetting, resetToday, resetAll, updateBadgeConfig };
+  return { addGoal, removeGoal, updateGoal, addReward, updateReward, removeReward, saveSetting, resetToday, resetAll };
 }

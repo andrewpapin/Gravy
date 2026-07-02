@@ -19,8 +19,8 @@ All state flows through a single React Context in `src/state/GravyContext.tsx`, 
   `<meta theme-color>` before paint, avoiding a flash of the wrong theme).
 - Day-rollover re-check on `visibilitychange`, applied to **every** profile (not just the active
   one), so a kid not opened in days still has correct streaks/cleared "today" state when picked.
-- Toast notifications (plain, no undo — undo lives in the Log), celebration/confetti triggers,
-  badge-earned detection — all run after each state-mutating action.
+- Toast notifications (plain, no undo — undo lives in the Log) and celebration/confetti
+  triggers — run after each state-mutating action.
 - `actionLog: ActionLogEntry[]` (per-profile) — append-only history of kid-progress/reward actions,
   capped at `ACTION_LOG_MAX_ENTRIES` (500, FIFO). `src/state/actionLog.ts` holds the pure helpers:
   `appendActionLog(next, actor, entry)` (push + cap, stamps `actorUserId`/`actorLabel` from the
@@ -30,7 +30,7 @@ All state flows through a single React Context in `src/state/GravyContext.tsx`, 
   renders an Undo button — most-recent-only per (type, itemId, dateStr) key).
 - `auditLog: AuditLogEntry[]` (Epic 8 item 6) — append-only history of **household
   admin/destructive** actions the kid-progress `actionLog` excludes: catalog edits (goals/rewards),
-  settings changes, badge config, profile CRUD, danger-zone resets, sync/ownership changes. Unlike
+  settings changes, profile CRUD, danger-zone resets, sync/ownership changes. Unlike
   `actionLog` this is a **shared** field, mirrored across profiles by
   `mirrorSharedFields`/`copySharedInto`. `src/state/auditLog.ts` has the pure
   `appendAuditLog(next, actor, entry)` (push + cap at `AUDIT_LOG_MAX_ENTRIES` 300, same
@@ -48,7 +48,7 @@ All state flows through a single React Context in `src/state/GravyContext.tsx`, 
 
 The provider's imperative actions are split into per-domain custom hooks, each called once inside
 `GravyProvider` and receiving the shared state setters/refs and helper callbacks
-(`showToast`/`showCelebration`/`awardPoints`/`awardPointsForDay`/`checkBadges`/
+(`showToast`/`showCelebration`/`awardPoints`/`awardPointsForDay`/
 `maybeCelebrateRankUp`/`actorRef`) as explicit deps:
 
 - `useKidProgressActions.ts` — live "today" actions: `logFood`, `removeFood`, `incrementGoal`,
@@ -65,8 +65,8 @@ The provider's imperative actions are split into per-domain custom hooks, each c
   `decrementGoal`/`removeFood`/`undoBonusItem`/`declineGameWin` from `useKidProgressActions` as deps
   (via `stateRef`, the same dispatch-by-kind pattern `undoActionLogEntry` uses) so decline reuses
   their revert logic rather than duplicating it.
-- `useCatalogActions.ts` — goal/reward CRUD, `saveSetting`, `resetToday`, `resetAll`,
-  `updateBadgeConfig` (+ the `SETTING_LABELS` map for audit labels).
+- `useCatalogActions.ts` — goal/reward CRUD, `saveSetting`, `resetToday`, `resetAll`
+  (+ the `SETTING_LABELS` map for audit labels).
 - `useProfileActions.ts` — `switchProfile`, `addProfile`, `updateProfile`, `deleteProfile`.
 - `useHouseholdActions.ts` — `createHousehold`/`joinHousehold`/`leaveHousehold`/
   `deleteHouseholdEverywhere`/`changeHouseholdCode` + `signUp`/`signIn`/`sendSignInLink`/
@@ -88,7 +88,7 @@ create/join/leave/claim actions stay in `useHouseholdActions.ts` — that hook a
 through the refs/setters returned here.
 
 GravyContext keeps the local `useState`/`useRef` declarations, the theme/day-rollover/persist
-effects (the sync/auth effects moved to `useHouseholdSync`), the toast/celebration/award/badge/rank
+effects (the sync/auth effects moved to `useHouseholdSync`), the toast/celebration/award/rank
 helper callbacks, the `profiles` derivation, the assembled `value`, and `useGravy`. The pure point
 arithmetic still lives in `src/state/points.ts`.
 
@@ -100,7 +100,7 @@ complete, independent `GravyState` for one kid. `loadRoot()`/`saveRoot()` in
 `src/state/defaultState.ts` handle persistence; `loadRoot()` also migrates a legacy flat
 single-profile save by wrapping it as a one-entry root.
 
-- **Shared vs. per-kid fields** — `goals`, `rewards`, `badgeConfig`, and a subset of `settings`
+- **Shared vs. per-kid fields** — `goals`, `rewards`, and a subset of `settings`
   (`SHARED_SETTING_KEYS`: `foodPts`, `bonusPts`, `gamePts`, `pin`, `recoveryQuestion`,
   `recoveryAnswer`, `timezone`) are identical across every profile in a household. Per-kid fields
   are everything else: progress (points, streaks, counters, logs) plus identity (`childName`,
@@ -130,7 +130,7 @@ single-profile save by wrapping it as a one-entry root.
     "Swear Jar"). `target` is unused for bonus items.
   - **Multi-step** (`target > 1`, Daily only) — must be incremented/decremented `target` times via
     `incrementGoal`/`decrementGoal` before it counts as done.
-- **Streaks** — four independent counters: `streak` (general daily-activity, used for badges/UI),
+- **Streaks** — four independent counters: `streak` (general daily-activity),
   `foodStreak` (consecutive full-tray days), `goalStreak` (consecutive all-daily-goals-done days),
   `megaStreak` (consecutive days hitting both). All four are recomputed in `applyDayRollover()`
   when the day changes; `streak` only extends if the closed-out day had real logged activity,
@@ -140,7 +140,7 @@ single-profile save by wrapping it as a one-entry root.
   counts into `dayLogs[dateStr]`, updates the four streaks, then clears the live `today*` fields
   (food, daily-goal completions/counts, bonus-item ledger, `todayGameWins`). Bonus-item completions,
   like daily goals, reset every day.
-- **Counters** (`GravyState.counters`) — lifetime aggregates for badge progress: `foodLogs`
+- **Counters** (`GravyState.counters`) — lifetime aggregates: `foodLogs`
   (per food-group), `fullTrayDays`, `totalGoals`, `allGoalsDays`, `comboDays` (full tray + all daily
   goals same day), `totalRewards`, `maxDayPoints`, `gamesPlayed`, `gamesWon`.
 - **Pending rewards** — kids request via `requestReward` (which reserves points already promised to
@@ -150,12 +150,12 @@ single-profile save by wrapping it as a one-entry root.
   `GravyContext`, i.e. a kid device joined via family code only — see `docs/persistence-and-sync.md`
   for the account model), every point-earning action (`logFood`/`incrementGoal`/`logBonusItem`/
   `completeGameRound`) still completes live — the goal checks off, the food entry logs, counters/
-  streaks/badges update — but the points are queued as a `PendingPointsAward` in
+  streaks update — but the points are queued as a `PendingPointsAward` in
   `pendingPointsAwards` (`src/state/pendingPoints.ts`'s `queuePendingPoints`) instead of touching
   `points`/`totalPoints`/`todayPoints`. A parent approves (`approvePendingPointsAward` credits the
   points — via `applyBonusItem` for a Bonus item, so forgiveness is computed against the balance at
-  approval time, not log time — then re-runs `checkBadges`/`maybeCelebrateRankUp` since crediting can
-  newly cross a threshold) or declines (`declinePendingPointsAward` dispatches to the matching
+  approval time, not log time — then re-runs `maybeCelebrateRankUp` since crediting can
+  newly cross a rank threshold) or declines (`declinePendingPointsAward` dispatches to the matching
   exact-inverse action — `decrementGoal`/`removeFood`/`undoBonusItem`/`declineGameWin` — which fully
   reverts the completion, exactly as if the kid had undone it themselves) from `ApprovalsPanel`. If
   the kid cancels their own still-pending action first (unchecking a goal, tapping a Bonus item back
@@ -173,7 +173,7 @@ single-profile save by wrapping it as a one-entry root.
   `logFood`/`incrementGoal`/`logBonusItem`). The `*ForDay` actions are full point-parity with their
   "today" counterparts: they award/remove via `awardPointsForDay` (the day-scoped mirror of
   `awardPoints`) moving `next.points`/`next.totalPoints` in lockstep with `log.points`, run
-  `maybeCelebrateRankUp()` and `checkBadges()`, and apply the same unfloored exact-inverse
+  `maybeCelebrateRankUp()`, and apply the same unfloored exact-inverse
   arithmetic and bonus-item forgiveness/exact-undo tracking (`DayLog.bonusApplied`). The one thing
   intentionally *not* ported is the food/goal-specific full-screen celebration overlays (`'Full
   Tray!'`, `'All Goals Done!'`) — a toast covers the bonus award on past days instead. Multi-step
@@ -182,7 +182,7 @@ single-profile save by wrapping it as a one-entry root.
   toggle tile rather than a stepper. There's no kid-facing calendar/history view — the Calendar is
   reached only through the account-gated parent dashboard described above. `TopBar`
   (`src/components/TopBar.tsx`) holds the avatar, `Greeting` (`src/components/Greeting.tsx`), a bell
-  icon (opens `ApprovalsDrawer` directly, badged with `pendingRewards.length +
+  icon (opens `ApprovalsDrawer` directly, marked with a count pill for `pendingRewards.length +
   pendingPointsAwards.length`), and the grown-up menu (hamburger) icon (opens `AccountMenu`); it
   carries no date nav. `src/components/
   CalendarGrid.tsx` is the month-grid UI used by `CalendarPanel`; it disables/mutes any day cell

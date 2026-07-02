@@ -7,7 +7,6 @@ import { ToastContainer } from './components/ToastContainer';
 import { UpdatePrompt } from './components/UpdatePrompt';
 import { Celebration } from './components/Celebration';
 import { Confetti } from './components/Confetti';
-import { BadgePopup } from './components/BadgePopup';
 import { STORAGE_KEY, ONBOARDING_DONE_KEY } from './state/defaultState';
 import { safeGetItem } from './state/storage';
 
@@ -15,7 +14,6 @@ import { safeGetItem } from './state/storage';
 // by default, or — for Onboarding/SyncGateModal — only one of the two ever mounts depending
 // on first-run state). Loading them on demand keeps their weight out of the main bundle.
 const StoreScreen = lazy(() => import('./components/StoreScreen').then((m) => ({ default: m.StoreScreen })));
-const BadgesScreen = lazy(() => import('./components/BadgesScreen').then((m) => ({ default: m.BadgesScreen })));
 const GamesScreen = lazy(() => import('./components/GamesScreen').then((m) => ({ default: m.GamesScreen })));
 const RankScreen = lazy(() => import('./components/RankScreen').then((m) => ({ default: m.RankScreen })));
 const ProfileSwitcher = lazy(() => import('./components/ProfileSwitcher').then((m) => ({ default: m.ProfileSwitcher })));
@@ -52,9 +50,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 }
 
 function AppShell() {
-  const [activeBadge, setActiveBadge] = useState<string | null>(null);
   const [storeOpen, setStoreOpen] = useState(false);
-  const [badgesOpen, setBadgesOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
   const [rankOpen, setRankOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -77,19 +73,11 @@ function AppShell() {
           onOpenAccountMenu={() => setAccountMenuOpen(true)}
           onOpenApprovals={() => setApprovalsOpen(true)}
           onOpenStore={() => setStoreOpen(true)}
-          onOpenBadges={() => setBadgesOpen(true)}
           onOpenGames={() => setGamesOpen(true)}
           onOpenRank={() => setRankOpen(true)}
         />
         <Suspense fallback={null}>
           <StoreScreen open={storeOpen} onClose={() => setStoreOpen(false)} />
-        </Suspense>
-        <Suspense fallback={null}>
-          <BadgesScreen
-            open={badgesOpen}
-            onClose={() => setBadgesOpen(false)}
-            onShowBadge={setActiveBadge}
-          />
         </Suspense>
         <Suspense fallback={null}>
           <GamesScreen open={gamesOpen} onClose={() => setGamesOpen(false)} />
@@ -147,7 +135,6 @@ function AppShell() {
         </Suspense>
       </div>
 
-      <BadgePopup badgeId={activeBadge} onClose={() => setActiveBadge(null)} />
       <Celebration />
       <Confetti />
       <ToastContainer />

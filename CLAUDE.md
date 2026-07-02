@@ -18,10 +18,9 @@ npm test          # Run Vitest unit tests (src/**/*.test.ts)
 
 ## Testing
 
-Vitest covers the pure point/streak/badge logic: `src/state/points.ts` (award/forgiveness/exact-undo
+Vitest covers the pure point/streak logic: `src/state/points.ts` (award/forgiveness/exact-undo
 arithmetic), `src/state/defaultState.ts` (`applyDayRollover`, `backfillStreaksFromLogs`),
-`src/state/badges.ts` (`findNewlyEarnedBadges` and friends), `src/state/auth.ts`
-(`normalizeHouseholdStatus`), and `src/state/merge.ts` (`mergeRoots`/`mergeStates`, the
+`src/state/auth.ts` (`normalizeHouseholdStatus`), and `src/state/merge.ts` (`mergeRoots`/`mergeStates`, the
 collection/record-level cloud-sync merge). Colocated `*.test.ts` files live next to the module they
 test. There
 is no component/UI test setup — `verify_gravy.mjs` at the repo root is an ad-hoc Playwright
@@ -36,7 +35,7 @@ unintentional or unreported. Completed/decided items are condensed to one-liners
 
 ## Keeping tests and docs in sync
 
-- **New/changed logic in `src/state/*.ts`** (points, streaks, badges, day rollover, any pure state
+- **New/changed logic in `src/state/*.ts`** (points, streaks, day rollover, any pure state
   logic) needs matching coverage in its colocated `*.test.ts`. If the logic is still tangled inside a
   `GravyContext` action hook (side effects mixed with arithmetic), extract the pure part into
   `src/state/*.ts` first, the way `points.ts` was pulled out — that's the established pattern.
@@ -56,7 +55,7 @@ beyond `HomeScreen` is an overlay drawer/modal toggled by boolean state in `AppS
 
 All state flows through one React Context (`src/state/GravyContext.tsx`), consumed via `useGravy()`.
 It owns the multi-profile `GravyRoot`, the active profile's `GravyState`, local persistence/theme/
-day-rollover effects, toasts/celebrations, and badge detection. The cloud-sync + parent-account
+day-rollover effects, and toasts/celebrations. The cloud-sync + parent-account
 reactive layer (household code/status, Supabase realtime push/subscribe, auth tracking) lives in its
 own `src/state/useHouseholdSync.ts` hook. The provider's imperative actions are split into
 per-domain custom hooks under `src/state/actions/` (kid-progress, day-edit, rewards, catalog,
@@ -85,13 +84,12 @@ Deep detail lives in `docs/`. Read the linked file when working in that area.
   lock gating Approvals/Profiles/Game Settings/Calendar/Advanced Settings, now account-based
   via `SignInPrompt` rather than PIN-based); the "Game Settings" dashboard (`ParentDashboard`
   component, formerly labeled "Grown ups") two-level router and its panels
-  (`GoalsPanel`/`StorePanel`/`BadgesPanel`); `ApprovalsPanel`/`CalendarPanel` reached directly from
+  (`GoalsPanel`/`StorePanel`); `ApprovalsPanel`/`CalendarPanel` reached directly from
   `AccountMenu` via `ApprovalsDrawer`/`CalendarDrawer`, plus `SettingsPanel` (including the nested
   `LogPanel`) reached via `AdvancedSettingsDrawer`; `Onboarding`'s three-way account fork (new
   family / sign in to join / kid device).
 - **Subsystems** (`docs/systems.md`) — Arcade/games hub (`src/data/games.ts`, `completeGameRound`,
-  `DAILY_GAME_WIN_CAP`); Rank ladder (`src/data/ranks.ts`, `getRank`, `useTodaySnapshot`); 71 Badges
-  (`src/data/badges.ts`, `src/state/badges.ts`, `badgeConfig`); Icon system (`src/data/icons.ts`,
+  `DAILY_GAME_WIN_CAP`); Rank ladder (`src/data/ranks.ts`, `getRank`, `useTodaySnapshot`); Icon system (`src/data/icons.ts`,
   `AppIcon`); Theming (`Settings.theme`, `src/index.css`); Time zone (`Settings.timezone`,
   `todayStr`, `src/data/timezones.ts`); Deployment (`deploy.yml`); Version display
   (`__APP_VERSION__`); PWA update (`UpdatePrompt.tsx`, `vite-plugin-pwa`).

@@ -157,7 +157,7 @@ export function useHouseholdSync({ root, state, setRoot, setState }: HouseholdSy
         };
         // Merge the arriving snapshot into the *current* local root (via refs, since this effect
         // only re-subscribes on householdCode) rather than replacing it — so id-keyed collections
-        // (goals/rewards/badges/logs) edited locally but not yet pushed survive the remote update
+        // (goals/rewards/logs) edited locally but not yet pushed survive the remote update
         // instead of being clobbered. Scalars/counters still take the remote value (last-write-wins).
         const finalRoot = mergeRoots(buildMergedRoot(rootRef.current, stateRef.current), hydratedRemote);
         mirrorSharedFields(finalRoot);

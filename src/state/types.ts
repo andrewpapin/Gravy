@@ -28,7 +28,7 @@ export type PendingPointsKind = 'goal' | 'food' | 'bonus' | 'game';
 
 // A point-earning action taken on a device with no signed-in account (a "kid-only" device
 // joined via family code only — see GravyContext's `requiresApproval`). The completion itself
-// (todayGoals/todayFoodCounts/counters/streaks/badges) applies immediately; only the points sit
+// (todayGoals/todayFoodCounts/counters/streaks) applies immediately; only the points sit
 // here, out of the live balance, until a parent approves or declines them from the Approvals
 // screen. `kind`+`itemId` is how the exact-inverse actions (decrementGoal, removeFood,
 // undoBonusItem, declineGameWin) find and cancel a still-pending award instead of touching the
@@ -52,13 +52,6 @@ export interface Counters {
   maxDayPoints: number;
   gamesPlayed: number;
   gamesWon: number;
-}
-
-export interface BadgeOverride {
-  enabled?: boolean;
-  name?: string;
-  emoji?: string;
-  icon?: string;       // registered icon key (see data/icons.ts)
 }
 
 export type Theme = 'capri' | 'classic' | 'midnight' | 'ocean' | 'bubblegum' | 'cyberpunk' | 'ranger';
@@ -116,13 +109,12 @@ export interface ActionLogEntry {
 }
 
 // Dashboard-level / destructive actions that the kid-progress actionLog deliberately excludes —
-// catalog edits, settings, badge config, profile CRUD, danger-zone resets, sync changes. Shown
+// catalog edits, settings, profile CRUD, danger-zone resets, sync changes. Shown
 // in the grown-ups-only Admin Log (Epic 8 item 6). Informational only; never undoable here.
 export type AuditLogType =
   | 'goalAdded' | 'goalUpdated' | 'goalRemoved'
   | 'rewardAdded' | 'rewardUpdated' | 'rewardRemoved'
   | 'settingChanged'
-  | 'badgeConfigChanged'
   | 'profileAdded' | 'profileUpdated' | 'profileRemoved'
   | 'resetToday' | 'resetAll'
   | 'syncEnabled' | 'syncJoined' | 'syncDisabled' | 'syncCodeChanged' | 'syncDeleted'
@@ -159,9 +151,7 @@ export interface GravyState {
   // Points earned on a kid-only device (no signed-in account) awaiting parent approval — see
   // PendingPointsAward. Per-kid, never mirrored, same as pendingRewards.
   pendingPointsAwards: PendingPointsAward[];
-  earnedBadges: string[];
   counters: Counters;
-  badgeConfig: Record<string, BadgeOverride>;
   goals: Goal[];
   rewards: Reward[];
   settings: Settings;
@@ -174,7 +164,7 @@ export interface GravyState {
   auditLog: AuditLogEntry[];
 }
 
-// One kid. Holds a complete GravyState; the shared fields (goals, rewards, badgeConfig and the
+// One kid. Holds a complete GravyState; the shared fields (goals, rewards and the
 // shared settings — see SHARED_SETTING_KEYS in defaultState.ts) are mirrored across every profile
 // so the active profile's GravyState can flow through the app unchanged.
 export interface ProfileEntry {

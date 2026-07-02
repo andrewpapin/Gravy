@@ -1,22 +1,18 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFire, faMedal, faChevronRight, faCoins, faCloudArrowUp } from '@fortawesome/free-solid-svg-icons';
+import { faFire, faChevronRight, faCoins, faCloudArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { AppIcon } from './AppIcon';
 import { useGravy } from '../state/GravyContext';
 import { useTodaySnapshot } from '../state/useTodaySnapshot';
-import { getEnabledBadgeCount } from '../state/badges';
 import { useEffect, useRef, useState } from 'react';
 
 interface StatsCardProps {
-  onOpenBadges: () => void;
   onOpenRank: () => void;
   onOpenStore?: () => void;
 }
 
-export function StatsCard({ onOpenBadges, onOpenRank, onOpenStore }: StatsCardProps) {
+export function StatsCard({ onOpenRank, onOpenStore }: StatsCardProps) {
   const { state, householdCode, syncStatus } = useGravy();
   const { rank, xpText, pct, streakAtRisk } = useTodaySnapshot();
-  const earnedCount = state.earnedBadges.length;
-  const totalBadgeCount = getEnabledBadgeCount(state);
   const syncError = !!householdCode && syncStatus === 'error';
   // The internal balance can dip below zero after a large deduction; never show negative.
   const displayPoints = Math.max(0, state.points);
@@ -76,12 +72,6 @@ export function StatsCard({ onOpenBadges, onOpenRank, onOpenStore }: StatsCardPr
                 <FontAwesomeIcon icon={faCloudArrowUp} aria-hidden="true" />
               </span>
             )}
-          </span>
-          <FontAwesomeIcon icon={faChevronRight} />
-        </button>
-        <button className="stats-badges-bar" onClick={onOpenBadges} type="button">
-          <span className="stats-badges-bar-label">
-            <FontAwesomeIcon icon={faMedal} /> {earnedCount}/{totalBadgeCount} Badges
           </span>
           <FontAwesomeIcon icon={faChevronRight} />
         </button>

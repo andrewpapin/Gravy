@@ -20,7 +20,6 @@
 import type {
   ActionLogEntry,
   AuditLogEntry,
-  BadgeOverride,
   DayLog,
   Goal,
   GravyRoot,
@@ -61,7 +60,7 @@ function mergeLog<T extends { id: string; at: number; undone?: boolean }>(local:
   return [...byId.values()].sort((a, b) => a.at - b.at);
 }
 
-// Union a string-keyed record (badgeConfig, dayLogs), `remote` winning a shared key.
+// Union a string-keyed record (dayLogs), `remote` winning a shared key.
 function mergeRecord<V>(local: Record<string, V>, remote: Record<string, V>): Record<string, V> {
   return { ...local, ...remote };
 }
@@ -77,9 +76,7 @@ export function mergeStates(local: GravyState, remote: GravyState): GravyState {
     ...remote,
     goals: mergeById<Goal>(local.goals, remote.goals),
     rewards: mergeById<Reward>(local.rewards, remote.rewards),
-    badgeConfig: mergeRecord<BadgeOverride>(local.badgeConfig, remote.badgeConfig),
     dayLogs: mergeRecord<DayLog>(local.dayLogs, remote.dayLogs),
-    earnedBadges: [...new Set([...local.earnedBadges, ...remote.earnedBadges])],
     actionLog: mergeLog<ActionLogEntry>(local.actionLog, remote.actionLog),
     auditLog: mergeLog<AuditLogEntry>(local.auditLog ?? [], remote.auditLog ?? []),
   };

@@ -1,6 +1,6 @@
 # Subsystems
 
-Deep reference for games, ranks, badges, icons, theming, time zone, deployment, versioning, and the
+Deep reference for games, ranks, icons, theming, time zone, deployment, versioning, and the
 PWA update mechanism. CLAUDE.md links here; read the relevant section when touching those areas.
 
 ## Arcade (Games Hub)
@@ -34,30 +34,17 @@ day streak, and mega streak (`state.foodStreak`/`goalStreak`/`streak`/`megaStrea
 rank list. `StatsCard` shows only the rank icon/name/XP bar plus the conditional streak-at-risk
 nudge; the (i) info button (`onOpenRank`) is the only entry point to these stats.
 
-## Badge System
-
-71 unlockable badges defined in `src/data/badges.ts` across 7 groups (Food, Chores, Points, Streaks,
-Store, Combos, Games), evaluated in `src/state/badges.ts`. Badges are triggered by:
-- First-time events (`first_food`, `first_chore`, `first_reward`, `first_game`).
-- Cumulative counter thresholds (`fruit:N`, `veggie:N`, `pts:N`, `pts_day:N`, `streak:N`,
-  `chore_count:N`, `combo:N`, `games_won:N`, etc. — see the trigger-type comment atop `badges.ts`).
-
-`findNewlyEarnedBadges()` is called after each state-mutating action in `GravyContext`. Parents can
-override a badge's name/emoji/icon/visibility per-id via `badgeConfig` in state; `getBadgeDisplay()`
-merges the override onto the `BADGE_MASTER` definition. `badgeConfig` (like `goals`/`rewards`) is a
-shared field, mirrored across every profile in a household.
-
 ## Icon System
 
-Every visual entity (`Goal`, `Reward`, `BadgeDef`/`BadgeOverride`, `Rank`, `GameDef`, `Food`) carries
+Every visual entity (`Goal`, `Reward`, `Rank`, `GameDef`, `Food`) carries
 **both** an `emoji` string (legacy fallback) and an `icon`/`iconKey` string. `src/data/icons.ts` is
 the single source of truth mapping string keys to imported FontAwesome `IconDefinition`s —
 FontAwesome tree-shakes, so any icon used anywhere must be explicitly imported and added to the
 `ICONS` map there. `<AppIcon iconKey emojiFallback>` (`src/components/AppIcon.tsx`) renders the
 FontAwesome icon for a known key, or falls back to the raw emoji string for unknown/absent keys —
-keeping old synced data rendering correctly. When adding a new goal/reward/badge/game in code, set
+keeping old synced data rendering correctly. When adding a new goal/reward/game in code, set
 `icon` to a real key from `icons.ts`. `IconPicker`/`ColorPicker` (`src/components/`) are the generic
-tap-to-open grid pickers used wherever a parent customizes an icon (goals/rewards/badges) or a
+tap-to-open grid pickers used wherever a parent customizes an icon (goals/rewards) or a
 profile's avatar icon and colors (`avatarIconColor`/`avatarBgColor`).
 
 ## Theming
@@ -99,7 +86,7 @@ This setting is what "today" means for the whole household, not each device's ow
 fields — so `applyDayRollover()` and `backfillStreaksFromLogs()` take/derive their zone from
 `state.settings.timezone` and walk dates with a UTC-anchored `addDaysToDateStr()` helper, never
 local-`Date` mutation. The effect: every device in a household agrees on when a day rolls over and
-what "today" is for streaks, badges, and the calendar, regardless of each device's clock.
+what "today" is for streaks and the calendar, regardless of each device's clock.
 `isValidTimezone()` (`src/data/timezones.ts`) guards both `saveSetting()` (so a bad value is never
 written) and `sanitizeState()`/`hydrateState()` (so a corrupt or pre-feature save falls back to the
 default rather than throwing inside `Intl.DateTimeFormat`).

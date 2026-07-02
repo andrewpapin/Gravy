@@ -23,11 +23,11 @@ PWA/infra/accessibility, security/privacy) and the full PR history.
 ## Snapshot — what's already built
 
 Goals (daily/bonus/multi-step) + streaks, a reward store with parent approval,
-71 badges across 7 groups, a 24-tier rank ladder, 4 educational mini-games
+a 24-tier rank ladder, 4 educational mini-games
 (Hangman, Math Facts, Word Scramble, Memory Match), multi-kid profiles per
 household, 5 visual themes, full-screen onboarding, mandatory parent accounts
 (Supabase Auth) as the sole gate for the parent dashboard
-(Approvals/Goals/Calendar/Store/Badges/Admin-Log — no PIN), and real-time Supabase
+(Approvals/Goals/Calendar/Store/Admin-Log — no PIN), and real-time Supabase
 sync via a 6-character household code, bundled into account creation. This is a mature, feature-complete product
 surface — the gaps below are about durability (security, tests, accessibility,
 process) and the next wave of capability (cloud-first sync, native app), not
@@ -216,7 +216,7 @@ opinionated changes that need a mockup before committing.
   "use the space differently" win. Candidates: a 2-up row pairing the Games
   card with a compact stat, or Daily Goals / Bonus Points side-by-side on
   wider phones (the `@media (min-width: 768px)` block in `src/index.css`
-  already does this kind of widening for the food/store/badge grids). Needs a
+  already does this kind of widening for the food/store grids). Needs a
   mockup to compare against the current flow before building. *(P2, M.)*
 - **Modernize the shadow treatment.** The hard `Npx Npx 0` offset shadows are
   the heaviest part of the neo-brutalist look. Options: drop card shadows to

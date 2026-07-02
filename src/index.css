@@ -26,7 +26,7 @@
   /* Border widths */
   --border-width-xl: 2px;    /* was 3px   — cards, primary buttons, major tiles, modals */
   --border-width-lg: 1.5px;  /* was 2.5px — pills, secondary buttons, inputs, menu rows */
-  --border-width-md: 1.25px; /* was 2px   — badges, small icons, progress bars */
+  --border-width-md: 1.25px; /* was 2px   — small icons, progress bars, pills */
   --border-width-sm: 1px;    /* was 1.5px — minor indicators */
 
   /* Shadows — tightened one notch (4→3 / 5→4) so the hard offset reads less
@@ -151,13 +151,11 @@
    used as a literal background fill paired with hardcoded white text — restore a
    dark ink there, same fix the old "dark" theme needed for the same reason. */
 :root[data-theme="midnight"] .btn-purple,
-:root[data-theme="midnight"] .btn-dark,
-:root[data-theme="midnight"] .badge-info-btn:active {
+:root[data-theme="midnight"] .btn-dark {
   color: #0f0f13;
 }
 :root[data-theme="cyberpunk"] .btn-purple,
-:root[data-theme="cyberpunk"] .btn-dark,
-:root[data-theme="cyberpunk"] .badge-info-btn:active {
+:root[data-theme="cyberpunk"] .btn-dark {
   color: #000000;
 }
 /* cyberpunk uniquely pairs a light --bg with a dark --card (every other theme
@@ -178,7 +176,7 @@
 :root[data-theme="cyberpunk"] .empty-state--bare {
   color: #000000;
 }
-:root[data-theme="cyberpunk"] .pbadge-toggle-track::after {
+:root[data-theme="cyberpunk"] .goal-type-toggle-track::after {
   background: #000000;
 }
 
@@ -193,7 +191,6 @@
 :root[data-theme="midnight"] .tile-check-badge,
 :root[data-theme="midnight"] .pts-badge:not(.negative),
 :root[data-theme="midnight"] .store-cost:not(.unaffordable),
-:root[data-theme="midnight"] .badge-tile.unlocked .badge-info-btn,
 :root[data-theme="midnight"] .account-menu-option-icon,
 :root[data-theme="midnight"] .pin-key.delete,
 :root[data-theme="midnight"] .household-code-display,
@@ -211,7 +208,6 @@
 :root[data-theme="cyberpunk"] .tile-check-badge,
 :root[data-theme="cyberpunk"] .pts-badge:not(.negative),
 :root[data-theme="cyberpunk"] .store-cost:not(.unaffordable),
-:root[data-theme="cyberpunk"] .badge-tile.unlocked .badge-info-btn,
 :root[data-theme="cyberpunk"] .account-menu-option-icon,
 :root[data-theme="cyberpunk"] .pin-key.delete,
 :root[data-theme="cyberpunk"] .household-code-display,
@@ -235,14 +231,12 @@
 :root[data-theme="cyberpunk"] .trophy-pill,
 :root[data-theme="cyberpunk"] .pending-item-emoji,
 :root[data-theme="cyberpunk"] .pending-item-name,
-:root[data-theme="cyberpunk"] .badge-info-btn,
-:root[data-theme="cyberpunk"] .badge-popup-name,
-:root[data-theme="cyberpunk"] .badge-popup-desc,
+:root[data-theme="cyberpunk"] .confirm-dialog-title,
+:root[data-theme="cyberpunk"] .confirm-dialog-message,
 :root[data-theme="cyberpunk"] .menu-card-icon,
 :root[data-theme="cyberpunk"] .icon-picker-trigger,
 :root[data-theme="cyberpunk"] .icon-picker-cell:not(.active),
 :root[data-theme="cyberpunk"] .settings-row input,
-:root[data-theme="cyberpunk"] .pbadge-name-input,
 :root[data-theme="cyberpunk"] .store-cost.unaffordable,
 :root[data-theme="cyberpunk"] .games-cap-banner:not(.maxed),
 :root[data-theme="cyberpunk"] .scramble-answer-slot:not(.filled) {
@@ -511,24 +505,6 @@ button.calendar-day {
   cursor: pointer;
 }
 .stats-rank:active { transform: scale(0.98); }
-.stats-badges-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-  background: var(--coral);
-  border: none;
-  padding: 10px 16px;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 0.8rem;
-  color: white;
-  cursor: pointer;
-}
-.stats-badges-bar-label { display: inline-flex; align-items: center; gap: 8px; }
-.stats-badges-bar:active { transform: translate(1px, 1px); }
 
 /* ===== HOME SCREEN: GAMES CARD ===== */
 .games-card {
@@ -1179,83 +1155,6 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   border: var(--border-width-sm) solid var(--dark);
 }
 
-/* ===== BADGES SCREEN ===== */
-.badges-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-.badge-tile {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 16px 8px;
-  text-align: center;
-  box-shadow: var(--shadow);
-  border: var(--border-width-xl) solid var(--dark);
-  position: relative;
-}
-.badge-tile.locked { opacity: 0.45; filter: grayscale(0.6); }
-.badge-icon { font-size: 2rem; display: block; margin: 0 auto 6px; color: var(--coral); }
-.badge-tile.locked .badge-icon { color: var(--muted); }
-.badge-name { font-size: var(--text-xs); font-weight: 800; color: var(--text); }
-.badge-tile.unlocked { border-color: var(--yellow); }
-.badge-progress {
-  margin-top: 8px;
-  height: 6px;
-  border-radius: 4px;
-  background: var(--cream);
-  border: var(--border-width-md) solid var(--dark);
-  overflow: hidden;
-}
-.badge-progress-fill {
-  height: 100%;
-  background: var(--sage);
-  border-radius: 2px;
-}
-.badge-progress-label {
-  margin-top: 3px;
-  font-size: var(--text-2xs);
-  font-weight: 800;
-  color: var(--muted);
-}
-.badge-tile.unlocked::after {
-  content: '★';
-  position: absolute;
-  top: -10px; right: -2px;
-  color: var(--yellow);
-  font-size: 1.2rem;
-  text-shadow: 0 0 0 var(--dark), 1px 1px 0 var(--dark), -1px -1px 0 var(--dark), 1px -1px 0 var(--dark), -1px 1px 0 var(--dark);
-}
-.badge-info-btn {
-  position: absolute;
-  top: 0; left: 0;
-  /* Visual circle */
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  background: var(--cream);
-  border: var(--border-width-md) solid var(--dark);
-  cursor: pointer;
-  font-size: var(--text-xs);
-  font-weight: 900;
-  color: var(--dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  padding: 0;
-  transition: background var(--transition), color var(--transition);
-  z-index: 2;
-  /* Expand hit area to 44×44 without affecting layout */
-  margin: 4px 0 0 4px;
-}
-.badge-info-btn::before {
-  content: '';
-  position: absolute;
-  inset: -11px;
-}
-.badge-tile.unlocked .badge-info-btn { background: var(--yellow); color: var(--dark); }
-.badge-info-btn:active { background: var(--dark); color: white; }
-
 /* ===== RANK LADDER SCREEN ===== */
 .rank-stats-summary {
   display: flex;
@@ -1762,8 +1661,8 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   gap: var(--space-sm);
 }
 
-/* Badge popup */
-.badge-popup-overlay {
+/* Confirm dialog */
+.confirm-dialog-overlay {
   position: fixed;
   inset: 0;
   z-index: 650;
@@ -1777,8 +1676,8 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   pointer-events: none;
   transition: opacity var(--transition-slow);
 }
-.badge-popup-overlay.show { opacity: 1; pointer-events: all; }
-.badge-popup {
+.confirm-dialog-overlay.show { opacity: 1; pointer-events: all; }
+.confirm-dialog {
   background: var(--cream);
   border-radius: var(--radius);
   padding: 24px 20px 20px;
@@ -1791,46 +1690,22 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   transition: transform var(--transition-slow);
   position: relative;
 }
-.badge-popup-overlay.show .badge-popup { transform: translateY(0); }
-.badge-popup-icon { font-size: 3rem; display: block; margin-bottom: 8px; color: var(--coral); }
-.badge-popup-name { font-size: 1.1rem; font-weight: 900; color: var(--dark); margin-bottom: 6px; }
-.badge-popup-desc {
+.confirm-dialog-overlay.show .confirm-dialog { transform: translateY(0); }
+.confirm-dialog-icon { font-size: 3rem; display: block; margin-bottom: 8px; color: var(--coral); }
+.confirm-dialog-title { font-size: 1.1rem; font-weight: 900; color: var(--dark); margin-bottom: 6px; }
+.confirm-dialog-message {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--muted);
   line-height: 1.4;
   margin-bottom: 16px;
 }
-.badge-popup-status {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 900;
-  padding: 5px 14px;
-  border-radius: 50px;
-  border: var(--border-width-md) solid var(--dark);
-}
-.badge-popup-status.earned { background: var(--success); color: white; }
-.badge-popup-status.locked { background: var(--card); color: var(--muted); }
 .confirm-dialog-btns {
   display: flex;
   gap: 10px;
   margin-top: 4px;
 }
 .confirm-dialog-btns .btn { flex: 1; width: auto; }
-.badge-popup-close {
-  position: absolute;
-  top: 12px; right: 12px;
-  background: var(--card);
-  border: var(--border-width-md) solid var(--dark);
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  font-size: 0.8rem;
-  cursor: pointer;
-  color: var(--dark);
-  font-family: var(--font-display);
-  font-weight: 900;
-  display: flex; align-items: center; justify-content: center;
-}
 .account-menu { text-align: left; }
 .account-menu-option {
   display: flex;
@@ -2478,48 +2353,15 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
 .flex-between { display: flex; align-items: center; justify-content: space-between; }
 .gap-8 { gap: 8px; }
 
-/* ===== PARENT BADGE LIST ===== */
-.pbadge-row {
-  background: var(--card);
-  border-radius: var(--radius-sm);
-  padding: var(--space-sm) var(--space-md);
-  margin-bottom: var(--space-sm);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border: var(--border-width-lg) solid var(--dark);
-  box-shadow: 3px 3px 0 var(--dark);
-  transition: opacity 0.2s;
-}
-.pbadge-row.disabled-row { opacity: 0.5; }
-.pbadge-name-input {
-  flex: 1;
-  font-size: 0.8rem;
-  font-weight: 800;
-  border: var(--border-width-md) solid var(--dark);
-  border-radius: 10px;
-  padding: 6px 10px;
-  background: var(--cream);
-  font-family: var(--font-display);
-  color: var(--text);
-  min-width: 0;
-}
-.pbadge-name-input:focus { border-color: var(--coral); outline: none; }
-.pbadge-desc {
-  font-size: 0.65rem;
-  color: var(--muted);
-  font-weight: 600;
-  margin-top: 3px;
-  line-height: 1.3;
-}
-.pbadge-toggle {
+/* ===== GOAL TYPE TOGGLE (Daily Goal / Bonus Points switch, reused in GoalsPanel) ===== */
+.goal-type-toggle {
   position: relative;
   width: 40px;
   height: 22px;
   flex-shrink: 0;
 }
-.pbadge-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-.pbadge-toggle-track {
+.goal-type-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.goal-type-toggle-track {
   position: absolute;
   inset: 0;
   background: var(--cream);
@@ -2528,7 +2370,7 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   cursor: pointer;
   transition: background var(--transition-slow);
 }
-.pbadge-toggle-track::after {
+.goal-type-toggle-track::after {
   content: '';
   position: absolute;
   top: 1px; left: 1px;
@@ -2537,30 +2379,8 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   background: var(--dark);
   transition: transform var(--transition-slow);
 }
-.pbadge-toggle input:checked + .pbadge-toggle-track { background: var(--sage); }
-.pbadge-toggle input:checked + .pbadge-toggle-track::after { transform: translateX(18px); background: white; }
-.group-pill {
-  background: var(--card);
-  border: var(--border-width-md) solid var(--dark);
-  border-radius: 50px;
-  padding: 5px 12px;
-  font-size: 0.68rem;
-  font-weight: 900;
-  cursor: pointer;
-  color: var(--muted);
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: all 0.15s;
-}
-.group-pill.active { background: var(--yellow); color: var(--dark); }
-.pbadge-earned-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--success);
-  flex-shrink: 0;
-}
-.pbadge-earned-dot.unearned { background: var(--cream); border: 1px solid var(--muted); }
+.goal-type-toggle input:checked + .goal-type-toggle-track { background: var(--sage); }
+.goal-type-toggle input:checked + .goal-type-toggle-track::after { transform: translateX(18px); background: white; }
 
 
 /* ===== TABLET / IPAD (768px+) ===== */
@@ -2578,10 +2398,6 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   }
   .store-grid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-  .badges-grid {
-    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
   }
   .games-grid {
