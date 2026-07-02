@@ -106,6 +106,15 @@ for a device that's offline at edit time.)*
   real RLS predicates, so Realtime is authenticated per-household instead of relying on a
   shared anon key with table-wide read access. Mechanical once accounts/membership exist,
   but every RPC and the `subscribeToHousehold` call site need updating together. *(P1, M.)*
+- **Stop embedding the parent's email in the synced audit log.** A fresh audit
+  (`AUDIT_REPORT.md`, see Epic 13) found `appendAuditLog` (`src/state/auditLog.ts:16-19`)
+  stamps `actorLabel` with the signed-in parent's email (sourced from
+  `useHouseholdSync.ts:77`), which lives in `state.auditLog` — part of the JSONB blob
+  exposed by the open SELECT policy above. This directly contradicts `DATA_HANDLING.md`'s
+  claim that email never leaves `auth.users`. Independent of the larger RLS migration above
+  (which needs a Realtime redesign and stays deliberately deferred): store `actorUserId`
+  only in the synced log and resolve the display label client-side from the locally-known
+  signed-in account. Small, live-risk, and doesn't need to wait on the RLS item. *(P0, S.)*
 - **Account-level data export.** A parent can request a structured export of everything
   tied to their account. Doesn't exist as a concept today (no account to scope it to);
   becomes a real expectation once accounts exist, and is the easy half of COPPA's
@@ -219,6 +228,124 @@ opinionated changes that need a mockup before committing.
   reviewed as a deliberate visual-direction decision rather than a tweak.
   *(P2, S–M.)*
 
+## Epic 13 — Engineering & Security Audit (July 2026)
+
+*(Grounded in a fresh, independent codebase audit — `AUDIT_REPORT.md` — covering bugs,
+architecture, code quality, performance, security, accessibility, testing, DX, dependencies,
+and scalability. The single highest-severity finding from that audit — the parent's email
+leaking via the synced audit log — is filed under Epic 9 above since it's a direct extension
+of that epic's existing RLS item. Everything else from the audit lands here.)*
+
+### Security
+
+- **Client-side-only parent gate has no server-mirrored authorization check.**
+  `isGrownUpUnlocked` (`src/state/auth.ts:114-116`) is a pure rendering predicate; the
+  catalog mutation functions it gates (`src/state/actions/useCatalogActions.ts`) have no
+  authorization check of their own, and `gravy_upsert_household_state`'s existing-row branch
+  is anon-writable for an already-claimed household by design (kid-mode sync without an
+  account). A household member with DevTools access could bypass the parent gate entirely
+  for their own household's data — documented as an accepted tradeoff in
+  `docs/persistence-and-sync.md`. This item is to get explicit sign-off on that threat model,
+  or scope the RPC to reject settings-shaped payloads from non-members. *(P2, decision, or S
+  if scoping the RPC.)*
+- **Hardcoded Supabase URL/key, no `.env` convention.** `src/lib/supabaseClient.ts:3-4` —
+  not a live secret (publishable-key-by-design) but there's no way to point at a
+  staging project without a code change. *(P2, S.)*
+- **No CSP meta tag.** `index.html` — defense-in-depth only, no injection sink found. *(P2, S.)*
+- **`@capacitor/core` misplaced in `dependencies`.** Never imported in `src/`; belongs in
+  `devDependencies` alongside its siblings. *(P2, S.)*
+
+### Testing & Reliability
+
+- **`verify_gravy.mjs` is broken against the current app.** Asserts against a removed
+  PIN-unlock flow (`.pin-key`/`.pin-dot`) and nonexistent `.nav-btn`/`.week-strip-header`
+  selectors — would fail immediately if run, giving false confidence that a working smoke
+  test exists. Not wired into CI. *(P1, S to update selectors for the current sign-in flow;
+  the long-term successor is Epic 10's "device-matrix testing" item.)*
+- **Zero component/UI-level automated test coverage.** `vitest.config.ts` only covers pure
+  logic under `src/state/`; no `@testing-library/react`/`jsdom`, no render/interaction
+  tests, `GravyContext`'s actual wiring is untested. *(P2, M — start with `GravyProvider`
+  wiring plus one or two panels rather than full coverage.)*
+- **Single global `ErrorBoundary`.** `src/App.tsx:27-50` wraps the entire app; a bug in one
+  drawer/mini-game blanks the whole UI instead of isolating failure. *(P2, S–M.)*
+
+### Developer Experience
+
+- **TypeScript strict mode is not actually enabled**, despite the now-stale
+  `CODE_REVIEW.md` claiming it is — none of the three tsconfig files set `"strict": true`.
+  *(P1, S–M — likely a contained lift given the code already appears written in a strict
+  style by convention.)*
+- **Stale prior audit doc left unlabeled.** `/CODE_REVIEW.md` describes a PIN-unlock system
+  and badge system both fully removed since it was written (Epics 8, 12); its findings on
+  those subsystems are moot and it could mislead a new contributor. *(P1, S — label as
+  historical/archive, don't delete the history.)*
+
+### Architecture, Performance & Code Quality
+
+- **`GravyContext`'s value is unmemoized and unsliced.** `src/state/GravyContext.tsx:325-348`
+  — every `useGravy()` consumer re-renders on any state change (a toast fading re-renders the
+  whole tree); zero components anywhere use `React.memo`. Low pain today at this app's scale,
+  but the structural root cause worth fixing before state/screen count grows further. *(P2, M.)*
+- **`GoalsPanel`/`StorePanel` duplicate ~80 lines of CRUD/inline-edit scaffolding.**
+  `src/components/parent/GoalsPanel.tsx` vs `StorePanel.tsx` — same edit-state shape and
+  save/cancel handlers, copy-pasted rather than shared; a validation fix to one won't
+  propagate to the other. *(P2, M — extract a shared `useEditableList` hook.)*
+- **`Onboarding.tsx` (306 lines, largest component) models its 6-phase wizard as flat
+  sibling `useState`s** with a hand-rolled back-navigation if/else chain (`handleBack`,
+  lines 125-141) that has to independently know every phase's provenance. *(P2, M —
+  candidate for `useReducer`.)*
+- **`AppShell` tracks overlay visibility via ten independent booleans**
+  (`src/App.tsx:53-62`) rather than one discriminated-union `activeOverlay` state; permits
+  two overlays open at once in principle and adds a boolean per future drawer. *(P2, S.)*
+- **Duplicated "menu/detail router + header-sync" pattern**, implemented identically three
+  times (`ParentDashboard.tsx`, `SettingsPanel.tsx`, partially `CalendarPanel.tsx`), and a
+  duplicated `{title, onBack}` header-state shape in three drawer components. *(P2, S —
+  extract `useSubPanelRouter`/`useDrawerHeader`.)*
+- **Theme set hand-encoded in three unsynchronized places** (CSS `:root[data-theme]`
+  blocks, `THEME_COLORS` in `GravyContext.tsx:35-43`, `THEME_OPTIONS` in
+  `ProfilesManager.tsx:12-20`) — nothing enforces all three stay in sync when a theme is
+  added. *(P2, S.)*
+- **Icon registry requires touching three places per pickable icon**
+  (`src/data/icons.ts`) with nothing enforcing consistency. *(P2, S.)*
+- **`LogPanel` re-sorts the merged action/audit log on every render**, unbounded within the
+  existing 500/300-entry caps. *(P2, S — memoize.)*
+- **No baseline SQL migration for `households`.** `supabase/migrations/` has no
+  `CREATE TABLE`/init migration — schema isn't reconstructable from the repo alone. *(P2, S.)*
+
+### Accessibility
+
+- **No `aria-live` region on toasts.** `src/components/ToastContainer.tsx:6-15` —
+  point-award/error/sync-status toasts are silent to screen readers, including the
+  storage-failure warning. *(P1, S.)*
+- **No automated a11y linting.** `eslint-plugin-jsx-a11y` isn't wired into
+  `eslint.config.js`; existing good patterns rely on discipline, not tooling. *(P1, S.)*
+- **Several inputs identified only by placeholder text, no `<label>`.** `GoalsPanel.tsx`,
+  `StorePanel.tsx`, `PointsPanel.tsx`, `ProfilesManager.tsx:133-140`. *(P2, S.)*
+- **Dark-theme CSS overrides are a growing, manually-maintained list.**
+  `src/index.css:153-215+` — `midnight`/`cyberpunk` need per-component overrides beyond the
+  token swap; nothing enforces a new component gets one added. No contrast failure
+  confirmed (needs visual verification), flagged as a standing risk. *(P2, ongoing
+  discipline, not a single fix.)*
+
+### Bugs
+
+- **`ProfilesManager` double-writes on name edit.** `src/components/ProfilesManager.tsx:138-139`
+  — `updateProfile` fires on every keystroke (`onChange`) and again on `onBlur`. *(P2, S —
+  buffer locally, commit on blur only.)*
+- **`UpdatePrompt` force-reloads without an actual prompt**, despite
+  `registerType: 'prompt'`. `src/components/UpdatePrompt.tsx:22-24` — can reload the page out
+  from under an active interaction. *(P2, S — either switch to `registerType: 'autoUpdate'`
+  to match behavior, or gate the reload on real user confirmation.)*
+- **Inconsistent `useCallback` dependency arrays** in
+  `src/state/actions/useKidProgressActions.ts` — not a live bug (omitted deps are stable
+  imports) but a maintenance trap if one of those imports later becomes a prop/state.
+  *(P2, S.)*
+
+### Dependencies
+
+- **`@playwright/test` present with no `playwright.config.ts`/script**, only reachable via
+  the broken `verify_gravy.mjs` above. *(P2, S — resolve alongside that item.)*
+
 ## Do these next (top 5, in order)
 
 The original top-5 (PIN/recovery hashing, the PR #92 decision, the lint gate,
@@ -229,7 +356,18 @@ in `BACKLOG_DONE.md`. Two more of the prior top-5 are now done as well: the
 (`src/state/merge.ts`, Epic 9) and the **Capacitor wrap spike** (Epic 10;
 `docs/capacitor.md`).
 
-**Current focus: get a first build into internal TestFlight.** Push notifications
+**Reprioritized after the July 2026 audit (Epic 13):** one finding from that audit —
+a live data-exposure bug, cheap to fix — now outranks everything else, including the
+TestFlight path. Do it first, standalone, before resuming the TestFlight critical path:
+
+0. **Stop embedding the parent's email in the synced audit log** (Epic 9, P0/S) — a
+   fresh audit found the signed-in parent's email is being written into `state.auditLog`,
+   which is exposed by the already-known-open `households` SELECT policy
+   (`src/state/auditLog.ts:16-19`). Directly contradicts `DATA_HANDLING.md`. One small,
+   self-contained change (store `actorUserId` only, resolve the label client-side) — do
+   this before anything else below, it doesn't block or depend on the larger RLS migration.
+
+**Then, current focus: get a first build into internal TestFlight.** Push notifications
 were the prior #1, but a TestFlight build needs no push — it's a fast-follow once
 on-device, not a blocker. The first two critical-path items are now done:
 **disabling the PWA service worker under `--mode capacitor`** and **native app
@@ -253,6 +391,20 @@ going on-device:
    today beyond the realtime subscription, so a device offline at edit time just
    lags until reconnect; pairs with the now-done collection/record-level merge
    (`src/state/merge.ts`) so replay lands queued edits safely.
+
+**Audit fast-follows (Epic 13) — parallel track, none block the TestFlight path above,**
+each is small enough to slot into any gap in the native work:
+
+- Fix or explicitly deprecate **`verify_gravy.mjs`** (P1/S) and label **`CODE_REVIEW.md`**
+  as historical (P1/S) — both are currently "false confidence" artifacts.
+- Enable **TypeScript strict mode** (P1/S–M) while the codebase is still small enough for
+  it to be a contained lift.
+- Add **`aria-live` to toasts** and wire up **`eslint-plugin-jsx-a11y`** (P1/S each) —
+  cheap, and accessibility carries extra weight for an app built for kids.
+- Everything else in Epic 13 (duplicated CRUD/router extraction, `GravyContext`
+  memoization, `Onboarding.tsx` → `useReducer`, component test infra, and the remaining
+  P2 items) is real but not urgent — pick up opportunistically once the items above and
+  the TestFlight path are moving.
 
 Holding just off the top-5 but still near-term: gated on *external* TestFlight
 rather than internal, the **COPPA signup review** (Epic 9, P0 once real-account
