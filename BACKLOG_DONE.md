@@ -158,6 +158,14 @@ work lives in `BACKLOG.md`.
   (vs. dropping the plugin) keeps the `virtual:pwa-register` modules resolvable as no-ops so
   `UpdatePrompt`/`useRegisterSW` still build; the Pages/PWA build keeps its SW. `docs/capacitor.md`.
   First item on the "Path to first TestFlight build" critical path.
+- **Native app icon + splash, `ios/` graduated into the repo** — generated
+  `AppIcon.appiconset`/`Splash.imageset` from the existing PWA source art (`public/pwa-512x512.png`
+  for the icon, `public/maskable-icon-512x512.png` — already safe-zone-padded — for the splash);
+  no higher-res source logo exists yet, so both are upscaled from 512px (acceptable placeholder
+  quality, easy to regenerate once a bigger source exists). `ios/` is now tracked in git (its own
+  `ios/.gitignore` still excludes the synced web bundle, Pods, DerivedData, generated config);
+  `android/` stays gitignored. `docs/capacitor.md`. Second item on the "Path to first TestFlight
+  build" critical path.
 
 ## Epic 12 — Badge System Removal
 
