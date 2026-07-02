@@ -28,16 +28,16 @@ export function ConfirmDialog({
   const popupRef = useFocusTrap<HTMLDivElement>(open, onCancel);
   return (
     <div
-      className={`badge-popup-overlay ${open ? 'show' : ''}`}
+      className={`confirm-dialog-overlay ${open ? 'show' : ''}`}
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel();
       }}
     >
       {open && (
-        <div className="badge-popup" ref={popupRef} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1}>
-          <span className="badge-popup-icon"><FontAwesomeIcon icon={icon} /></span>
-          <div className="badge-popup-name">{title}</div>
-          <div className="badge-popup-desc">{message}</div>
+        <div className="confirm-dialog" ref={popupRef} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1}>
+          <span className="confirm-dialog-icon"><FontAwesomeIcon icon={icon} /></span>
+          <div className="confirm-dialog-title">{title}</div>
+          <div className="confirm-dialog-message">{message}</div>
           <div className="confirm-dialog-btns">
             <button className="btn btn-sm btn-ghost" onClick={onCancel}>
               {cancelLabel}

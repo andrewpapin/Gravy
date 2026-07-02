@@ -9,20 +9,20 @@ there is no router, just boolean open/close state per drawer.
 
 ## Kid view (`src/components/`)
 
-`HomeScreen` (rank/streak/badge stats card, Arcade hub card, food tray, daily goals, bonus items)
-plus drawers for the reward store, badges, the Arcade (games), and the rank ladder. The user-facing
+`HomeScreen` (rank/streak stats card, Arcade hub card, food tray, daily goals, bonus items)
+plus drawers for the reward store, the Arcade (games), and the rank ladder. The user-facing
 label for the games hub is "Arcade" (`GamesCard`, `GamesScreen`) — kept distinct from the parent
 dashboard's "Game Settings" label (see below) so the two aren't confused; the underlying
 component/file names (`GamesCard`, `GamesScreen`, `onOpenGames`, `gamesOpen`, `src/data/games.ts`)
-are unchanged. The coin balance and Reward Store entry point live in `StatsCard`'s coins row (the
-top row of the stacked rank/badges card), not in `TopBar` — `TopBar` holds the avatar, greeting, a
+are unchanged. The coin balance and Reward Store entry point live in `StatsCard`'s coins row, not in
+`TopBar` — `TopBar` holds the avatar, greeting, a
 bell icon, and the grown-up menu (hamburger) icon. There is no kid-facing calendar/history icon or
 screen; the only calendar surface is the PIN-gated parent `CalendarPanel` (see below), reached via
 `AccountMenu` → "Calendar".
 
 The bell icon opens `ApprovalsDrawer` directly — Approvals is no longer an `AccountMenu` item (it
-used to be the first one); it's its own top-level entry point next to the hamburger, badged via the
-same `nav-badge` CSS class with `data-count={pendingRewards.length + pendingPointsAwards.length}`.
+used to be the first one); it's its own top-level entry point next to the hamburger, marked with a
+count pill via the `nav-badge` CSS class with `data-count={pendingRewards.length + pendingPointsAwards.length}`.
 Since it's no longer reached only through an already-unlocked `AccountMenu`, `ApprovalsDrawer` gates
 itself: it reads `grownUpUnlocked` directly and renders `SignInPrompt` (title "Sign In") in place of
 `ApprovalsPanel` whenever locked, falling back to the panel on its own once sign-in flips
@@ -55,7 +55,7 @@ open (mirroring the old `pinNonce` idea) so a half-finished sign-in attempt neve
   read-only quick-switch list (tap → `switchProfile(id)`).
 - **Game Settings** (formerly "Grown ups") — opens `GrownUpsDrawer` → `ParentDashboard` directly.
   Renamed because, with Approvals/Calendar/Advanced Settings all graduated to top-level items (see
-  below and this list), all that's left inside is gamification config (Goals/Store/Badges) — "Game
+  below and this list), all that's left inside is gamification config (Goals/Store) — "Game
   Settings" describes that scope more accurately than the old catch-all "Grown ups" label.
 - **Calendar** — opens `CalendarDrawer` (`src/components/parent/CalendarDrawer.tsx`), a thin
   `Modal` wrapper around `CalendarPanel` (view/edit past days) — a first-class `AccountMenu` item,
@@ -100,15 +100,14 @@ header both read "Game Settings"); the component/file names (`ParentDashboard`, 
 `RootMenu`) are unchanged — only user-facing copy was renamed, since those symbols also represent
 the PIN-gated access tier shared by every parent-only feature, not just this dashboard.
 
-`ParentDashboard` is a two-level router: a local `root` state (`'menu' | 'goals' | 'store' |
-'badges'`). At `'menu'` it renders `RootMenu` (a card list, not tabs); picking a card drills into
+`ParentDashboard` is a two-level router: a local `root` state (`'menu' | 'goals' | 'store'`).
+At `'menu'` it renders `RootMenu` (a card list, not tabs); picking a card drills into
 one panel with a back button:
 
 - `GoalsPanel` — goal/bonus-item CRUD, and (nested at the bottom) `PointsPanel` for the per-action
   point values (`foodPts`, `bonusPts`, `gamePts` — the latter's section is labeled "Arcade" to match
   the kid-facing hub name).
 - `StorePanel` — reward CRUD.
-- `BadgesPanel` — customize badge name/emoji/icon/visibility.
 
 `ApprovalsPanel` (approve/decline pending points and pending reward requests) is no longer nested
 here — it's reached directly from the `TopBar` bell icon via the standalone, self-gating

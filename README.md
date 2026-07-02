@@ -6,14 +6,14 @@ persists to `localStorage`, with optional real-time cloud sync across
 devices via Supabase.
 
 Kids log food groups eaten and complete daily goals to earn points, climb a
-24-tier rank ladder, build streaks, play mini-games, and unlock badges.
+24-tier rank ladder, build streaks, and play mini-games.
 Points can be redeemed for rewards from a parent-managed store, with a
 parent menu (approvals and configuration) locked behind a required parent
 account — there's no PIN.
 
 ## Features
 
-- **Home** — rank progress, streak/badge stats, food tray tracker, daily
+- **Home** — rank progress, streak stats, food tray tracker, daily
   goals (including multi-step goals), and repeatable bonus-point items
 - **Arcade** — Hangman, Math Facts, Word Scramble, and Memory Match;
   winning earns points up to a daily cap so kids can't farm easy rounds
@@ -25,18 +25,16 @@ account — there's no PIN.
   items/games still complete live, but the points sit pending until a
   parent approves or declines them from Approvals; a signed-in parent's
   own device posts points immediately, same as before
-- **Badges** — 71 unlockable badges across food, chores, points, streaks,
-  store, combo, and games categories
 - **Multi-profile households** — multiple kid profiles per device, each
-  with independent progress/streaks but shared goals, rewards, badge
-  config, and points settings; switch between them from a parent
+  with independent progress/streaks but shared goals, rewards,
+  and points settings; switch between them from a parent
   account-gated quick-switch list
-- **Approvals** — a bell icon next to the menu (hamburger) icon, badged
-  with the number waiting; approve or decline pending points and reward
+- **Approvals** — a bell icon next to the menu (hamburger) icon, marked
+  with a count pill for the number waiting; approve or decline pending points and reward
   requests. Tapping it prompts sign-in first if the device isn't unlocked.
 - **Parent menu** (locked to a signed-in parent account)
   - **Game Settings** — manage daily goals, bonus items, per-action point
-    values, store rewards, and badge names/emoji/icons/visibility
+    values, and store rewards
   - **Calendar** — view and edit past days
   - **Advanced Settings** — time zone, family code, Log (history of every
     action, including admin changes), and reset today's progress or
@@ -65,8 +63,8 @@ Open the printed local URL in your browser.
 - `npm test` — run the Vitest unit suite
 
 `npm test` runs the Vitest unit suite, which covers the pure
-point/streak/badge logic (`src/state/points.ts`, `src/state/defaultState.ts`,
-`src/state/badges.ts`, `src/state/auth.ts`) via colocated `*.test.ts` files.
+point/streak logic (`src/state/points.ts`, `src/state/defaultState.ts`,
+`src/state/auth.ts`) via colocated `*.test.ts` files.
 There's no component/UI test setup. `verify_gravy.mjs` at the repo root is an
 ad-hoc Playwright smoke-test script you can run manually against a
 `npm run dev` server (`node verify_gravy.mjs`); otherwise UI testing is
@@ -76,11 +74,11 @@ manual via the browser.
 
 ```
 src/
-  data/             static data: ranks, foods, games, badge definitions, icons
-  state/            Gravy state, localStorage persistence, Supabase sync, badge logic, React context
-  components/       kid-facing screens and widgets (Home, Store, Badges, Arcade, Rank ladder, etc.)
+  data/             static data: ranks, foods, games, icons
+  state/            Gravy state, localStorage persistence, Supabase sync, React context
+  components/       kid-facing screens and widgets (Home, Store, Arcade, Rank ladder, etc.)
   components/games/ individual mini-game components
-  components/parent/ account-gated parent panels (approvals, goals, calendar, store, badges, settings)
+  components/parent/ account-gated parent panels (approvals, goals, calendar, store, settings)
 ```
 
 ## Deployment

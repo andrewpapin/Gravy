@@ -136,24 +136,6 @@ await pinInput.fill('1234');
 await pinInput.blur();
 await page.waitForTimeout(300);
 
-// ── Test 11: Badges tab — debounce check (structural only) ───────────────
-const badgesTab = page.locator('[role="tab"]').filter({ hasText: 'Badges' });
-await badgesTab.click();
-await page.waitForTimeout(300);
-const badgeNameInputs = page.locator('input.pbadge-name-input');
-const badgeNameCount = await badgeNameInputs.count();
-log('11-badges-tab-loads', badgeNameCount > 0 ? 'PASS' : 'FAIL', `badge name inputs found: ${badgeNameCount}`);
-await shot('09_badges_panel');
-
-// Edit a badge name — just verify it doesn't crash
-const firstBadgeInput = badgeNameInputs.first();
-const originalName = await firstBadgeInput.inputValue();
-await firstBadgeInput.fill('Test Badge');
-await page.waitForTimeout(400); // let debounce fire
-await firstBadgeInput.fill(originalName); // restore
-await page.waitForTimeout(400);
-log('11-badge-name-edit', true ? 'PASS' : 'FAIL', 'editing badge name did not crash');
-
 // ── Exit parent mode ─────────────────────────────────────────────────────
 const exitBtn = page.locator('.parent-topbar-exit-btn');
 if (await exitBtn.isVisible()) {
@@ -393,7 +375,7 @@ if (warningText) {
   const approveBtn = page.locator('.btn-green').first();
   await approveBtn.click();
   await page.waitForTimeout(300);
-  const confirmDialogVisible = await page.locator('.badge-popup').isVisible();
+  const confirmDialogVisible = await page.locator('.confirm-dialog').isVisible();
   log('12-insufficient-confirm', confirmDialogVisible ? 'PASS' : 'FAIL', `confirm dialog shown: ${confirmDialogVisible}`);
   await shot('25_insufficient_confirm');
   const cancelBtn = page.getByRole('button', { name: /cancel/i });

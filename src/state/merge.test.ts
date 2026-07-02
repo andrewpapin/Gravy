@@ -7,9 +7,7 @@ function freshState(): GravyState {
   const state = cloneDefaultState();
   state.goals = [];
   state.rewards = [];
-  state.badgeConfig = {};
   state.dayLogs = {};
-  state.earnedBadges = [];
   state.actionLog = [];
   state.auditLog = [];
   state.pendingRewards = [];
@@ -73,30 +71,9 @@ describe('mergeStates — id-keyed collections', () => {
     const merged = mergeStates(local, remote);
     expect(merged.rewards.map((r) => r.id).sort()).toEqual([1, 2]);
   });
-
-  it('unions badgeConfig keys, remote winning a shared key', () => {
-    const local = freshState();
-    local.badgeConfig = { a: { enabled: false }, b: { name: 'Local' } };
-    const remote = freshState();
-    remote.badgeConfig = { b: { name: 'Remote' }, c: { enabled: true } };
-
-    const merged = mergeStates(local, remote);
-    expect(Object.keys(merged.badgeConfig).sort()).toEqual(['a', 'b', 'c']);
-    expect(merged.badgeConfig.b).toEqual({ name: 'Remote' });
-  });
 });
 
-describe('mergeStates — sets and per-day logs', () => {
-  it('unions earnedBadges without duplicates', () => {
-    const local = freshState();
-    local.earnedBadges = ['first-goal', 'streak-3'];
-    const remote = freshState();
-    remote.earnedBadges = ['streak-3', 'food-hero'];
-
-    const merged = mergeStates(local, remote);
-    expect(merged.earnedBadges.sort()).toEqual(['first-goal', 'food-hero', 'streak-3']);
-  });
-
+describe('mergeStates — per-day logs', () => {
   it('unions dayLogs by date key', () => {
     const local = freshState();
     local.dayLogs = { '2026-06-27': { foodCounts: {}, goalIds: [1], points: 5 } };

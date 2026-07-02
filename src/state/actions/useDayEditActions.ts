@@ -6,14 +6,13 @@ import { FOODS } from '../../data/foods';
 import { resolveToastIcon } from '../../data/icons';
 import { applyBonusItemForDay, reverseBonusItem } from '../points';
 import { clone } from './shared';
-import type { AwardPointsForDay, CheckBadges, MaybeCelebrateRankUp, ShowToast } from './types';
+import type { AwardPointsForDay, MaybeCelebrateRankUp, ShowToast } from './types';
 
 export interface DayEditDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
   stateRef: MutableRefObject<GravyState>;
   showToast: ShowToast;
   awardPointsForDay: AwardPointsForDay;
-  checkBadges: CheckBadges;
   maybeCelebrateRankUp: MaybeCelebrateRankUp;
   actorRef: MutableRefObject<LogActor | undefined>;
   // Today-scoped inverses (from useKidProgressActions) that undoActionLogEntry dispatches to.
@@ -23,11 +22,11 @@ export interface DayEditDeps {
 }
 
 // Past-day point/streak edits used by the parent Calendar (PIN-gated). Full point-parity with the
-// "today" actions above — they award/remove via awardPointsForDay and re-run streaks/badges/rank
+// "today" actions above — they award/remove via awardPointsForDay and re-run streaks/rank
 // so editing a past day moves the live balance exactly as if it were edited today.
 export function useDayEditActions(deps: DayEditDeps) {
   const {
-    setState, stateRef, showToast, awardPointsForDay, checkBadges, maybeCelebrateRankUp, actorRef,
+    setState, stateRef, showToast, awardPointsForDay, maybeCelebrateRankUp, actorRef,
     removeFood, decrementGoal, undoBonusItem,
   } = deps;
 
@@ -71,10 +70,9 @@ export function useDayEditActions(deps: DayEditDeps) {
 
       backfillStreaksFromLogs(next);
       maybeCelebrateRankUp(prev.totalPoints, next);
-      checkBadges(next);
       return next;
     });
-  }, [setState, awardPointsForDay, checkBadges, maybeCelebrateRankUp, actorRef]);
+  }, [setState, awardPointsForDay, maybeCelebrateRankUp, actorRef]);
 
   const removeFoodForDay = useCallback((dateStr: string, foodId: string) => {
     setState((prev) => {
@@ -164,13 +162,12 @@ export function useDayEditActions(deps: DayEditDeps) {
           if (fullTray) next.counters.comboDays++;
         }
         maybeCelebrateRankUp(prev.totalPoints, next);
-        checkBadges(next);
       }
 
       backfillStreaksFromLogs(next);
       return next;
     });
-  }, [setState, awardPointsForDay, checkBadges, maybeCelebrateRankUp, actorRef]);
+  }, [setState, awardPointsForDay, maybeCelebrateRankUp, actorRef]);
 
   const logBonusItemForDay = useCallback((dateStr: string, goalId: number) => {
     setState((prev) => {

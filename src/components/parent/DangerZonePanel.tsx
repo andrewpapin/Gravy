@@ -36,7 +36,7 @@ export function DangerZonePanel() {
         open={confirmStep === 'resetAll1'}
         icon={faTriangleExclamation}
         title="Reset everything?"
-        message="This will delete ALL progress — points, badges, history, goals, and rewards. This can't be undone."
+        message="This will delete ALL progress — points, history, goals, and rewards. This can't be undone."
         confirmLabel="Continue"
         danger
         onConfirm={() => setConfirmStep('resetAll2')}
@@ -46,7 +46,7 @@ export function DangerZonePanel() {
         open={confirmStep === 'resetAll2'}
         icon={faTriangleExclamation}
         title="Are you really sure?"
-        message="All points, badges, and history will be gone for good."
+        message="All points and history will be gone for good."
         confirmLabel="Yes, reset everything"
         danger
         onConfirm={() => {

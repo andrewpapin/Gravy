@@ -65,7 +65,7 @@ Deep reference for localStorage persistence, Supabase cloud sync, the household 
   when a remote root arrives, `GravyContext`'s receive effect runs `mergeRoots(localRoot, remoteRoot)`
   against the *current* local root (read via `rootRef`/`stateRef`) rather than replacing it. Profiles
   union by id (a kid added on either device survives); per-profile, id-keyed collections union
-  (`goals`/`rewards` by id, `badgeConfig`/`dayLogs` by key, `earnedBadges` as a set, `actionLog`/
+  (`goals`/`rewards` by id, `dayLogs` by key, `actionLog`/
   `auditLog` by entry id, sorted by `at`) so edits made locally but not yet pushed aren't clobbered.
   Live progress scalars/counters (points, streaks, the `today*` fields, `counters`, `settings`) and
   `pendingRewards` still take the remote snapshot — last-write-wins **within those fields only**. The

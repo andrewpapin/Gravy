@@ -8,28 +8,27 @@ import { GAMES } from '../../data/games';
 import { applyBonusItem, reverseBonusItem } from '../points';
 import { queuePendingPoints, takeMostRecentPending } from '../pendingPoints';
 import { DAILY_GAME_WIN_CAP, clone } from './shared';
-import type { AwardPoints, CheckBadges, MaybeCelebrateRankUp, ShowCelebration, ShowToast } from './types';
+import type { AwardPoints, MaybeCelebrateRankUp, ShowCelebration, ShowToast } from './types';
 
 export interface KidProgressDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
   showToast: ShowToast;
   showCelebration: ShowCelebration;
   awardPoints: AwardPoints;
-  checkBadges: CheckBadges;
   maybeCelebrateRankUp: MaybeCelebrateRankUp;
   actorRef: MutableRefObject<LogActor | undefined>;
   // True on a device with no signed-in account (joined via family code only) — every
   // point-earning action below still completes immediately (todayGoals/todayFoodCounts/
-  // counters/streaks/badges), but the points themselves are queued in pendingPointsAwards
+  // counters/streaks), but the points themselves are queued in pendingPointsAwards
   // instead of touching the live balance, until a parent approves/declines them from Approvals.
   requiresApproval: boolean;
 }
 
-// Live "today" point/streak/badge actions for the kid-facing UI (food tray, daily goals, bonus
+// Live "today" point/streak actions for the kid-facing UI (food tray, daily goals, bonus
 // items, games). The point arithmetic lives in ../points.ts; these orchestrate counters, the
-// action log, and the celebration/badge/rank-up side effects around it.
+// action log, and the celebration/rank-up side effects around it.
 export function useKidProgressActions(deps: KidProgressDeps) {
-  const { setState, showToast, showCelebration, awardPoints, checkBadges, maybeCelebrateRankUp, actorRef, requiresApproval } = deps;
+  const { setState, showToast, showCelebration, awardPoints, maybeCelebrateRankUp, actorRef, requiresApproval } = deps;
 
   const logFood = useCallback((id: string) => {
     setState((prev) => {
@@ -64,19 +63,18 @@ export function useKidProgressActions(deps: KidProgressDeps) {
           // Silent — the celebration overlay already announces the bonus.
           awardPoints(next, next.settings.bonusPts, '🎉 Full Tray Bonus!', { silent: true });
         }
-        // Only daily goals count toward combo badge
+        // Only daily goals count toward the combo counter
         const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
         const allDailyGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => next.todayGoals.includes(g.id));
         if (allDailyGoalsDone) next.counters.comboDays++;
         showCelebration(faUtensils, 'Full Tray!', `All 5 food groups eaten! +${next.settings.bonusPts} bonus!`);
       }
-      // Defer badge/rank-up announcements so they don't pile up on top of the celebration overlay.
+      // Defer the rank-up announcement so it doesn't pile up on top of the celebration overlay.
       const delay = !wasFull && isFull ? 1400 : 0;
       maybeCelebrateRankUp(prev.totalPoints, next, delay);
-      checkBadges(next, delay);
       return next;
     });
-  }, [setState, awardPoints, checkBadges, maybeCelebrateRankUp, showCelebration, showToast, actorRef, requiresApproval]);
+  }, [setState, awardPoints, maybeCelebrateRankUp, showCelebration, showToast, actorRef, requiresApproval]);
 
   const removeFood = useCallback((id: string) => {
     setState((prev) => {
@@ -147,14 +145,13 @@ export function useKidProgressActions(deps: KidProgressDeps) {
           if (fullTray) next.counters.comboDays++;
           showCelebration(faListCheck, 'All Goals Done!', `Every daily goal complete${fullTray ? ' — perfect day!' : ''}!`);
         }
-        // Defer rank-up/badge announcements so they don't pile onto the celebration overlay.
+        // Defer the rank-up announcement so it doesn't pile onto the celebration overlay.
         const delay = allGoalsDone ? 1400 : 0;
         maybeCelebrateRankUp(prev.totalPoints, next, delay);
-        checkBadges(next, delay);
       }
       return next;
     });
-  }, [setState, awardPoints, checkBadges, maybeCelebrateRankUp, showCelebration, showToast, actorRef, requiresApproval]);
+  }, [setState, awardPoints, maybeCelebrateRankUp, showCelebration, showToast, actorRef, requiresApproval]);
 
   const decrementGoal = useCallback((id: number) => {
     setState((prev) => {
@@ -212,11 +209,10 @@ export function useKidProgressActions(deps: KidProgressDeps) {
           showToast(faGamepad, "Nice win! Today's game points are maxed — keep playing for fun!");
         }
         maybeCelebrateRankUp(prev.totalPoints, next);
-        checkBadges(next);
       }
       return next;
     });
-  }, [setState, awardPoints, checkBadges, maybeCelebrateRankUp, showToast, actorRef, requiresApproval]);
+  }, [setState, awardPoints, maybeCelebrateRankUp, showToast, actorRef, requiresApproval]);
 
   // Reverses a still-pending game-win award (counters.gamesWon/todayGameWins) when a parent
   // declines it from Approvals — there's no kid-facing "undo" for a game round, so this is only

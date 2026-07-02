@@ -147,13 +147,13 @@ export function GoalsPanel() {
             {isDailyGoal && (g.target || 1) > 1 ? ` · ×${g.target}` : ''}
           </div>
         </div>
-        <label className="pbadge-toggle" title="Toggle Daily Goal / Bonus Points">
+        <label className="goal-type-toggle" title="Toggle Daily Goal / Bonus Points">
           <input
             type="checkbox"
             checked={isDailyGoal}
             onChange={(e) => updateGoal(g.id, { isDaily: e.target.checked })}
           />
-          <span className="pbadge-toggle-track" />
+          <span className="goal-type-toggle-track" />
         </label>
         <button className="btn btn-sm btn-purple" title="Edit" aria-label="Edit" onClick={() => startEdit(g)}>
           <FontAwesomeIcon icon={faPen} />
@@ -204,9 +204,9 @@ export function GoalsPanel() {
               : 'Repeats anytime, can add or subtract points'}
           </div>
         </div>
-        <label className="pbadge-toggle">
+        <label className="goal-type-toggle">
           <input type="checkbox" checked={isDaily} onChange={(e) => setIsDaily(e.target.checked)} />
-          <span className="pbadge-toggle-track" />
+          <span className="goal-type-toggle-track" />
         </label>
       </div>
 

@@ -4,19 +4,18 @@ import type { GravyState } from '../types';
 import { todayStr } from '../defaultState';
 import { appendActionLog, type LogActor } from '../actionLog';
 import { clone } from './shared';
-import type { CheckBadges, ShowToast } from './types';
+import type { ShowToast } from './types';
 
 export interface RewardDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
   showToast: ShowToast;
-  checkBadges: CheckBadges;
   actorRef: MutableRefObject<LogActor | undefined>;
 }
 
 // Reward request/approve/decline flow. requestReward reserves points already promised to other
 // pending requests so a kid can't queue more than their balance covers.
 export function useRewardActions(deps: RewardDeps) {
-  const { setState, showToast, checkBadges, actorRef } = deps;
+  const { setState, showToast, actorRef } = deps;
 
   const requestReward = useCallback((id: number) => {
     setState((prev) => {
@@ -46,10 +45,9 @@ export function useRewardActions(deps: RewardDeps) {
         dateStr: todayStr(next.settings.timezone),
         itemId: id,
       });
-      checkBadges(next);
       return next;
     });
-  }, [setState, checkBadges, showToast, actorRef]);
+  }, [setState, showToast, actorRef]);
 
   const approveReward = useCallback((prId: string) => {
     setState((prev) => {

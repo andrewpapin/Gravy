@@ -25,7 +25,6 @@ export const defaultState: GravyState = {
   dayLogs: {},
   pendingRewards: [],
   pendingPointsAwards: [],
-  earnedBadges: [],
   actionLog: [],
   auditLog: [],
   counters: {
@@ -39,7 +38,6 @@ export const defaultState: GravyState = {
     gamesPlayed: 0,
     gamesWon: 0,
   },
-  badgeConfig: {},
   goals: [
     // Daily
     { id: 1, emoji: '📖', icon: 'bookOpen', name: 'Read for 30 minutes', pts: 15, isDaily: true },
@@ -146,7 +144,7 @@ export function migrateLegacyState(state: Record<string, unknown>): void {
     }
   }
 
-  // NOTE: the `icon` field (goals/rewards/badge overrides) is additive and intentionally
+  // NOTE: the `icon` field (goals/rewards) is additive and intentionally
   // NOT backfilled here. Items created before the icon system keep only their `emoji`
   // string and render via the emoji fallback (see components/AppIcon.tsx) until a parent
   // edits them and picks an icon. This keeps the change safe for Supabase last-write-wins.
@@ -250,10 +248,6 @@ function asPlainObject(v: unknown): Record<string, unknown> {
   return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
 }
 
-function asStringArray(v: unknown): string[] {
-  return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
-}
-
 function asNumberArray(v: unknown): number[] {
   return Array.isArray(v) ? v.filter((x): x is number => typeof x === 'number') : [];
 }
@@ -344,10 +338,8 @@ function sanitizeState(state: GravyState): void {
   state.todayGoalCounts = asPlainObject(state.todayGoalCounts) as Record<number, number>;
   state.todayBonusApplied = asPlainObject(state.todayBonusApplied) as Record<number, number>;
   state.dayLogs = asPlainObject(state.dayLogs) as GravyState['dayLogs'];
-  state.badgeConfig = asPlainObject(state.badgeConfig) as GravyState['badgeConfig'];
 
   state.todayGoals = asNumberArray(state.todayGoals);
-  state.earnedBadges = asStringArray(state.earnedBadges);
   state.pendingRewards = sanitizePendingRewards(state.pendingRewards);
   state.pendingPointsAwards = sanitizePendingPointsAwards(state.pendingPointsAwards);
   state.goals = sanitizeGoals(state.goals);
@@ -409,7 +401,6 @@ export function hydrateState(raw: unknown): GravyState {
     if (!(k in state.counters)) countersRecord[k] = defaultState.counters[k];
   }
   if (!state.counters.foodLogs) state.counters.foodLogs = {};
-  if (!state.badgeConfig) state.badgeConfig = {};
   sanitizeState(state);
   return applyDayRollover(state);
 }
@@ -432,7 +423,7 @@ export function saveState(state: GravyState): boolean {
 // ---- Profiles (multi-kid) ----------------------------------------------------------------
 
 // Settings shared by every kid in the household. The rest of Settings (childName, the three
-// avatar fields, theme) is per-kid. Goals, rewards and badgeConfig are also shared (mirrored
+// avatar fields, theme) is per-kid. Goals and rewards are also shared (mirrored
 // across profiles by mirrorSharedFields).
 export const SHARED_SETTING_KEYS: (keyof Settings)[] = [
   'foodPts',
@@ -449,7 +440,6 @@ function genProfileId(): string {
 function copySharedInto(dest: GravyState, src: GravyState): void {
   dest.goals = JSON.parse(JSON.stringify(src.goals));
   dest.rewards = JSON.parse(JSON.stringify(src.rewards));
-  dest.badgeConfig = JSON.parse(JSON.stringify(src.badgeConfig));
   // The Admin Log is a household-wide history, so it's a shared field mirrored across profiles.
   dest.auditLog = JSON.parse(JSON.stringify(src.auditLog ?? []));
   const destSettings = dest.settings as unknown as Record<string, unknown>;

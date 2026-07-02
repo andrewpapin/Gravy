@@ -162,7 +162,7 @@ export function useHouseholdActions(deps: HouseholdDeps) {
   }, [setState, setRoot, showToast, actorRef, setSyncStatus, setHouseholdCode, lastSyncedRef]);
 
   const leaveHousehold = useCallback(() => {
-    // Cancel any deferred celebration/badge toasts queued just before disconnecting — they'd
+    // Cancel any deferred celebration toasts queued just before disconnecting — they'd
     // otherwise still fire afterward, referencing a state snapshot from the now-disconnected sync.
     pendingTimersRef.current.forEach((t) => clearTimeout(t));
     pendingTimersRef.current = [];

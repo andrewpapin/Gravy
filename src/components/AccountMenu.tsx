@@ -82,7 +82,7 @@ export function AccountMenu({
             <span className="account-menu-option-icon"><FontAwesomeIcon icon={faUserShield} /></span>
             <span className="account-menu-option-text">
               <span className="account-menu-option-title">Game Settings</span>
-              <span className="account-menu-option-sub">Goals, rewards, and badges</span>
+              <span className="account-menu-option-sub">Goals and rewards</span>
             </span>
           </button>
           <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenCalendar)}>

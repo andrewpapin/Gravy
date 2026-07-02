@@ -158,3 +158,17 @@ work lives in `BACKLOG.md`.
   (vs. dropping the plugin) keeps the `virtual:pwa-register` modules resolvable as no-ops so
   `UpdatePrompt`/`useRegisterSW` still build; the Pages/PWA build keeps its SW. `docs/capacitor.md`.
   First item on the "Path to first TestFlight build" critical path.
+
+## Epic 12 — Badge System Removal
+
+- **Removed the badge feature entirely** (product decision) — deleted `src/data/badges.ts`
+  (71 `BADGE_MASTER` defs), `src/state/badges.ts` (`findNewlyEarnedBadges`/`getBadgeDisplay`/
+  progress helpers) + `badges.test.ts`, `BadgesScreen.tsx`, `BadgePopup.tsx`, and the parent
+  `BadgesPanel.tsx`. Dropped `earnedBadges`/`badgeConfig`/`BadgeOverride` from `GravyState`
+  (and their sanitize/merge/mirror handling in `defaultState.ts`/`merge.ts`), the `checkBadges`
+  callback and its threading through every point-earning action hook, `updateBadgeConfig`, the
+  `badgeConfigChanged` audit type, and the `'badges'` arm of `ParentDashboard`/`RootMenu`'s
+  `RootDest` union. `ConfirmDialog.tsx`'s reused `badge-popup-*` CSS was renamed to
+  `confirm-dialog-*` rather than deleted; `GoalsPanel`'s reused `pbadge-toggle` CSS was renamed
+  to `goal-type-toggle`. No Supabase migration needed — old synced rows just carry a dead
+  `earnedBadges`/`badgeConfig` JSON key forever, same as any other retired field.

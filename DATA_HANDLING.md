@@ -20,7 +20,7 @@ household:
   "Where it lives" below.
 - **Child name** — free text, parent-entered, per profile. The only field
   in the in-app data that could identify a real person.
-- **Gameplay/progress data** — points, streaks, badges, goals, rewards,
+- **Gameplay/progress data** — points, streaks, goals, rewards,
   day-by-day logs, game stats. Behavioral, not personal.
 - **Appearance preferences** — theme, avatar icon, avatar colors.
 
@@ -75,7 +75,7 @@ instead of "anyone with the 6-character code can read and write it":
 ## How to delete it
 
 - **Local data:** `AccountMenu` → Advanced Settings → Reset → "Reset
-  Everything" clears all progress on the active profile (points, badges,
+  Everything" clears all progress on the active profile (points,
   history, counters) and disconnects the device from sync (it does not sign
   the account out). It intentionally leaves the child's name, theme, and
   avatar set — those are identity settings, not progress, and resetting a

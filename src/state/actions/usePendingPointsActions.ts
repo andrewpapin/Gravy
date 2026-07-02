@@ -5,13 +5,12 @@ import { todayStr } from '../defaultState';
 import { appendActionLog, type LogActor } from '../actionLog';
 import { applyAward, applyBonusItem } from '../points';
 import { clone } from './shared';
-import type { CheckBadges, MaybeCelebrateRankUp, ShowToast } from './types';
+import type { MaybeCelebrateRankUp, ShowToast } from './types';
 
 export interface PendingPointsDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
   stateRef: MutableRefObject<GravyState>;
   showToast: ShowToast;
-  checkBadges: CheckBadges;
   maybeCelebrateRankUp: MaybeCelebrateRankUp;
   actorRef: MutableRefObject<LogActor | undefined>;
   // The exact-inverse "today" actions (from useKidProgressActions) that cancel a still-pending
@@ -29,7 +28,7 @@ export interface PendingPointsDeps {
 // the opposite direction: the completion already happened live, only the point credit is gated.
 export function usePendingPointsActions(deps: PendingPointsDeps) {
   const {
-    setState, stateRef, showToast, checkBadges, maybeCelebrateRankUp, actorRef,
+    setState, stateRef, showToast, maybeCelebrateRankUp, actorRef,
     decrementGoal, removeFood, undoBonusItem, declineGameWin,
   } = deps;
 
@@ -57,10 +56,9 @@ export function usePendingPointsActions(deps: PendingPointsDeps) {
         itemId: pending.itemId,
       });
       maybeCelebrateRankUp(prev.totalPoints, next);
-      checkBadges(next);
       return next;
     });
-  }, [setState, showToast, checkBadges, maybeCelebrateRankUp, actorRef]);
+  }, [setState, showToast, maybeCelebrateRankUp, actorRef]);
 
   const declinePendingPointsAward = useCallback((id: string) => {
     const pending = stateRef.current.pendingPointsAwards.find((p) => p.id === id);

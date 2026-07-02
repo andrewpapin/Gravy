@@ -39,7 +39,7 @@ import {
  * Single source of truth mapping string icon keys → FontAwesome icon definitions.
  * FontAwesome tree-shakes, so every icon used anywhere in the app must be imported
  * and registered here. Keys are stored in data files and in user state (goals,
- * rewards, badge overrides). An unknown/absent key falls back to a legacy emoji
+ * rewards). An unknown/absent key falls back to a legacy emoji
  * string via `<AppIcon emojiFallback>` (see components/AppIcon.tsx), so data created
  * before this icon system keeps rendering.
  */
@@ -189,7 +189,7 @@ export interface PickerIcon {
   label: string;
 }
 
-/** Curated, kid-friendly grid shown to parents when choosing a goal/reward/badge icon. */
+/** Curated, kid-friendly grid shown to parents when choosing a goal/reward icon. */
 export const PICKER_ICONS: PickerIcon[] = [
   // Chores / home
   { key: 'broom', label: 'Broom' },
