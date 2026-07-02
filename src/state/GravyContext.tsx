@@ -8,7 +8,7 @@ import {
   saveRoot,
 } from './defaultState';
 import { resolveToastIcon } from '../data/icons';
-import { findNewlyEarnedBadges, getBadgeDisplay } from './badges';
+import { findBadgesToRevoke, findNewlyEarnedBadges, getBadgeDisplay } from './badges';
 import { applyAward, applyAwardForDay } from './points';
 import { getRank, RANKS } from '../data/ranks';
 import {
@@ -309,14 +309,23 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     [showToast, fireConfetti],
   );
 
+  // Un-earns any badge whose trigger no longer holds (mirrors checkBadges in reverse). Called
+  // after an undo drops a counter/totalPoints/streak back below a badge's threshold, so undoing
+  // the action that earned a badge also revokes it — it can be re-earned honestly later.
+  const revokeBadges = useCallback((next: GravyState) => {
+    const toRevoke = findBadgesToRevoke(next);
+    if (toRevoke.length === 0) return;
+    next.earnedBadges = next.earnedBadges.filter((id) => !toRevoke.includes(id));
+  }, []);
+
   // Per-domain action groups, each relocated verbatim into its own hook (see ./actions/*).
   // They receive the shared state setters/refs and the helper callbacks above as dependencies.
   const kidProgress = useKidProgressActions({
-    setState, showToast, showCelebration, awardPoints, checkBadges, maybeCelebrateRankUp, actorRef,
+    setState, showToast, showCelebration, awardPoints, checkBadges, revokeBadges, maybeCelebrateRankUp, actorRef,
     requiresApproval,
   });
   const dayEdit = useDayEditActions({
-    setState, stateRef, showToast, awardPointsForDay, checkBadges, maybeCelebrateRankUp, actorRef,
+    setState, stateRef, showToast, awardPointsForDay, checkBadges, revokeBadges, maybeCelebrateRankUp, actorRef,
     removeFood: kidProgress.removeFood,
     decrementGoal: kidProgress.decrementGoal,
     undoBonusItem: kidProgress.undoBonusItem,

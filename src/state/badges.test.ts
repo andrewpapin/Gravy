@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cloneDefaultState } from './defaultState';
 import {
+  findBadgesToRevoke,
   findNewlyEarnedBadges,
   getBadgeDisplay,
   getBadgeProgress,
@@ -62,6 +63,36 @@ describe('findNewlyEarnedBadges', () => {
 
   it('returns an empty list for a brand-new state', () => {
     expect(findNewlyEarnedBadges(freshState())).toEqual([]);
+  });
+});
+
+describe('findBadgesToRevoke', () => {
+  it('revokes an earned badge whose counter has dropped back below threshold', () => {
+    const state = freshState({
+      earnedBadges: ['first_chore'],
+      counters: { ...cloneDefaultState().counters, totalGoals: 0 },
+    });
+    expect(findBadgesToRevoke(state)).toContain('first_chore');
+  });
+
+  it('does not revoke an earned badge whose condition still holds', () => {
+    const state = freshState({
+      earnedBadges: ['first_chore'],
+      counters: { ...cloneDefaultState().counters, totalGoals: 1 },
+    });
+    expect(findBadgesToRevoke(state)).not.toContain('first_chore');
+  });
+
+  it('ignores badges that were never earned', () => {
+    const state = freshState({
+      counters: { ...cloneDefaultState().counters, totalGoals: 0 },
+    });
+    expect(findBadgesToRevoke(state)).toEqual([]);
+  });
+
+  it('revokes a pts threshold badge once totalPoints drops back below it', () => {
+    const state = freshState({ earnedBadges: ['pts100'], totalPoints: 50 });
+    expect(findBadgesToRevoke(state)).toContain('pts100');
   });
 });
 

@@ -42,10 +42,15 @@ Store, Combos, Games), evaluated in `src/state/badges.ts`. Badges are triggered 
 - Cumulative counter thresholds (`fruit:N`, `veggie:N`, `pts:N`, `pts_day:N`, `streak:N`,
   `chore_count:N`, `combo:N`, `games_won:N`, etc. — see the trigger-type comment atop `badges.ts`).
 
-`findNewlyEarnedBadges()` is called after each state-mutating action in `GravyContext`. Parents can
-override a badge's name/emoji/icon/visibility per-id via `badgeConfig` in state; `getBadgeDisplay()`
-merges the override onto the `BADGE_MASTER` definition. `badgeConfig` (like `goals`/`rewards`) is a
-shared field, mirrored across every profile in a household.
+`findNewlyEarnedBadges()` is called after each state-mutating action in `GravyContext`. Undoing the
+action that earned a badge (unchecking a goal, removing a food log, undoing a bonus item/game win,
+or the same via `*ForDay`/decline-pending-points) also revokes it: `findBadgesToRevoke()` re-checks
+every id in `earnedBadges` against its trigger and drops any that no longer hold, via the
+`revokeBadges` callback wired alongside `checkBadges` into the same action hooks — so a badge earned
+only by an action that's since been undone can be honestly re-earned later. Parents can override a
+badge's name/emoji/icon/visibility per-id via `badgeConfig` in state; `getBadgeDisplay()` merges the
+override onto the `BADGE_MASTER` definition. `badgeConfig` (like `goals`/`rewards`) is a shared
+field, mirrored across every profile in a household.
 
 ## Icon System
 

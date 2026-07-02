@@ -8,7 +8,7 @@ import { GAMES } from '../../data/games';
 import { applyBonusItem, reverseBonusItem } from '../points';
 import { queuePendingPoints, takeMostRecentPending } from '../pendingPoints';
 import { DAILY_GAME_WIN_CAP, clone } from './shared';
-import type { AwardPoints, CheckBadges, MaybeCelebrateRankUp, ShowCelebration, ShowToast } from './types';
+import type { AwardPoints, CheckBadges, MaybeCelebrateRankUp, RevokeBadges, ShowCelebration, ShowToast } from './types';
 
 export interface KidProgressDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
@@ -16,6 +16,7 @@ export interface KidProgressDeps {
   showCelebration: ShowCelebration;
   awardPoints: AwardPoints;
   checkBadges: CheckBadges;
+  revokeBadges: RevokeBadges;
   maybeCelebrateRankUp: MaybeCelebrateRankUp;
   actorRef: MutableRefObject<LogActor | undefined>;
   // True on a device with no signed-in account (joined via family code only) — every
@@ -29,7 +30,7 @@ export interface KidProgressDeps {
 // items, games). The point arithmetic lives in ../points.ts; these orchestrate counters, the
 // action log, and the celebration/badge/rank-up side effects around it.
 export function useKidProgressActions(deps: KidProgressDeps) {
-  const { setState, showToast, showCelebration, awardPoints, checkBadges, maybeCelebrateRankUp, actorRef, requiresApproval } = deps;
+  const { setState, showToast, showCelebration, awardPoints, checkBadges, revokeBadges, maybeCelebrateRankUp, actorRef, requiresApproval } = deps;
 
   const logFood = useCallback((id: string) => {
     setState((prev) => {
@@ -108,9 +109,10 @@ export function useKidProgressActions(deps: KidProgressDeps) {
         if (allGoalsDone) next.counters.comboDays = Math.max(0, next.counters.comboDays - 1);
       }
       markMostRecentUndone(next.actionLog, 'food', id, todayStr(next.settings.timezone));
+      revokeBadges(next);
       return next;
     });
-  }, [setState]);
+  }, [setState, revokeBadges]);
 
   const incrementGoal = useCallback((id: number) => {
     setState((prev) => {
@@ -180,10 +182,11 @@ export function useKidProgressActions(deps: KidProgressDeps) {
           next.todayPoints -= goal.pts;
         }
         markMostRecentUndone(next.actionLog, 'goal', id, todayStr(next.settings.timezone));
+        revokeBadges(next);
       }
       return next;
     });
-  }, [setState]);
+  }, [setState, revokeBadges]);
 
   const completeGameRound = useCallback((gameId: string, won: boolean) => {
     setState((prev) => {
@@ -230,9 +233,10 @@ export function useKidProgressActions(deps: KidProgressDeps) {
       next.counters.gamesWon = Math.max(0, next.counters.gamesWon - 1);
       next.todayGameWins = Math.max(0, next.todayGameWins - 1);
       markMostRecentUndone(next.actionLog, 'game', gameId, todayStr(next.settings.timezone));
+      revokeBadges(next);
       return next;
     });
-  }, [setState]);
+  }, [setState, revokeBadges]);
 
   const logBonusItem = useCallback((id: number) => {
     setState((prev) => {
@@ -297,9 +301,10 @@ export function useKidProgressActions(deps: KidProgressDeps) {
         next.todayBonusApplied[id] = net + reverse;
       }
       markMostRecentUndone(next.actionLog, 'bonus', id, todayStr(next.settings.timezone));
+      revokeBadges(next);
       return next;
     });
-  }, [setState]);
+  }, [setState, revokeBadges]);
 
   return {
     logFood, removeFood, incrementGoal, decrementGoal, completeGameRound, declineGameWin,

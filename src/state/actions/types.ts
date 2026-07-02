@@ -12,6 +12,7 @@ export type AwardPoints = (next: GravyState, pts: number, reason: string, opts?:
 export type AwardPointsForDay = (next: GravyState, log: DayLog, pts: number, reason: string, opts?: { silent?: boolean }) => void;
 export type MaybeCelebrateRankUp = (prevTotalPoints: number, next: GravyState, delayMs?: number) => void;
 export type CheckBadges = (next: GravyState, delayMs?: number) => void;
+export type RevokeBadges = (next: GravyState) => void;
 
 export type SettableSettingKey = keyof Settings;
 

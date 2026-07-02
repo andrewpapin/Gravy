@@ -6,7 +6,7 @@ import { FOODS } from '../../data/foods';
 import { resolveToastIcon } from '../../data/icons';
 import { applyBonusItemForDay, reverseBonusItem } from '../points';
 import { clone } from './shared';
-import type { AwardPointsForDay, CheckBadges, MaybeCelebrateRankUp, ShowToast } from './types';
+import type { AwardPointsForDay, CheckBadges, MaybeCelebrateRankUp, RevokeBadges, ShowToast } from './types';
 
 export interface DayEditDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
@@ -14,6 +14,7 @@ export interface DayEditDeps {
   showToast: ShowToast;
   awardPointsForDay: AwardPointsForDay;
   checkBadges: CheckBadges;
+  revokeBadges: RevokeBadges;
   maybeCelebrateRankUp: MaybeCelebrateRankUp;
   actorRef: MutableRefObject<LogActor | undefined>;
   // Today-scoped inverses (from useKidProgressActions) that undoActionLogEntry dispatches to.
@@ -27,7 +28,7 @@ export interface DayEditDeps {
 // so editing a past day moves the live balance exactly as if it were edited today.
 export function useDayEditActions(deps: DayEditDeps) {
   const {
-    setState, stateRef, showToast, awardPointsForDay, checkBadges, maybeCelebrateRankUp, actorRef,
+    setState, stateRef, showToast, awardPointsForDay, checkBadges, revokeBadges, maybeCelebrateRankUp, actorRef,
     removeFood, decrementGoal, undoBonusItem,
   } = deps;
 
@@ -113,9 +114,10 @@ export function useDayEditActions(deps: DayEditDeps) {
 
       markMostRecentUndone(next.actionLog, 'food', foodId, dateStr);
       backfillStreaksFromLogs(next);
+      revokeBadges(next);
       return next;
     });
-  }, [setState]);
+  }, [setState, revokeBadges]);
 
   const toggleGoalForDay = useCallback((dateStr: string, goalId: number) => {
     setState((prev) => {
@@ -129,8 +131,9 @@ export function useDayEditActions(deps: DayEditDeps) {
       const log = next.dayLogs[dateStr];
       const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
       const fullTray = FOODS.every((f) => (log.foodCounts[f.id] || 0) > 0);
+      const isUndo = log.goalIds.includes(goalId);
 
-      if (log.goalIds.includes(goalId)) {
+      if (isUndo) {
         const wasAllGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => log.goalIds.includes(g.id));
         log.goalIds = log.goalIds.filter((id) => id !== goalId);
         next.counters.totalGoals = Math.max(0, next.counters.totalGoals - 1);
@@ -168,9 +171,10 @@ export function useDayEditActions(deps: DayEditDeps) {
       }
 
       backfillStreaksFromLogs(next);
+      if (isUndo) revokeBadges(next);
       return next;
     });
-  }, [setState, awardPointsForDay, checkBadges, maybeCelebrateRankUp, actorRef]);
+  }, [setState, awardPointsForDay, checkBadges, revokeBadges, maybeCelebrateRankUp, actorRef]);
 
   const logBonusItemForDay = useCallback((dateStr: string, goalId: number) => {
     setState((prev) => {
@@ -222,9 +226,10 @@ export function useDayEditActions(deps: DayEditDeps) {
       nextLog.points += reverse;
       nextLog.bonusApplied[goalId] = net + reverse;
       markMostRecentUndone(next.actionLog, 'bonus', goalId, dateStr);
+      revokeBadges(next);
       return next;
     });
-  }, [setState]);
+  }, [setState, revokeBadges]);
 
   // Dispatches a Log entry's Undo to the same exact-inverse action the live UI would call —
   // today's actions vs. the *ForDay variant, chosen by comparing the entry's day to today.
