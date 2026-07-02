@@ -162,13 +162,6 @@ is explicitly *not* blocking the first build.
 
 **Blocks the first internal build:**
 
-- **Generate native app icons + splash/launch screen.** Only web/PWA icons exist in `public/`;
-  a real iOS build needs a native icon set and launch screen. Use `@capacitor/assets` to
-  generate both from a source logo. *(P1, S.)*
-- **Graduate the spike — commit `ios/`.** `docs/capacitor.md` defines this: once the shell
-  carries real customizations (`Info.plist`, app icons/splash, signing), the gitignored
-  native folder becomes source and must be tracked. Commit `ios/` with the first build;
-  `android/` can stay gitignored until an Android track is scheduled. *(P1, S.)*
 - **Apple Developer Program + signing.** Membership, an App ID for `com.gravyapp.app`, and a
   distribution certificate + provisioning profile. Mostly a human/account task, but nothing
   uploads without it. *(P1, M.)*
@@ -238,27 +231,25 @@ in `BACKLOG_DONE.md`. Two more of the prior top-5 are now done as well: the
 
 **Current focus: get a first build into internal TestFlight.** Push notifications
 were the prior #1, but a TestFlight build needs no push — it's a fast-follow once
-on-device, not a blocker. The first critical-path item — **disabling the PWA service
-worker under `--mode capacitor`** — is now done (`vite.config.ts`, see
-`BACKLOG_DONE.md` Epic 10). The path below is the rest of Epic 10's "Path to first
-TestFlight build (internal testing)" critical path, front-loaded, then the
-highest-value work that pairs with going on-device:
+on-device, not a blocker. The first two critical-path items are now done:
+**disabling the PWA service worker under `--mode capacitor`** and **native app
+icons/splash + graduating `ios/` into the repo** (both `BACKLOG_DONE.md` Epic 10).
+The path below is the rest of Epic 10's "Path to first TestFlight build (internal
+testing)" critical path, front-loaded, then the highest-value work that pairs with
+going on-device:
 
-1. **Native app icons + splash, then graduate `ios/` into the repo** (Epic 10,
-   P1/S) — generate assets via `@capacitor/assets`, commit the now-customized
-   `ios/` shell (per `docs/capacitor.md`'s graduation step).
-2. **Signing + App Store Connect + a build→upload pipeline** (Epic 10, P1/M) —
+1. **Signing + App Store Connect + a build→upload pipeline** (Epic 10, P1/M) —
    Apple Developer membership, App ID for `com.gravyapp.app`, distribution
    cert/profile, the app record (answer export-compliance), and at minimum a
    documented local `xcodebuild archive` + Transporter upload. This is the step
    that actually puts a build in TestFlight; CI/Fastlane is the durable version.
-3. **Native push notifications (APNs/FCM)** (Epic 5/10, P1/M) — the biggest
+2. **Native push notifications (APNs/FCM)** (Epic 5/10, P1/M) — the biggest
    retention lever and the top fast-follow once on-device. Skip web push: with the
    Capacitor route chosen, iOS PWA web push would be partly throwaway.
-4. **Crash reporting (Sentry or equivalent)** (Epic 10, P1/M) — pull in right
+3. **Crash reporting (Sentry or equivalent)** (Epic 10, P1/M) — pull in right
    after the first build lands; on-device, you can't reproduce crashes from a web
    console, and update cadence depends on seeing them.
-5. **Offline write queue with replay** (Epic 9, P1/M) — no write queue exists
+4. **Offline write queue with replay** (Epic 9, P1/M) — no write queue exists
    today beyond the realtime subscription, so a device offline at edit time just
    lags until reconnect; pairs with the now-done collection/record-level merge
    (`src/state/merge.ts`) so replay lands queued edits safely.
