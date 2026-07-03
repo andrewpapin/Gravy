@@ -884,6 +884,11 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   background: var(--danger);
   color: white;
 }
+.pts-badge-corner {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+}
 
 /* ===== STORE SCREEN ===== */
 .store-grid {

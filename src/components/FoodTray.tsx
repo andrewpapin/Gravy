@@ -5,6 +5,7 @@ import { AppIcon } from './AppIcon';
 import { useGravy } from '../state/GravyContext';
 import { getDayLog } from '../state/dayLog';
 import { todayStr } from '../state/defaultState';
+import { getFoodPts } from '../state/points';
 import { triggerHaptic } from '../lib/haptics';
 
 interface FoodTrayProps {
@@ -51,7 +52,7 @@ export function FoodTray({ dateStr }: FoodTrayProps = {}) {
               }}
               aria-label={logged ? `${f.label}, logged. Tap to undo.` : `${f.label}. Tap to log.`}
             >
-              <span className="food-count-badge" aria-hidden="true">+{state.settings.foodPts}</span>
+              <span className="food-count-badge" aria-hidden="true">+{getFoodPts(state.settings, f.id)}</span>
               {logged && (
                 <span className="tile-check-badge" aria-hidden="true">
                   <FontAwesomeIcon icon={faCheck} />
