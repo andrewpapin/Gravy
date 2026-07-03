@@ -51,6 +51,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
             if (isToday && target > 1) {
               return (
                 <div key={g.id} className={`goal-tile ${done ? 'checked' : ''}`}>
+                  <span className="pts-badge pts-badge-corner">+{g.pts}</span>
                   {done && (
                     <span className="tile-check-badge" aria-hidden="true">
                       <FontAwesomeIcon icon={faCheck} />
@@ -58,7 +59,6 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                   )}
                   <div className="goal-tile-top">
                     <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-tile-emoji" />
-                    <span className="pts-badge">+{g.pts}</span>
                   </div>
                   <div className="goal-tile-name">{g.name}</div>
                   <div className="goal-stepper">
@@ -97,6 +97,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                 aria-pressed={done}
                 aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
               >
+                <span className="pts-badge pts-badge-corner">+{g.pts}</span>
                 {done && (
                   <span className="tile-check-badge" aria-hidden="true">
                     <FontAwesomeIcon icon={faCheck} />
@@ -104,7 +105,6 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                 )}
                 <div className="goal-tile-top">
                   <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-tile-emoji" />
-                  <span className="pts-badge">+{g.pts}</span>
                 </div>
                 <div className="goal-tile-name">{g.name}</div>
               </button>
