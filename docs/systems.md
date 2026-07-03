@@ -127,3 +127,26 @@ deliberate tradeoff for a rapid-beta-testing phase — favoring "no one is stuck
 interruption-free UX. The service worker only runs against production builds (`npm run build && npm
 run preview`); `npm run dev` doesn't register it since `devOptions.enabled` isn't set in
 `vite.config.ts`.
+
+## Release Notes Drawer
+
+`src/data/releaseNotes.ts` holds `RELEASE_NOTES`, a hand-maintained list of `{ version, note }`
+entries — one plain-language bullet per user-facing change worth announcing. `version` is a
+manually-bumped integer local to this feature (append a new entry with `version` one higher than
+the current last entry whenever a PR ships something worth telling users about); it's intentionally
+unrelated to the auto-derived `__APP_VERSION__` build string above, since a contributor can't know
+their PR's future merge number while writing the note. The pure comparison logic
+(`getUnseenReleaseNotes`/`getLatestReleaseNoteVersion`, tested in `src/state/releaseNotes.test.ts`)
+lives in `src/state/releaseNotes.ts`.
+
+`ReleaseNotesDrawer.tsx` reads the last-seen version from `localStorage`
+(`gravy_release_notes_seen`) on mount, shows a drawer listing any notes newer than it (newest
+first), and immediately records the latest version as seen — so a shown drawer won't reappear next
+load. A `null` last-seen value (brand-new install, or an existing install from before this feature
+shipped) is treated as nothing-to-announce, so it bootstraps silently instead of dumping the whole
+history. Since `UpdatePrompt` auto-reloads on every deploy (see above) and each merge to `main`
+changes `__APP_VERSION__`, in practice this drawer surfaces once per meaningful release: the reload
+after a deploy is what makes "loads with a new version" and "a PR merged to main" the same event
+from the client's point of view. Mounted last in `AppShell` (`App.tsx`) and given
+`overlayClassName="release-notes-overlay"` (z-index 1200) so it always stacks above the cloud-sync
+gate (`SyncGateModal`, z-index 1100) rather than getting silently buried behind it.

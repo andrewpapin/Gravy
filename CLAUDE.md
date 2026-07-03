@@ -92,7 +92,8 @@ Deep detail lives in `docs/`. Read the linked file when working in that area.
   `DAILY_GAME_WIN_CAP`); Rank ladder (`src/data/ranks.ts`, `getRank`, `useTodaySnapshot`); Icon system (`src/data/icons.ts`,
   `AppIcon`); Theming (`Settings.theme`, `src/index.css`); Time zone (`Settings.timezone`,
   `todayStr`, `src/data/timezones.ts`); Deployment (`deploy.yml`); Version display
-  (`__APP_VERSION__`); PWA update (`UpdatePrompt.tsx`, `vite-plugin-pwa`).
+  (`__APP_VERSION__`); PWA update (`UpdatePrompt.tsx`, `vite-plugin-pwa`); Release notes drawer
+  (`src/data/releaseNotes.ts`, `src/state/releaseNotes.ts`, `ReleaseNotesDrawer.tsx`).
 - **Native wrap** (`docs/capacitor.md`) — Capacitor packaging spike (Epic 10): `capacitor.config.ts`,
   the `--mode capacitor` root-relative build (`npm run build:native`/`cap:sync`), and why
   `ios/`/`android/` are gitignored. Read before touching the native build path.

@@ -11,13 +11,15 @@ interface ModalProps {
   onBack?: () => void;
   headerExtra?: ReactNode;
   children: ReactNode;
+  /** Extra class on the overlay — e.g. to raise z-index above another overlay it may coexist with. */
+  overlayClassName?: string;
 }
 
-export function Modal({ open, onClose, closeLabel, title, onBack, headerExtra, children }: ModalProps) {
+export function Modal({ open, onClose, closeLabel, title, onBack, headerExtra, children, overlayClassName }: ModalProps) {
   const sheetRef = useFocusTrap<HTMLDivElement>(open, onClose);
   return (
     <div
-      className={`calendar-modal-overlay ${open ? 'show' : ''}`}
+      className={`calendar-modal-overlay ${open ? 'show' : ''} ${overlayClassName ?? ''}`}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
