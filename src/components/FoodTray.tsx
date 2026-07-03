@@ -51,6 +51,7 @@ export function FoodTray({ dateStr }: FoodTrayProps = {}) {
               }}
               aria-label={logged ? `${f.label}, logged. Tap to undo.` : `${f.label}. Tap to log.`}
             >
+              <span className="food-count-badge" aria-hidden="true">+{state.settings.foodPts}</span>
               {logged && (
                 <span className="tile-check-badge" aria-hidden="true">
                   <FontAwesomeIcon icon={faCheck} />
