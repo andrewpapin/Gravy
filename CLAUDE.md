@@ -13,8 +13,9 @@ npm run preview   # Serve ./dist locally
 npm test          # Run Vitest unit tests (src/**/*.test.ts)
 ```
 
-`npm run lint`, `npm test`, and `npm run build` are all required to merge into `main`
-(`deploy.yml` gates on lint → test → build). Run all three before considering a change finished.
+`npm run lint`, `npm test`, and `npm run build` are all required to merge into `main` — `ci.yml`
+runs all three as a required PR status check, and `deploy.yml` re-runs them after merge before
+deploying from `main`. Run all three before considering a change finished.
 
 ## Testing
 
