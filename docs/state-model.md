@@ -101,10 +101,10 @@ complete, independent `GravyState` for one kid. `loadRoot()`/`saveRoot()` in
 single-profile save by wrapping it as a one-entry root.
 
 - **Shared vs. per-kid fields** — `goals`, `rewards`, and a subset of `settings`
-  (`SHARED_SETTING_KEYS`: `foodPts`, `bonusPts`, `gamePts`, `pin`, `recoveryQuestion`,
-  `recoveryAnswer`, `timezone`) are identical across every profile in a household. Per-kid fields
-  are everything else: progress (points, streaks, counters, logs) plus identity (`childName`,
-  `avatarIcon`, `avatarIconColor`, `avatarBgColor`, `theme`).
+  (`SHARED_SETTING_KEYS`: `foodPtsByItem`, `bonusPts`, `gamePts`, `timezone`) are identical across
+  every profile in a household. Per-kid fields are everything else: progress (points, streaks,
+  counters, logs) plus identity (`childName`, `avatarIcon`, `avatarIconColor`, `avatarBgColor`,
+  `theme`).
 - `mirrorSharedFields(root)` copies the shared fields from the **active** profile onto every other
   profile after any edit — the active profile is where all parent config changes happen, so it's the
   source of truth for shared config at any moment.

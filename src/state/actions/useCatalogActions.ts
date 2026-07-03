@@ -4,6 +4,7 @@ import type { Goal, GravyState, Reward } from '../types';
 import { applyDayRollover, cloneDefaultState } from '../defaultState';
 import { appendAuditLog } from '../auditLog';
 import type { LogActor } from '../actionLog';
+import { FOODS } from '../../data/foods';
 import { isValidTimezone } from '../../data/timezones';
 import { safeRemoveItem } from '../storage';
 import { HOUSEHOLD_CODE_KEY, SYNC_SKIPPED_KEY, clone } from './shared';
@@ -12,7 +13,6 @@ import type { SettableSettingKey, ShowToast, SyncStatus } from './types';
 // Friendly names for the Admin Log's settingChanged entries (Epic 8 item 6).
 const SETTING_LABELS: Partial<Record<SettableSettingKey, string>> = {
   childName: 'child name',
-  foodPts: 'food points',
   bonusPts: 'bonus points',
   gamePts: 'game points',
   theme: 'theme',
@@ -119,8 +119,6 @@ export function useCatalogActions(deps: CatalogDeps) {
       const next = clone(prev);
       if (key === 'childName') {
         next.settings.childName = val.trim() || 'Zack';
-      } else if (key === 'foodPts') {
-        next.settings.foodPts = Math.max(1, parseInt(val) || 1);
       } else if (key === 'bonusPts') {
         next.settings.bonusPts = Math.max(0, parseInt(val) || 0);
       } else if (key === 'theme') {
@@ -142,6 +140,24 @@ export function useCatalogActions(deps: CatalogDeps) {
         appendAuditLog(next, actorRef.current, {
           type: 'settingChanged',
           label: `Changed ${name} to "${val}"`,
+        });
+      }
+      return next;
+    });
+  }, [setState, actorRef]);
+
+  // Points per food group are configured per-item (Settings.foodPtsByItem) rather than
+  // through the generic saveSetting, since a single food id's value must be set independently.
+  const saveFoodPts = useCallback((foodId: string, val: string) => {
+    setState((prev) => {
+      const next = clone(prev);
+      const clamped = Math.max(1, parseInt(val) || 1);
+      next.settings.foodPtsByItem = { ...next.settings.foodPtsByItem, [foodId]: clamped };
+      if (clamped !== (prev.settings.foodPtsByItem[foodId] ?? clamped)) {
+        const food = FOODS.find((f) => f.id === foodId);
+        appendAuditLog(next, actorRef.current, {
+          type: 'settingChanged',
+          label: `Changed ${food?.label ?? foodId} points to "${clamped}"`,
         });
       }
       return next;
@@ -194,5 +210,5 @@ export function useCatalogActions(deps: CatalogDeps) {
     });
   }, [setState, showToast, actorRef, pendingTimersRef, setHouseholdCode, lastSyncedRef, setSyncStatus]);
 
-  return { addGoal, removeGoal, updateGoal, addReward, updateReward, removeReward, saveSetting, resetToday, resetAll };
+  return { addGoal, removeGoal, updateGoal, addReward, updateReward, removeReward, saveSetting, saveFoodPts, resetToday, resetAll };
 }

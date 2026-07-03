@@ -1,4 +1,11 @@
-import type { DayLog, GravyState } from './types';
+import type { DayLog, GravyState, Settings } from './types';
+import { DEFAULT_FOOD_PTS } from './defaultState';
+
+// Looks up the configured points for a single food item, keyed by Food.id — each food group
+// has its own independently configurable point value (see Settings.foodPtsByItem).
+export function getFoodPts(settings: Settings, foodId: string): number {
+  return settings.foodPtsByItem[foodId] ?? DEFAULT_FOOD_PTS;
+}
 
 // Awards points and updates today's running max. The balance is intentionally not floored
 // here so an award and its later exact-inverse removal cancel out precisely (flooring would

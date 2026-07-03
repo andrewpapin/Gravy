@@ -5,7 +5,7 @@ import { todayStr } from '../defaultState';
 import { appendActionLog, markMostRecentUndone, type LogActor } from '../actionLog';
 import { FOODS } from '../../data/foods';
 import { GAMES } from '../../data/games';
-import { applyBonusItem, reverseBonusItem } from '../points';
+import { applyBonusItem, getFoodPts, reverseBonusItem } from '../points';
 import { queuePendingPoints, takeMostRecentPending } from '../pendingPoints';
 import { DAILY_GAME_WIN_CAP, clone } from './shared';
 import type { AwardPoints, MaybeCelebrateRankUp, ShowCelebration, ShowToast } from './types';
@@ -41,18 +41,19 @@ export function useKidProgressActions(deps: KidProgressDeps) {
       const label = `${food?.label ?? ''} logged!`;
       const isFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
       const bonusTriggered = !wasFull && isFull && next.settings.bonusPts > 0;
+      const foodPts = getFoodPts(next.settings, id);
 
       if (requiresApproval) {
-        const totalPts = next.settings.foodPts + (bonusTriggered ? next.settings.bonusPts : 0);
+        const totalPts = foodPts + (bonusTriggered ? next.settings.bonusPts : 0);
         queuePendingPoints(next, 'food', id, totalPts, label);
         showToast(faHourglassHalf, `${label} — waiting for approval`);
       } else {
-        awardPoints(next, next.settings.foodPts, label);
+        awardPoints(next, foodPts, label);
       }
       appendActionLog(next, actorRef.current, {
         type: 'food',
         label,
-        pts: requiresApproval ? 0 : next.settings.foodPts,
+        pts: requiresApproval ? 0 : foodPts,
         dateStr: todayStr(next.settings.timezone),
         itemId: id,
       });
@@ -89,9 +90,10 @@ export function useKidProgressActions(deps: KidProgressDeps) {
       const pending = takeMostRecentPending(next, 'food', id);
       if (!pending) {
         // Exact inverse of logFood's award (see awardPoints note) — no zero-floor here.
-        next.points -= next.settings.foodPts;
-        next.totalPoints -= next.settings.foodPts;
-        next.todayPoints -= next.settings.foodPts;
+        const foodPts = getFoodPts(next.settings, id);
+        next.points -= foodPts;
+        next.totalPoints -= foodPts;
+        next.todayPoints -= foodPts;
       }
       const isFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
       if (wasFull && !isFull) {

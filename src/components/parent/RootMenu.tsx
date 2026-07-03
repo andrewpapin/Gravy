@@ -1,9 +1,9 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faListCheck, faCartShopping, faChevronRight,
+  faListCheck, faCartShopping, faGamepad, faChevronRight,
 } from '@fortawesome/free-solid-svg-icons';
 
-export type RootDest = 'goals' | 'store';
+export type RootDest = 'goals' | 'store' | 'arcade';
 
 interface RootMenuProps {
   onNavigate: (dest: RootDest) => void;
@@ -25,6 +25,14 @@ export function RootMenu({ onNavigate }: RootMenuProps) {
         <div className="menu-card-body">
           <div className="menu-card-title">Store</div>
           <div className="menu-card-sub">Rewards your child can redeem</div>
+        </div>
+        <FontAwesomeIcon icon={faChevronRight} className="menu-card-chevron" />
+      </button>
+      <button className="menu-card" onClick={() => onNavigate('arcade')} type="button">
+        <span className="menu-card-icon"><FontAwesomeIcon icon={faGamepad} /></span>
+        <div className="menu-card-body">
+          <div className="menu-card-title">Arcade</div>
+          <div className="menu-card-sub">Points earned from winning games</div>
         </div>
         <FontAwesomeIcon icon={faChevronRight} className="menu-card-chevron" />
       </button>

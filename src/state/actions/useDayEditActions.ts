@@ -4,7 +4,7 @@ import { backfillStreaksFromLogs, todayStr } from '../defaultState';
 import { appendActionLog, markMostRecentUndone, type LogActor } from '../actionLog';
 import { FOODS } from '../../data/foods';
 import { resolveToastIcon } from '../../data/icons';
-import { applyBonusItemForDay, reverseBonusItem } from '../points';
+import { applyBonusItemForDay, getFoodPts, reverseBonusItem } from '../points';
 import { clone } from './shared';
 import type { AwardPointsForDay, MaybeCelebrateRankUp, ShowToast } from './types';
 
@@ -47,11 +47,12 @@ export function useDayEditActions(deps: DayEditDeps) {
       // the live balance/lifetime total exactly like logging the same item today does.
       const food = FOODS.find((f) => f.id === foodId);
       const label = `${food?.label ?? ''} added!`;
-      awardPointsForDay(next, log, next.settings.foodPts, label);
+      const foodPts = getFoodPts(next.settings, foodId);
+      awardPointsForDay(next, log, foodPts, label);
       appendActionLog(next, actorRef.current, {
         type: 'food',
         label,
-        pts: next.settings.foodPts,
+        pts: foodPts,
         dateStr,
         itemId: foodId,
       });
@@ -90,7 +91,7 @@ export function useDayEditActions(deps: DayEditDeps) {
 
       // Exact inverse of logFoodForDay's award (see awardPoints note) — no zero-floor here,
       // so re-adding the same item afterward lands back exactly where the balance was.
-      const foodPts = next.settings.foodPts;
+      const foodPts = getFoodPts(next.settings, foodId);
       next.points -= foodPts;
       next.totalPoints -= foodPts;
       nextLog.points -= foodPts;
