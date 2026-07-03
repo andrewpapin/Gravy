@@ -129,9 +129,16 @@ export function useHouseholdSync({ root, state, setRoot, setState }: HouseholdSy
     if (json === lastSyncedRef.current) return;
     setSyncStatus('syncing');
     const timeout = setTimeout(() => {
+      // Mark this snapshot as "seen" before the request resolves, not after. The realtime
+      // postgres_changes echo of this exact write can arrive over the websocket before this
+      // RPC's HTTP response comes back (they're independent round trips) — if the receive
+      // effect doesn't yet recognize the echo as its own, it merges it in, and since scalars
+      // like todayGoals/points/counters are last-write-wins from the remote snapshot, that
+      // clobbers any click made in between with this (now-stale) echoed state. Setting it here
+      // closes that window regardless of which round trip finishes first.
+      lastSyncedRef.current = json;
       pushHouseholdState(householdCode, merged)
         .then(() => {
-          lastSyncedRef.current = json;
           setSyncStatus('idle');
         })
         .catch(() => setSyncStatus('error'));
