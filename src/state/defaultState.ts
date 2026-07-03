@@ -7,6 +7,9 @@ export const STORAGE_KEY = 'gravy_v1';
 // Lives here (not in Onboarding.tsx) so App.tsx can read it without a static import that
 // would pull the lazy-loaded Onboarding component back into the main bundle.
 export const ONBOARDING_DONE_KEY = 'gravy_onboarded';
+// Fallback points for a food item with no configured value (e.g. one added to FOODS after a
+// save was written) — mirrors the points-per-food-group default every FOODS entry starts at.
+export const DEFAULT_FOOD_PTS = 10;
 
 export const defaultState: GravyState = {
   points: 0,
@@ -66,7 +69,7 @@ export const defaultState: GravyState = {
     { id: 6, emoji: '💰', icon: 'moneyBill', name: '$5 allowance', cost: 200 },
   ],
   settings: {
-    foodPts: 10,
+    foodPtsByItem: Object.fromEntries(FOODS.map((f) => [f.id, DEFAULT_FOOD_PTS])),
     bonusPts: 25,
     gamePts: 15,
     childName: 'Zack',
@@ -206,6 +209,14 @@ export function migrateLegacyState(state: Record<string, unknown>): void {
     delete settings.recoveryAnswerHash;
     delete settings.recoveryAnswerSalt;
   }
+
+  // foodPts (a single points-per-food-group number) was replaced by foodPtsByItem (a
+  // per-food-group map) — carry the old uniform value forward onto every food item so
+  // upgrading doesn't silently reset a parent's configured points.
+  if (settings && typeof settings.foodPts === 'number' && !settings.foodPtsByItem) {
+    settings.foodPtsByItem = Object.fromEntries(FOODS.map((f) => [f.id, settings.foodPts]));
+  }
+  if (settings) delete settings.foodPts;
 }
 
 // Walks backward day-by-day from yesterday through `dayLogs`, replaying the same
@@ -246,6 +257,21 @@ function asString(v: unknown, fallback: string): string {
 
 function asPlainObject(v: unknown): Record<string, unknown> {
   return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
+}
+
+// Ensures every FOODS entry has a configured, finite point value — filling in any missing/
+// invalid one with DEFAULT_FOOD_PTS — without discarding a saved value for a food item that's
+// since been removed from FOODS (harmless leftover, kept for round-tripping cloud sync).
+function sanitizeFoodPtsByItem(v: unknown): Record<string, number> {
+  const obj = asPlainObject(v);
+  const result: Record<string, number> = {};
+  for (const key of Object.keys(obj)) {
+    if (typeof obj[key] === 'number' && Number.isFinite(obj[key])) result[key] = obj[key] as number;
+  }
+  for (const f of FOODS) {
+    if (!(f.id in result)) result[f.id] = DEFAULT_FOOD_PTS;
+  }
+  return result;
 }
 
 function asNumberArray(v: unknown): number[] {
@@ -361,7 +387,7 @@ function sanitizeState(state: GravyState): void {
   settings.avatarIcon = asString(settings.avatarIcon, defaultState.settings.avatarIcon);
   settings.avatarIconColor = asString(settings.avatarIconColor, defaultState.settings.avatarIconColor);
   settings.avatarBgColor = asString(settings.avatarBgColor, defaultState.settings.avatarBgColor);
-  settings.foodPts = asFiniteNumber(settings.foodPts, defaultState.settings.foodPts);
+  settings.foodPtsByItem = sanitizeFoodPtsByItem(settings.foodPtsByItem);
   settings.bonusPts = asFiniteNumber(settings.bonusPts, defaultState.settings.bonusPts);
   settings.timezone = isValidTimezone(settings.timezone) ? settings.timezone : defaultState.settings.timezone;
 }
@@ -386,10 +412,12 @@ export function hydrateState(raw: unknown): GravyState {
       stateRecord[k] = JSON.parse(JSON.stringify(defaultState[k]));
     }
   }
-  if (!state.settings) state.settings = { ...defaultState.settings };
+  if (!state.settings) state.settings = JSON.parse(JSON.stringify(defaultState.settings));
   const settingsRecord = state.settings as unknown as Record<string, unknown>;
   for (const k of Object.keys(defaultState.settings) as (keyof GravyState['settings'])[]) {
-    if (!(k in state.settings)) settingsRecord[k] = defaultState.settings[k];
+    if (!(k in state.settings)) {
+      settingsRecord[k] = JSON.parse(JSON.stringify(defaultState.settings[k]));
+    }
   }
   // Validated again (redundantly but harmlessly) below in sanitizeState — done here too so an
   // invalid/garbage saved value can't blow up Intl.DateTimeFormat inside backfillStreaksFromLogs.
@@ -426,7 +454,7 @@ export function saveState(state: GravyState): boolean {
 // avatar fields, theme) is per-kid. Goals and rewards are also shared (mirrored
 // across profiles by mirrorSharedFields).
 export const SHARED_SETTING_KEYS: (keyof Settings)[] = [
-  'foodPts',
+  'foodPtsByItem',
   'bonusPts',
   'gamePts',
   'timezone',
@@ -443,7 +471,12 @@ function copySharedInto(dest: GravyState, src: GravyState): void {
   // The Admin Log is a household-wide history, so it's a shared field mirrored across profiles.
   dest.auditLog = JSON.parse(JSON.stringify(src.auditLog ?? []));
   const destSettings = dest.settings as unknown as Record<string, unknown>;
-  for (const k of SHARED_SETTING_KEYS) destSettings[k] = src.settings[k];
+  for (const k of SHARED_SETTING_KEYS) {
+    const v = src.settings[k];
+    // Deep-clone object-valued settings (foodPtsByItem) so mirrored profiles don't alias the
+    // same nested object — scalars are copied by value either way.
+    destSettings[k] = v && typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : v;
+  }
 }
 
 // Pushes the shared fields from the active profile (where all parent config edits happen) into

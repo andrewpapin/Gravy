@@ -57,7 +57,9 @@ export interface Counters {
 export type Theme = 'capri' | 'classic' | 'midnight' | 'ocean' | 'bubblegum' | 'cyberpunk' | 'ranger';
 
 export interface Settings {
-  foodPts: number;
+  // Points awarded per food item, keyed by Food.id (see src/data/foods.ts) — each food group
+  // has its own independently configurable point value.
+  foodPtsByItem: Record<string, number>;
   bonusPts: number;
   gamePts: number;
   childName: string;

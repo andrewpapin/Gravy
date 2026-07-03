@@ -103,6 +103,7 @@ interface GravyContextValue {
   removeReward: (id: number) => void;
   updateReward: (id: number, patch: Partial<Omit<Reward, 'id'>>) => void;
   saveSetting: (key: SettableSettingKey, val: string) => void;
+  saveFoodPts: (foodId: string, val: string) => void;
   resetToday: () => void;
   resetAll: () => void;
   // The sole gate for parental-control screens — derived from authUser + householdStatus, not
