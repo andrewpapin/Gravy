@@ -5,6 +5,7 @@ import { GrownUpsDrawer } from './components/parent/GrownUpsDrawer';
 import { AccountMenu } from './components/AccountMenu';
 import { ToastContainer } from './components/ToastContainer';
 import { UpdatePrompt } from './components/UpdatePrompt';
+import { ReleaseNotesDrawer } from './components/ReleaseNotesDrawer';
 import { Celebration } from './components/Celebration';
 import { Confetti } from './components/Confetti';
 import { STORAGE_KEY, ONBOARDING_DONE_KEY } from './state/defaultState';
@@ -142,6 +143,9 @@ function AppShell() {
       <Suspense fallback={null}>
         {onboarded ? <SyncGateModal /> : <Onboarding onComplete={() => setOnboarded(true)} />}
       </Suspense>
+      {/* Rendered last so it stacks above the sync gate/onboarding — release notes are
+          dismissible and shouldn't get silently buried behind a mandatory-looking overlay. */}
+      <ReleaseNotesDrawer />
     </>
   );
 }

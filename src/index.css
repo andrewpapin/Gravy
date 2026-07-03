@@ -1071,6 +1071,38 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   flex-direction: column;
 }
 
+.release-notes-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.release-notes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.release-notes-list li {
+  background: var(--card);
+  border: var(--border-width-lg) solid var(--dark);
+  border-radius: var(--radius-sm);
+  box-shadow: 2px 2px 0 var(--dark);
+  padding: 12px 14px;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.release-notes-list li::before {
+  content: '\2728  ';
+}
+/* Above .sync-gate-overlay (1100) — release notes shouldn't get buried behind the cloud-sync
+   gate, since unlike that gate this one is dismissible and won't reappear once seen. */
+.release-notes-overlay {
+  z-index: 1200;
+}
+
 .calendar-header {
   display: flex;
   align-items: center;
