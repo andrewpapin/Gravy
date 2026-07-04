@@ -41,7 +41,7 @@ export function FoodTray({ dateStr }: FoodTrayProps = {}) {
             <button
               key={f.id}
               type="button"
-              className={`food-tile ${logged ? 'checked' : ''}`}
+              className={`gtile ${logged ? 'checked' : ''}`}
               onClick={() => {
                 triggerHaptic();
                 if (isToday) {
@@ -52,14 +52,14 @@ export function FoodTray({ dateStr }: FoodTrayProps = {}) {
               }}
               aria-label={logged ? `${f.label}, logged. Tap to undo.` : `${f.label}. Tap to log.`}
             >
-              <span className="food-count-badge" aria-hidden="true">+{getFoodPts(state.settings, f.id)}</span>
+              <span className="tile-pts" aria-hidden="true">+{getFoodPts(state.settings, f.id)}</span>
               {logged && (
-                <span className="tile-check-badge" aria-hidden="true">
+                <span className="tile-check" aria-hidden="true">
                   <FontAwesomeIcon icon={faCheck} />
                 </span>
               )}
-              <AppIcon iconKey={f.icon} emojiFallback={f.emoji} className="food-emoji" />
-              <div className="food-label" aria-hidden="true">{f.label}</div>
+              <AppIcon iconKey={f.icon} emojiFallback={f.emoji} className="gtile-icon" />
+              <div className="gtile-name" aria-hidden="true">{f.label}</div>
             </button>
           );
         })}

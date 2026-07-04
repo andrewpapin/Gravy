@@ -50,29 +50,29 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
 
             if (isToday && target > 1) {
               return (
-                <div key={g.id} className={`goal-tile ${done ? 'checked' : ''}`}>
-                  <span className="pts-badge pts-badge-corner">+{g.pts}</span>
+                <div key={g.id} className={`gtile ${done ? 'checked' : ''}`}>
+                  <span className="tile-pts">+{g.pts}</span>
                   {done && (
-                    <span className="tile-check-badge" aria-hidden="true">
+                    <span className="tile-check" aria-hidden="true">
                       <FontAwesomeIcon icon={faCheck} />
                     </span>
                   )}
-                  <div className="goal-tile-top">
-                    <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-tile-emoji" />
+                  <div className="gtile-body">
+                    <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="gtile-icon" />
+                    <div className="gtile-name">{g.name}</div>
                   </div>
-                  <div className="goal-tile-name">{g.name}</div>
-                  <div className="goal-stepper">
+                  <div className="gtile-stepper">
                     <button
                       type="button"
-                      className="stepper-btn"
+                      className="gstep-btn"
                       onClick={() => { triggerHaptic(); decrementGoal(g.id); }}
                       disabled={count === 0}
                       aria-label={`Undo ${g.name}`}
                     >−</button>
-                    <span className="stepper-count">{count}/{target}</span>
+                    <span className="gstep-count">{count}/{target}</span>
                     <button
                       type="button"
-                      className="stepper-btn"
+                      className="gstep-btn"
                       onClick={() => { triggerHaptic(); incrementGoal(g.id); }}
                       aria-label={`Complete ${g.name}`}
                     >+</button>
@@ -85,7 +85,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
               <button
                 key={g.id}
                 type="button"
-                className={`goal-tile ${done ? 'checked' : ''}`}
+                className={`gtile ${done ? 'checked' : ''}`}
                 onClick={() => {
                   triggerHaptic();
                   if (isToday) {
@@ -97,16 +97,16 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                 aria-pressed={done}
                 aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
               >
-                <span className="pts-badge pts-badge-corner">+{g.pts}</span>
+                <span className="tile-pts">+{g.pts}</span>
                 {done && (
-                  <span className="tile-check-badge" aria-hidden="true">
+                  <span className="tile-check" aria-hidden="true">
                     <FontAwesomeIcon icon={faCheck} />
                   </span>
                 )}
-                <div className="goal-tile-top">
-                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-tile-emoji" />
+                <div className="gtile-body">
+                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="gtile-icon" />
+                  <div className="gtile-name">{g.name}</div>
                 </div>
-                <div className="goal-tile-name">{g.name}</div>
               </button>
             );
           })}
