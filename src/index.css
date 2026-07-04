@@ -1914,6 +1914,40 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
 }
 .approve-btns { display: flex; gap: 8px; }
 
+/* ===== INLINE-EDITABLE GOAL ROW (GoalsPanel) — mirrors PointsPanel's always-live,
+   save-on-blur inputs instead of a separate Edit/Save/Cancel step. ===== */
+.parent-item-name-input {
+  display: block;
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-bottom: var(--border-width-md) solid transparent;
+  padding: 0 0 2px;
+  outline: none;
+  text-overflow: ellipsis;
+}
+.parent-item-name-input:focus { border-bottom-color: var(--coral); }
+.goal-row-fields { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+.goal-row-fields input[type='number'] {
+  width: 56px;
+  flex: none;
+  border: var(--border-width-lg) solid var(--dark);
+  border-radius: 10px;
+  padding: 4px 6px;
+  font-family: var(--font-display);
+  font-size: var(--text-base); /* 16px — prevents iOS viewport zoom on focus */
+  font-weight: 700;
+  background: var(--card);
+  outline: none;
+  color: var(--text);
+}
+.goal-row-fields input[type='number']:focus { border-color: var(--coral); }
+.goal-type-inline-label { font-size: 0.75rem; color: var(--sage); font-weight: 700; }
+
 .action-log-meta { font-size: 0.7rem; color: var(--muted); font-weight: 700; margin-top: 2px; }
 .action-log-item--undone { opacity: 0.55; }
 .action-log-item--undone .parent-item-name { text-decoration: line-through; }

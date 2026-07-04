@@ -185,13 +185,16 @@ work lives in `BACKLOG.md`.
 
 - **`GoalsPanel` UX pass** — fixed a user-reported "confusing and inconsistent" Settings →
   Goals screen. Moved the Daily Goal/Bonus Points toggle above the add-goal fields it governs
-  instead of below them; unified the toggle into one `GoalTypeToggle` component used by both
-  the add form and (newly) the per-goal edit form, replacing the old bare unlabeled switch on
-  each row — a goal's type is now only changed via the same edit-and-Save flow as its other
-  fields, not an instant separate toggle. Moved `PointsPanel` (food-tray points) to the bottom
-  of the panel so opening "Goals" shows goal content first, matching what `docs/ui-surfaces.md`
-  already described. Added a `ConfirmDialog` (the same component `DangerZonePanel`/`SyncPanel`/
-  `ApprovalsPanel` use) before `removeGoal`, replacing the old instant/irreversible delete.
-  Points/target inputs now normalize on blur (mirroring `PointsPanel`'s existing clamp-on-blur
-  pattern) so an invalid/blank value's fallback is visible before submit instead of silently
-  applied after. Added `aria-label`s to `GoalsPanel`'s name/points/target inputs.
+  instead of below them. Moved `PointsPanel` (food-tray points) to the bottom of the panel so
+  opening "Goals" shows goal content first, matching what `docs/ui-surfaces.md` already
+  described. Replaced the old pencil-icon → separate edit form → Save/Cancel flow with a new
+  `GoalRow` component where every field (icon, name, points, target, Daily/Bonus toggle) is
+  always live and saves on blur/change — the same always-editable pattern `PointsPanel`'s
+  food-points inputs already used, with the same brief checkmark flash confirming each save;
+  the Daily/Bonus switch on each row now also carries a visible "Daily"/"Bonus" text label
+  instead of only a hover tooltip. Points/target inputs normalize on blur (mirroring
+  `PointsPanel`'s clamp-on-blur pattern) so an invalid/blank value's fallback is visible
+  before it's saved instead of silently applied after. Added a `ConfirmDialog` (the same
+  component `DangerZonePanel`/`SyncPanel`/`ApprovalsPanel` use) before `removeGoal`, replacing
+  the old instant/irreversible delete, and switched the row's Remove button to icon-only to
+  free up width for the now-editable name field. Added `aria-label`s to `GoalsPanel`'s inputs.
