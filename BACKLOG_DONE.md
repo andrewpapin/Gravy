@@ -180,3 +180,18 @@ work lives in `BACKLOG.md`.
   `confirm-dialog-*` rather than deleted; `GoalsPanel`'s reused `pbadge-toggle` CSS was renamed
   to `goal-type-toggle`. No Supabase migration needed — old synced rows just carry a dead
   `earnedBadges`/`badgeConfig` JSON key forever, same as any other retired field.
+
+## Epic 13 — Engineering & Security Audit (July 2026)
+
+- **`GoalsPanel` UX pass** — fixed a user-reported "confusing and inconsistent" Settings →
+  Goals screen. Moved the Daily Goal/Bonus Points toggle above the add-goal fields it governs
+  instead of below them; unified the toggle into one `GoalTypeToggle` component used by both
+  the add form and (newly) the per-goal edit form, replacing the old bare unlabeled switch on
+  each row — a goal's type is now only changed via the same edit-and-Save flow as its other
+  fields, not an instant separate toggle. Moved `PointsPanel` (food-tray points) to the bottom
+  of the panel so opening "Goals" shows goal content first, matching what `docs/ui-surfaces.md`
+  already described. Added a `ConfirmDialog` (the same component `DangerZonePanel`/`SyncPanel`/
+  `ApprovalsPanel` use) before `removeGoal`, replacing the old instant/irreversible delete.
+  Points/target inputs now normalize on blur (mirroring `PointsPanel`'s existing clamp-on-blur
+  pattern) so an invalid/blank value's fallback is visible before submit instead of silently
+  applied after. Added `aria-label`s to `GoalsPanel`'s name/points/target inputs.

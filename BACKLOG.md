@@ -319,8 +319,9 @@ of that epic's existing RLS item. Everything else from the audit lands here.)*
   storage-failure warning. *(P1, S.)*
 - **No automated a11y linting.** `eslint-plugin-jsx-a11y` isn't wired into
   `eslint.config.js`; existing good patterns rely on discipline, not tooling. *(P1, S.)*
-- **Several inputs identified only by placeholder text, no `<label>`.** `GoalsPanel.tsx`,
-  `StorePanel.tsx`, `PointsPanel.tsx`, `ProfilesManager.tsx:133-140`. *(P2, S.)*
+- **Several inputs identified only by placeholder text, no `<label>`.**
+  `StorePanel.tsx`, `PointsPanel.tsx`, `ProfilesManager.tsx:133-140` (`GoalsPanel.tsx`'s
+  fields got `aria-label`s in the Goals-panel UX pass below). *(P2, S.)*
 - **Dark-theme CSS overrides are a growing, manually-maintained list.**
   `src/index.css:153-215+` — `midnight`/`cyberpunk` need per-component overrides beyond the
   token swap; nothing enforces a new component gets one added. No contrast failure
