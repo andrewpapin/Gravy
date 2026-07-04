@@ -73,6 +73,13 @@ Deep reference for localStorage persistence, Supabase cloud sync, the household 
   result) and lets the push effect re-send any local-only additions; both devices converge to
   union-of-collections + last-writer's scalars. Server-side write races (two pushes inside the 800ms
   debounce) and `pendingRewards` add/remove tombstones remain for the offline-queue/RLS items.
+  `lastSyncedRef` (used by both the push and receive effects to recognize a device's own echo) is
+  stamped with the outgoing JSON the moment the debounced push *fires*, not after its RPC response
+  resolves — the realtime echo of that write can arrive over the websocket before the RPC's HTTP
+  response does, and if `lastSyncedRef` weren't updated yet, the receive effect would treat that
+  echo as a genuine remote change and merge it in, clobbering a click made in the intervening moment
+  with the (now-stale) echoed scalars. This was a real bug (a tapped goal/food/reward flashing done
+  then reverting) fixed by marking the snapshot as seen at send-time instead of on resolution.
 - `SyncGateModal` is only reachable post-onboarding, after `resetAll()` ("Reset Everything")
   disconnects sync (`setHouseholdCode(null)`) without signing the account out — reconnecting here is
   optional (`gravy_sync_skipped` key) since the account, and this device's settings access, are
