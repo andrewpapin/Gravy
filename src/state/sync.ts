@@ -19,13 +19,13 @@ export function isValidHouseholdCode(code: string): boolean {
 }
 
 // Routed through a SECURITY DEFINER RPC (rather than a direct table insert) so the anon
-// role doesn't need a blanket INSERT grant — see supabase/migrations/20260623000000_scope_household_mutations.sql.
+// role doesn't need a blanket INSERT grant — see supabase/migrations/20260623123203_scope_household_mutations.sql.
 export async function createHousehold(code: string, state: GravyRoot): Promise<void> {
   const { error } = await supabase.rpc('gravy_create_household', { p_code: code, p_state: state });
   if (error) throw error;
 }
 
-// Routed through a SECURITY DEFINER RPC — see supabase/migrations/20260623000000_scope_household_mutations.sql.
+// Routed through a SECURITY DEFINER RPC — see supabase/migrations/20260623123203_scope_household_mutations.sql.
 export async function renameHousehold(oldCode: string, newCode: string): Promise<void> {
   const { error } = await supabase.rpc('gravy_rename_household', { p_old_code: oldCode, p_new_code: newCode });
   if (error) throw error;
@@ -40,7 +40,7 @@ export async function fetchHousehold(code: string): Promise<GravyRoot | null> {
   return (data as GravyRoot | null) ?? null;
 }
 
-// Routed through a SECURITY DEFINER RPC — see supabase/migrations/20260623000000_scope_household_mutations.sql.
+// Routed through a SECURITY DEFINER RPC — see supabase/migrations/20260623123203_scope_household_mutations.sql.
 export async function pushHouseholdState(code: string, state: GravyRoot): Promise<void> {
   const { error } = await supabase.rpc('gravy_upsert_household_state', { p_code: code, p_state: state });
   if (error) throw error;

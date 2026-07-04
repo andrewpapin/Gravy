@@ -309,8 +309,6 @@ of that epic's existing RLS item. Everything else from the audit lands here.)*
   (`src/data/icons.ts`) with nothing enforcing consistency. *(P2, S.)*
 - **`LogPanel` re-sorts the merged action/audit log on every render**, unbounded within the
   existing 500/300-entry caps. *(P2, S — memoize.)*
-- **No baseline SQL migration for `households`.** `supabase/migrations/` has no
-  `CREATE TABLE`/init migration — schema isn't reconstructable from the repo alone. *(P2, S.)*
 
 ### Accessibility
 

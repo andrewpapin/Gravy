@@ -18,7 +18,7 @@ work lives in `BACKLOG.md`.
 - **Supabase `households` access control** — `SECURITY DEFINER` RPCs
   (`gravy_create_household`/`gravy_upsert_household_state`/`gravy_rename_household`),
   each scoped to one row; unscoped anon INSERT/UPDATE revoked.
-  `20260623000000_scope_household_mutations.sql`. SELECT stays open (Realtime needs
+  `20260623123203_scope_household_mutations.sql`. SELECT stays open (Realtime needs
   it under the shared anon key) — accepted residual read risk; tighten via Epic 9 RLS.
 - **Rate-limit household-code lookups** — `gravy_lookup_household` RPC throttles
   joins to 10 per 5-min window per IP; `fetchHousehold()` uses it, `joinHousehold`
@@ -99,7 +99,7 @@ work lives in `BACKLOG.md`.
 - **Household ownership + invite-by-code** — `households.owner_id` +
   `household_members` table; all RPCs membership-aware, plus
   `gravy_claim_household`/`gravy_household_status`; the 6-char code is the
-  join/invite token. `20260627000000_auth_household_ownership.sql`.
+  join/invite token. `20260627132616_auth_household_ownership.sql`.
 - **Claim-or-deprecate window for PIN-only households** — pre-existing rows
   (`owner_id IS NULL`) keep working anonymously until a signed-in parent claims
   them via `gravy_claim_household` (no data migration); "Secure this household"
@@ -110,7 +110,7 @@ work lives in `BACKLOG.md`.
   `SecurityPanel`) is deleted; `grownUpUnlocked` is now a derived value
   (`isGrownUpUnlocked(authUser, householdStatus)` in `src/state/auth.ts`) —
   signed in AND a household member, nothing else. Household creation now
-  requires `auth.uid()` (`20260701000000_require_account_for_household.sql`),
+  requires `auth.uid()` (`20260701234953_require_account_for_household.sql`),
   closing the claim-or-deprecate window above: every household is claimed at
   creation, so there's no more unclaimed state. An anonymous device can still
   join a household by code and sync kid-mode progress (the RPC's existing-row
@@ -195,3 +195,17 @@ work lives in `BACKLOG.md`.
   Points/target inputs now normalize on blur (mirroring `PointsPanel`'s existing clamp-on-blur
   pattern) so an invalid/blank value's fallback is visible before submit instead of silently
   applied after. Added `aria-label`s to `GoalsPanel`'s name/points/target inputs.
+- **Baseline `households` migration restored** — `supabase/migrations/` was missing the
+  original `CREATE TABLE`/RLS/policy migration for `public.households` (applied directly to
+  production on 2026-06-13, never committed); every later migration assumed the table already
+  existed, and a fresh database replay hit a missing relation on the very first guarded
+  `drop policy if exists`. This was also why Supabase's GitHub branching integration's
+  persistent `main` preview branch had been stuck in `MIGRATIONS_FAILED` since 2026-06-23.
+  Added `20260613184631_create_households_table.sql`, reconstructed from the live schema and
+  named with the version Supabase's own migration history already recorded for it (so
+  production recognizes it as already-applied rather than replaying it). Also renamed three
+  other migration files whose committed timestamps didn't match what was actually recorded in
+  production's migration history (`20260623123203_scope_household_mutations.sql`,
+  `20260627132616_auth_household_ownership.sql`,
+  `20260701234953_require_account_for_household.sql`) so the repo's migration ledger matches
+  production exactly.
