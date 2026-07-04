@@ -1,7 +1,7 @@
 -- Epic 8 follow-up — Account-Mandatory Household Model. See BACKLOG_DONE.md Epic 8 for the
 -- original claim/ownership model this tightens.
 --
--- The previous migration (20260627000000_auth_household_ownership.sql) deliberately kept
+-- The previous migration (20260627132616_auth_household_ownership.sql) deliberately kept
 -- "unclaimed" households working anonymously — a claim-or-deprecate transition window for
 -- pre-account data. That window is over: the app now requires every parent to have an account
 -- before it will create or join a household on their behalf, so unclaimed households can no

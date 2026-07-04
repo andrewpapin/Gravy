@@ -6,7 +6,7 @@
 -- them) but it means there was no way to actually delete a household's data everywhere.
 --
 -- This adds a fourth SECURITY DEFINER RPC, scoped to one code like the three in
--- 20260623000000_scope_household_mutations.sql, backing a new, separate "Delete household
+-- 20260623123203_scope_household_mutations.sql, backing a new, separate "Delete household
 -- everywhere" action in the UI (distinct from "Turn off cloud sync").
 
 create or replace function public.gravy_delete_household(p_code text)

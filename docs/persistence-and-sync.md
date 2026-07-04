@@ -31,9 +31,9 @@ Deep reference for localStorage persistence, Supabase cloud sync, the household 
   Realtime's `postgres_changes` delivery, which has no per-household auth claim to scope by), so this
   throttles the documented join flow, not a client querying the REST endpoint directly.
 - **Ownership (Epic 8, tightened by the account-mandatory migration).**
-  `20260627000000_auth_household_ownership.sql` introduced membership-aware RPCs and a
+  `20260627132616_auth_household_ownership.sql` introduced membership-aware RPCs and a
   claim-or-deprecate transition window (unclaimed households — `owner_id IS NULL` — kept working
-  anonymously). `20260701000000_require_account_for_household.sql` closed that window: creating a
+  anonymously). `20260701234953_require_account_for_household.sql` closed that window: creating a
   household (`gravy_create_household`, and the first-write branch of
   `gravy_upsert_household_state`) now requires `auth.uid()`, so every household is claimed
   (owned) from the moment it exists — there's no more unclaimed state to transition out of.

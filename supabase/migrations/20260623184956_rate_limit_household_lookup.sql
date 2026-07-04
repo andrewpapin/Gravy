@@ -1,4 +1,4 @@
--- BACKLOG.md Epic 1 follow-up to 20260623000000_scope_household_mutations.sql: that
+-- BACKLOG.md Epic 1 follow-up to 20260623123203_scope_household_mutations.sql: that
 -- migration scoped INSERT/UPDATE behind SECURITY DEFINER RPCs but left the join-by-code
 -- lookup (`fetchHousehold` in src/state/sync.ts) as a plain `.from('households').select()`,
 -- with nothing slowing down a scripted sweep of the ~32^6 household code space.
