@@ -106,17 +106,19 @@ header both read "Game Settings"); the component/file names (`ParentDashboard`, 
 `RootMenu`) are unchanged — only user-facing copy was renamed, since those symbols also represent
 the PIN-gated access tier shared by every parent-only feature, not just this dashboard.
 
-`ParentDashboard` is a two-level router: a local `root` state (`'menu' | 'goals' | 'store' |
-'arcade'`). At `'menu'` it renders `RootMenu` (a card list, not tabs); picking a card drills into
-one panel with a back button:
+`ParentDashboard` is a two-level router: a local `root` state (`'menu' | 'goals-store' |
+'arcade'`). At `'menu'` it renders `RootMenu` (a 2-card list, not tabs — "Goals & Store" and
+"Arcade"); picking a card drills into one panel with a back button:
 
-- `GoalsPanel` — goal/bonus-item CRUD, and (nested at the bottom) `PointsPanel` for the food-tray
-  point values: one points input per `FOODS` item (`Settings.foodPtsByItem`, set via `saveFoodPts`)
-  plus the full-tray `bonusPts`.
-- `StorePanel` — reward CRUD.
+- `GoalsStorePanel` — a combined screen with a `SegmentedTabs` switch (`'goals' | 'store'`, local
+  state, conditional render) toggling between the unchanged `GoalsPanel` and `StorePanel`:
+  - `GoalsPanel` — goal/bonus-item CRUD, and (nested at the bottom) `PointsPanel` for the food-tray
+    point values: one points input per `FOODS` item (`Settings.foodPtsByItem`, set via
+    `saveFoodPts`) plus the full-tray `bonusPts`.
+  - `StorePanel` — reward CRUD.
 - `ArcadePanel` — points per game win (`gamePts`), labeled "Arcade" to match the kid-facing hub
-  name. Promoted to its own top-level `RootMenu` card (sibling to Goals/Store) rather than nested
-  inside `GoalsPanel`'s `PointsPanel`, since it's unrelated to goals/food configuration.
+  name. Kept as its own top-level `RootMenu` card (sibling to the combined Goals & Store card)
+  rather than folded in, since it's unrelated to goals/food/reward configuration.
 
 `ApprovalsPanel` (approve/decline pending points and pending reward requests) is no longer nested
 here — it's reached directly from the `TopBar` bell icon via the standalone, self-gating

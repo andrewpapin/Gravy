@@ -1898,6 +1898,30 @@ button.gtile.checked:disabled { transform: scale(1.03); }
 .menu-card--danger { border-color: var(--danger); }
 .menu-card--danger .menu-card-icon { background: var(--danger); color: white; }
 
+.segmented-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  background: var(--card);
+  border: var(--border-width-lg) solid var(--dark);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  margin-bottom: var(--space-md);
+}
+.segmented-tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 4px;
+  border: none;
+  border-radius: calc(var(--radius-sm) - 4px);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.segmented-tab.active { background: var(--sage); color: white; box-shadow: 3px 3px 0 var(--dark); }
+
 /* ===== PARENT ITEMS ===== */
 .parent-item {
   background: var(--card);
