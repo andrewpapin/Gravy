@@ -670,10 +670,10 @@ button.gtile.checked:disabled { transform: scale(1.03); }
   font-weight: 800;
   line-height: 1.25;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  max-height: 2.5em;
+  max-height: 6.25em;
 }
 .gtile.checked .gtile-name { color: white; }
 
@@ -849,7 +849,7 @@ button.gtile.checked:disabled { transform: scale(1.03); }
   gap: 10px;
 }
 .goal-grid > *:nth-child(3n+1):last-child { grid-column: 1 / -1; }
-.goal-grid .gtile { height: 128px; padding: 24px 8px 8px; }
+.goal-grid .gtile { min-height: 144px; padding: 24px 8px 8px; }
 .gtile-stepper { display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
 .goal-grid .gtile-stepper { gap: 6px; }
 .goal-grid .gstep-btn { width: 24px; height: 24px; font-size: 0.75rem; }
@@ -2414,7 +2414,7 @@ button.gtile.checked:disabled { transform: scale(1.03); }
     gap: 16px;
   }
   .goal-grid .gtile {
-    height: 150px;
+    min-height: 150px;
     max-width: 190px;
     margin: 0 auto;
   }
