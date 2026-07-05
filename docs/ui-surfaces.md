@@ -9,9 +9,9 @@ there is no router, just boolean open/close state per drawer.
 
 ## Kid view (`src/components/`)
 
-`HomeScreen` (rank/streak stats card, Arcade hub card, food tray, daily goals, bonus items)
-plus drawers for the reward store, the Arcade (games), and the rank ladder. The three goal
-cards (`FoodTray`, `DailyGoals`, `BonusPoints`) share one 3-column tile grid (`.tray-grid`/
+`HomeScreen` (profile row, rank/streak stats card, food tray, daily goals, bonus items) plus
+drawers for the reward store, the Arcade (games), and the rank ladder. The three goal cards
+(`FoodTray`, `DailyGoals`, `BonusPoints`) share one 3-column tile grid (`.tray-grid`/
 `.goal-grid`, `.gtile`) and are each wrapped in `CollapsibleCard` (`src/components/
 CollapsibleCard.tsx`), which renders the header as a full-width toggle button (chevron +
 progress badge) and persists the collapsed/expanded state per kid via `Settings.
@@ -20,9 +20,11 @@ shared-vs-per-kid fields note. The user-facing
 label for the games hub is "Arcade" (`GamesCard`, `GamesScreen`) — kept distinct from the parent
 dashboard's "Game Settings" label (see below) so the two aren't confused; the underlying
 component/file names (`GamesCard`, `GamesScreen`, `onOpenGames`, `gamesOpen`, `src/data/games.ts`)
-are unchanged. The coin balance and Reward Store entry point live in `StatsCard`'s coins row, not in
-`TopBar` — `TopBar` holds the avatar, greeting, a
-bell icon, and the grown-up menu (hamburger) icon. There is no kid-facing calendar/history icon or
+are unchanged. `TopBar` is just the bell icon and the grown-up menu (hamburger) icon, right-aligned;
+the avatar and greeting live in their own `ProfileRow`, the first thing inside the scrollable
+content, left-aligned, with `GamesCard` rendered alongside it as a right-aligned pill (`.arcade-pill`)
+rather than the full-width card it used to be. The coin balance and Reward Store entry point live in
+`StatsCard`'s coins row, not `TopBar`/`ProfileRow`. There is no kid-facing calendar/history icon or
 screen; the only calendar surface is the PIN-gated parent `CalendarPanel` (see below), reached via
 `AccountMenu` → "Calendar".
 
