@@ -382,6 +382,44 @@ body {
 .card-title-icon.icon-yellow { background: var(--yellow); color: var(--dark); }
 .card-title-icon.icon-coral { background: var(--coral); }
 
+/* ===== COLLAPSIBLE CARD (Food Goals / Daily Goals / Bonus Points) ===== */
+.card-collapse-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.card-collapse-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.card-collapse-chevron {
+  color: var(--muted);
+  font-size: 0.8rem;
+  transform: rotate(180deg);
+  transition: transform var(--transition);
+}
+.card-collapse-chevron.collapsed { transform: rotate(0deg); }
+.card-collapse-body {
+  margin-top: 12px;
+  max-height: 2000px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height var(--transition-slow), opacity var(--transition-slow), margin-top var(--transition-slow);
+}
+.card-collapse-body.collapsed {
+  margin-top: 0;
+  max-height: 0;
+  opacity: 0;
+}
+
 /* ===== INTERACTIVE ELEMENT RESETS ===== */
 /* Buttons used as card tiles need their browser defaults reset */
 button.store-item,
@@ -811,12 +849,15 @@ button.gtile.checked:disabled { transform: scale(1.03); }
 /* ===== GOAL TILES (Daily Goals / Bonus Points grid) ===== */
 .goal-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
-.goal-grid > *:nth-child(odd):last-child { grid-column: 1 / -1; }
-.goal-grid .gtile { height: 136px; padding: 26px 10px 10px; }
+.goal-grid > *:nth-child(3n+1):last-child { grid-column: 1 / -1; }
+.goal-grid .gtile { height: 128px; padding: 24px 8px 8px; }
 .gtile-stepper { display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
+.goal-grid .gtile-stepper { gap: 6px; }
+.goal-grid .gstep-btn { width: 24px; height: 24px; font-size: 0.75rem; }
+.goal-grid .gstep-count { font-size: 0.68rem; min-width: 26px; }
 @media (max-width: 360px) {
   .goal-grid { grid-template-columns: 1fr; }
 }
@@ -2403,6 +2444,18 @@ button.gtile.checked:disabled { transform: scale(1.03); }
     margin: 0 auto;
   }
   .tray-grid .gtile-icon { font-size: 2.25rem; }
+  .goal-grid {
+    gap: 16px;
+  }
+  .goal-grid .gtile {
+    height: 150px;
+    max-width: 190px;
+    margin: 0 auto;
+  }
+  .goal-grid .gtile-icon { font-size: 1.75rem; }
+  .goal-grid .gtile-stepper { gap: 8px; }
+  .goal-grid .gstep-btn { width: 28px; height: 28px; font-size: 0.85rem; }
+  .goal-grid .gstep-count { font-size: 0.72rem; min-width: 22px; }
   .store-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;

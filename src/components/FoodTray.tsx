@@ -2,6 +2,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { FOODS } from '../data/foods';
 import { AppIcon } from './AppIcon';
+import { CollapsibleCard } from './CollapsibleCard';
 import { useGravy } from '../state/GravyContext';
 import { getDayLog } from '../state/dayLog';
 import { todayStr } from '../state/defaultState';
@@ -22,11 +23,11 @@ export function FoodTray({ dateStr }: FoodTrayProps = {}) {
   const allEaten = eatenCount === FOODS.length;
 
   return (
-    <div className="card">
-      <div className="flex-between" style={{ marginBottom: 12 }}>
-        <div className="goal-card-title">Food Goals</div>
-        <div className={`goal-progress-badge ${allEaten ? 'done' : ''}`}>{eatenCount}/{FOODS.length} done</div>
-      </div>
+    <CollapsibleCard
+      section="foodGoals"
+      title="Food Goals"
+      badge={<div className={`goal-progress-badge ${allEaten ? 'done' : ''}`}>{eatenCount}/{FOODS.length} done</div>}
+    >
       {allEaten && (
         <div className="tray-progress-bonus" style={{ marginBottom: 12 }}>
           <FontAwesomeIcon icon={faStar} aria-hidden="true" /> Full Tray Bonus!
@@ -64,6 +65,6 @@ export function FoodTray({ dateStr }: FoodTrayProps = {}) {
           );
         })}
       </div>
-    </div>
+    </CollapsibleCard>
   );
 }

@@ -10,7 +10,13 @@ there is no router, just boolean open/close state per drawer.
 ## Kid view (`src/components/`)
 
 `HomeScreen` (rank/streak stats card, Arcade hub card, food tray, daily goals, bonus items)
-plus drawers for the reward store, the Arcade (games), and the rank ladder. The user-facing
+plus drawers for the reward store, the Arcade (games), and the rank ladder. The three goal
+cards (`FoodTray`, `DailyGoals`, `BonusPoints`) share one 3-column tile grid (`.tray-grid`/
+`.goal-grid`, `.gtile`) and are each wrapped in `CollapsibleCard` (`src/components/
+CollapsibleCard.tsx`), which renders the header as a full-width toggle button (chevron +
+progress badge) and persists the collapsed/expanded state per kid via `Settings.
+collapsedSections` (`toggleSectionCollapsed` in `GravyContext`) — see `docs/state-model.md`'s
+shared-vs-per-kid fields note. The user-facing
 label for the games hub is "Arcade" (`GamesCard`, `GamesScreen`) — kept distinct from the parent
 dashboard's "Game Settings" label (see below) so the two aren't confused; the underlying
 component/file names (`GamesCard`, `GamesScreen`, `onOpenGames`, `gamesOpen`, `src/data/games.ts`)
