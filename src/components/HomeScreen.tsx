@@ -1,5 +1,5 @@
 import { TopBar } from './TopBar';
-import { ProfileRow } from './ProfileRow';
+import { QuickLinksRow } from './QuickLinksRow';
 import { StatsCard } from './StatsCard';
 import { FoodTray } from './FoodTray';
 import { DailyGoals } from './DailyGoals';
@@ -21,9 +21,9 @@ export function HomeScreen({ onOpenAccountMenu, onOpenApprovals, onOpenStore, on
 
   return (
     <div className="screen active">
-      <TopBar onOpenAccountMenu={onOpenAccountMenu} onOpenApprovals={onOpenApprovals} />
+      <TopBar dateStr={today} onOpenAccountMenu={onOpenAccountMenu} onOpenApprovals={onOpenApprovals} />
       <div className="scroll-area">
-        <ProfileRow dateStr={today} onOpenGames={onOpenGames} />
+        <QuickLinksRow onOpenGames={onOpenGames} onOpenRank={onOpenRank} onOpenStore={onOpenStore} />
         <StatsCard onOpenRank={onOpenRank} onOpenStore={onOpenStore} />
         <FoodTray dateStr={today} />
         <DailyGoals dateStr={today} />
