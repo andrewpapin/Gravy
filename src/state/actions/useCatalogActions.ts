@@ -122,7 +122,7 @@ export function useCatalogActions(deps: CatalogDeps) {
       } else if (key === 'bonusPts') {
         next.settings.bonusPts = Math.max(0, parseInt(val) || 0);
       } else if (key === 'theme') {
-        if (val === 'capri' || val === 'classic' || val === 'midnight' || val === 'ocean' || val === 'bubblegum' || val === 'cyberpunk' || val === 'ranger') {
+        if (val === 'capri' || val === 'classic' || val === 'twopointoh') {
           next.settings.theme = val;
         }
       } else if (key === 'avatarIcon') {

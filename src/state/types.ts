@@ -54,7 +54,7 @@ export interface Counters {
   gamesWon: number;
 }
 
-export type Theme = 'capri' | 'classic' | 'midnight' | 'ocean' | 'bubblegum' | 'cyberpunk' | 'ranger';
+export type Theme = 'capri' | 'classic' | 'twopointoh';
 
 export type CollapsibleSection = 'foodGoals' | 'dailyGoals' | 'bonusPoints';
 

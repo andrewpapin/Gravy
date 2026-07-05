@@ -322,11 +322,6 @@ of that epic's existing RLS item. Everything else from the audit lands here.)*
 - **Several inputs identified only by placeholder text, no `<label>`.**
   `StorePanel.tsx`, `PointsPanel.tsx`, `ProfilesManager.tsx:133-140` (`GoalsPanel.tsx`'s
   fields got `aria-label`s in the Goals-panel UX pass below). *(P2, S.)*
-- **Dark-theme CSS overrides are a growing, manually-maintained list.**
-  `src/index.css:153-215+` — `midnight`/`cyberpunk` need per-component overrides beyond the
-  token swap; nothing enforces a new component gets one added. No contrast failure
-  confirmed (needs visual verification), flagged as a standing risk. *(P2, ongoing
-  discipline, not a single fix.)*
 
 ### Bugs
 

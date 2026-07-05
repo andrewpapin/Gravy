@@ -52,23 +52,24 @@ profile's avatar icon and colors (`avatarIconColor`/`avatarBgColor`).
 
 ## Theming
 
-`Settings.theme` is one of
-`'capri' | 'classic' | 'midnight' | 'ocean' | 'bubblegum' | 'cyberpunk' | 'ranger'`
-(renamed from the older `light`/`dark`/`rainbow`/`gold` — `migrateLegacyState()` falls back any
-unrecognized saved value to `'capri'`), set per-profile via `ProfilesManager` and applied globally
-for the active profile. `'capri'` is the base/default theme (its tokens live on the unmarked
-`:root` in `src/index.css`); `'classic'` is the original default palette, demoted to a selectable
-theme under `:root[data-theme="classic"]`. Theme CSS lives in `src/index.css`, keyed off
-`[data-theme="..."]` on `<html>`.
+`Settings.theme` is one of `'capri' | 'classic' | 'twopointoh'` (renamed from the older
+`light`/`dark`/`rainbow`/`gold` — `migrateLegacyState()` falls back any unrecognized saved value to
+`'capri'`; the set was later trimmed from seven themes down to these three), set per-profile via
+`ProfilesManager` and applied globally for the active profile. `'capri'` is the base/default theme
+(its tokens live on the unmarked `:root` in `src/index.css`); `'classic'` is the original default
+palette, demoted to a selectable theme under `:root[data-theme="classic"]`; `'twopointoh'`
+("2.0") is a black-and-white-forward theme whose only saturated color lives on the three
+quick-links pills (Sunshine Orange/Skyblue Azure/Morning Yellow). Theme CSS lives in
+`src/index.css`, keyed off `[data-theme="..."]` on `<html>`.
 
 Each theme defines two groups of color tokens: **decorative** (`--yellow`/`--cream`/`--sage`/
 `--coral`/`--teal`/`--dark`/`--card`/`--bg`/`--text`/`--muted`) reused freely for accents, icon tints, and
 the rank/streak banner (`--teal` is a narrower exception — currently used only by the Stats quick-links
 pill, to avoid it duplicating `--coral`'s use on the rank-avatar circle directly below it); and **semantic** (`--success`/`--danger`), which always mean "done/correct"
 and "alarming/destructive" respectively, in every theme. `--success`/`--danger` exist specifically
-because `--sage`/`--coral` aren't reliably green/red across themes (e.g. `--sage` is purple in
-Midnight, blue in Ocean) — using them for "done"/"danger" state CSS broke that signal when switching
-themes. When adding a new "done"/"correct"/"earned" or "danger"/"destructive"/"error" UI state, use
+because `--sage`/`--coral` aren't reliably green/red across themes (e.g. `--sage` is Sunshine Orange
+in `twopointoh`) — using them for "done"/"danger" state CSS broke that signal when switching themes.
+When adding a new "done"/"correct"/"earned" or "danger"/"destructive"/"error" UI state, use
 `var(--success)`/`var(--danger)`, not `var(--sage)`/`var(--coral)` directly — reserve the latter for
 purely decorative use (icon tints, banners, accents) where hue consistency with green/red doesn't
 matter.

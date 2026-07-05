@@ -83,169 +83,24 @@
   --success: #749d8f;
   --danger: #df7a73;
 }
-:root[data-theme="midnight"] {
-  --bg: #1e1e24;
-  --card: #2b2b36;
-  --cream: #3a3a4a;
-  --text: #f5f6fa;
-  --muted: #a4b0be;
-  --dark: #f5f6fa;
-  --yellow: #00d4ff;
-  --coral: #635bff;
-  --teal: #C2178A;
-  --sage: #9d4edd;
-  --success: #16a34a;
-  --danger: #ef4444;
-}
-:root[data-theme="ocean"] {
-  --bg: #e0f7fa;
+:root[data-theme="twopointoh"] {
+  /* 2.0 — black & white forward, with the three quick-links pills carrying the
+     only saturated color (Sunshine Orange / Skyblue Azure / Morning Yellow).
+     --coral stays near-black rather than a 4th hue, both to keep the black/white
+     focus and to guarantee it reads distinct from --teal where they sit adjacent
+     (rank avatar directly under the Stats pill). */
+  --bg: #f5f5f5;
   --card: #ffffff;
-  --cream: #b2ebf2;
-  --text: #023e8a;
-  --muted: #276d7b;
-  --dark: #03045e;
-  --yellow: #ffb703;
-  --coral: #0077b6;
-  --teal: #007A6E;
-  --sage: #0096c7;
-  --success: #06a77d;
-  --danger: #e63946;
-}
-:root[data-theme="bubblegum"] {
-  --bg: #ffe5ec;
-  --card: #ffffff;
-  --cream: #ffc2d1;
-  --text: #590d22;
-  --muted: #800f2f;
-  --dark: #590d22;
-  --yellow: #ffb703;
-  --coral: #ff0a54;
-  --teal: #8E4FC0;
-  --sage: #fb6f92;
-  --success: #1b998b;
-  --danger: #d00000;
-}
-:root[data-theme="cyberpunk"] {
-  --bg: #fcee0a;
-  --card: #120458;
-  --cream: #ffe600;
-  --text: #ffffff;
-  --muted: #a1a1aa;
-  --dark: #ffffff;
-  --yellow: #00f0ff;
-  --coral: #ff003c;
-  --teal: #0047FF;
-  --sage: #b300ff;
-  --success: #00c853;
-  --danger: #ff1744;
-}
-:root[data-theme="ranger"] {
-  --bg: #f1eef4;
-  --card: #fbfbfb;
-  --cream: #ece6ef;
-  --text: #2b252c;
-  --muted: #6d6471;
-  --dark: #2b252c;
-  --yellow: #8dac50;
-  --coral: #613b6f;
-  --teal: #3F7D5C;
-  --sage: #1a48a0;
-  --success: #2d6a4f;
-  --danger: #9e2a2b;
-}
-/* midnight and cyberpunk pair a dark --card with --dark flipped light (above) so
-   on-card text/icons stay legible. That flip breaks the few spots where --dark is
-   used as a literal background fill paired with hardcoded white text — restore a
-   dark ink there, same fix the old "dark" theme needed for the same reason. */
-:root[data-theme="midnight"] .btn-purple,
-:root[data-theme="midnight"] .btn-dark {
-  color: #0f0f13;
-}
-:root[data-theme="cyberpunk"] .btn-purple,
-:root[data-theme="cyberpunk"] .btn-dark {
-  color: #000000;
-}
-/* cyberpunk uniquely pairs a light --bg with a dark --card (every other theme
-   keeps both consistently light or dark), so the --dark flip above also breaks
-   the few spots that paint ink directly on the raw page --bg instead of a card. */
-:root[data-theme="cyberpunk"] .topbar,
-:root[data-theme="cyberpunk"] .home-greeting-name,
-:root[data-theme="cyberpunk"] .home-greeting-date,
-:root[data-theme="cyberpunk"] .calendar-modal-title,
-:root[data-theme="cyberpunk"] .pin-title,
-:root[data-theme="cyberpunk"] .onb-back,
-:root[data-theme="cyberpunk"] .onb-wordmark,
-:root[data-theme="cyberpunk"] .onb-title,
-:root[data-theme="cyberpunk"] .onb-tagline,
-:root[data-theme="cyberpunk"] .onb-desc,
-:root[data-theme="cyberpunk"] .onb-link,
-:root[data-theme="cyberpunk"] .muted-note,
-:root[data-theme="cyberpunk"] .empty-state--bare {
-  color: #000000;
-}
-
-/* --yellow stays a bright accent in midnight/cyberpunk (the other themes keep it
-   muted enough for --dark to still read on it), so the same ink fix applies anywhere
-   --yellow is used as a background fill with --dark text/icons on top. */
-:root[data-theme="midnight"] .stats-coins-bar,
-:root[data-theme="midnight"] .card-title-icon.icon-yellow,
-:root[data-theme="midnight"] .btn-primary,
-:root[data-theme="midnight"] .btn-yellow,
-:root[data-theme="midnight"] .tile-pts:not(.negative),
-:root[data-theme="midnight"] .tile-check,
-:root[data-theme="midnight"] .pts-badge:not(.negative),
-:root[data-theme="midnight"] .store-cost:not(.unaffordable),
-:root[data-theme="midnight"] .account-menu-option-icon,
-:root[data-theme="midnight"] .pin-key.delete,
-:root[data-theme="midnight"] .household-code-display,
-:root[data-theme="midnight"] .group-pill.active,
-:root[data-theme="midnight"] .calendar-day.selected,
-:root[data-theme="midnight"] .pin-dot.filled,
-:root[data-theme="midnight"] .game-result-btn.primary {
-  color: #0f0f13;
-}
-:root[data-theme="cyberpunk"] .stats-coins-bar,
-:root[data-theme="cyberpunk"] .card-title-icon.icon-yellow,
-:root[data-theme="cyberpunk"] .btn-primary,
-:root[data-theme="cyberpunk"] .btn-yellow,
-:root[data-theme="cyberpunk"] .tile-pts:not(.negative),
-:root[data-theme="cyberpunk"] .tile-check,
-:root[data-theme="cyberpunk"] .pts-badge:not(.negative),
-:root[data-theme="cyberpunk"] .store-cost:not(.unaffordable),
-:root[data-theme="cyberpunk"] .account-menu-option-icon,
-:root[data-theme="cyberpunk"] .pin-key.delete,
-:root[data-theme="cyberpunk"] .household-code-display,
-:root[data-theme="cyberpunk"] .group-pill.active,
-:root[data-theme="cyberpunk"] .calendar-day.selected,
-:root[data-theme="cyberpunk"] .pin-dot.filled,
-:root[data-theme="cyberpunk"] .game-result-btn.primary {
-  color: #000000;
-}
-
-/* cyberpunk's --cream is a bright accent too (midnight's stays dark, consistent with
-   its own flipped --dark/--text), so the same ink fix applies again here, scoped to
-   cyberpunk only, anywhere --cream is used as a background fill under --dark/--text ink. */
-:root[data-theme="cyberpunk"] .gtile-icon,
-:root[data-theme="cyberpunk"] .gtile-name,
-:root[data-theme="cyberpunk"] .goal-row-icon,
-:root[data-theme="cyberpunk"] .goal-row-name,
-:root[data-theme="cyberpunk"] .gstep-btn,
-:root[data-theme="cyberpunk"] .gstep-count,
-:root[data-theme="cyberpunk"] .goal-row-check.done,
-:root[data-theme="cyberpunk"] .goal-progress-badge:not(.done),
-:root[data-theme="cyberpunk"] .trophy-pill,
-:root[data-theme="cyberpunk"] .pending-item-emoji,
-:root[data-theme="cyberpunk"] .pending-item-name,
-:root[data-theme="cyberpunk"] .confirm-dialog-title,
-:root[data-theme="cyberpunk"] .confirm-dialog-message,
-:root[data-theme="cyberpunk"] .menu-card-icon,
-:root[data-theme="cyberpunk"] .icon-picker-trigger,
-:root[data-theme="cyberpunk"] .icon-picker-cell:not(.active),
-:root[data-theme="cyberpunk"] .settings-row input,
-:root[data-theme="cyberpunk"] .store-cost.unaffordable,
-:root[data-theme="cyberpunk"] .games-cap-banner:not(.maxed),
-:root[data-theme="cyberpunk"] .scramble-answer-slot:not(.filled) {
-  color: #000000;
+  --cream: #e8e8e8;
+  --text: #111111;
+  --muted: #6e6e6e;
+  --dark: #000000;
+  --sage: #e8623d;
+  --teal: #3e7ca6;
+  --yellow: #f0c43d;
+  --coral: #1a1a1a;
+  --success: #1b8a4a;
+  --danger: #d7263d;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -2199,11 +2054,7 @@ button.gtile.checked:disabled { transform: scale(1.03); }
 }
 .theme-swatch-preview--capri { background: conic-gradient(#f0ede6 0deg 120deg, #a6c83b 120deg 240deg, #9c6bc4 240deg 360deg); }
 .theme-swatch-preview--classic { background: conic-gradient(#f4ece4 0deg 120deg, #749d8f 120deg 240deg, #df7a73 240deg 360deg); }
-.theme-swatch-preview--midnight { background: conic-gradient(#1e1e24 0deg 120deg, #16a34a 120deg 240deg, #635bff 240deg 360deg); }
-.theme-swatch-preview--ocean { background: conic-gradient(#e0f7fa 0deg 120deg, #06a77d 120deg 240deg, #0077b6 240deg 360deg); }
-.theme-swatch-preview--bubblegum { background: conic-gradient(#ffe5ec 0deg 120deg, #1b998b 120deg 240deg, #ff0a54 240deg 360deg); }
-.theme-swatch-preview--cyberpunk { background: conic-gradient(#fcee0a 0deg 120deg, #00c853 120deg 240deg, #ff003c 240deg 360deg); }
-.theme-swatch-preview--ranger { background: conic-gradient(#f1eef4 0deg 120deg, #2d6a4f 120deg 240deg, #613b6f 240deg 360deg); }
+.theme-swatch-preview--twopointoh { background: conic-gradient(#e8623d 0deg 120deg, #3e7ca6 120deg 240deg, #f0c43d 240deg 360deg); }
 
 .settings-row {
   background: var(--card);
