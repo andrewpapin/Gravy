@@ -665,7 +665,10 @@ button.gtile.checked:disabled { transform: scale(1.03); }
 
 .gtile-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
 .gtile-icon { font-size: 1.5rem; line-height: 1; color: var(--dark); }
-.gtile.checked .gtile-icon { color: #fff; animation: icon-pop 0.28s ease; }
+/* --dark reads far better than white against --success in most themes (e.g. default's
+   #a6c83b is a light yellow-green — white text on it is ~1.9:1 contrast, well under
+   WCAG AA). ranger is the outlier with a dark --success, overridden back to white below. */
+.gtile.checked .gtile-icon { color: var(--dark); animation: icon-pop 0.28s ease; }
 .gtile-name {
   font-size: 0.85rem;
   font-weight: 800;
@@ -676,7 +679,11 @@ button.gtile.checked:disabled { transform: scale(1.03); }
   overflow: hidden;
   max-height: 2.5em;
 }
-.gtile.checked .gtile-name { color: white; }
+.gtile.checked .gtile-name { color: var(--dark); }
+:root[data-theme="ranger"] .gtile.checked .gtile-icon,
+:root[data-theme="ranger"] .gtile.checked .gtile-name {
+  color: #fff;
+}
 
 .tile-pts {
   position: absolute;
