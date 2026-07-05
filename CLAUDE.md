@@ -84,9 +84,10 @@ Deep detail lives in `docs/`. Read the linked file when working in that area.
 - **UI surfaces** (`docs/ui-surfaces.md`) — kid view + `AccountMenu` (the single `grownUpUnlocked`
   lock gating Approvals/Profiles/Game Settings/Calendar/Advanced Settings, now account-based
   via `SignInPrompt` rather than PIN-based); the "Game Settings" dashboard (`ParentDashboard`
-  component, formerly labeled "Grown ups") two-level router and its panels
-  (`GoalsStorePanel`, combining `GoalsPanel`/`StorePanel` behind a segmented switch);
-  `ApprovalsPanel`/`CalendarPanel` reached directly from
+  component, formerly labeled "Grown ups") two-level router and its 5 first-level panels
+  (`GoalsPanel` — taking a `filter: 'daily'|'bonus'` prop — plus `PointsPanel`/`StorePanel`/
+  `ArcadePanel`, each its own `RootMenu` destination); `ApprovalsPanel`/`CalendarPanel` reached
+  directly from
   `AccountMenu` via `ApprovalsDrawer`/`CalendarDrawer`, plus `SettingsPanel` (including the nested
   `LogPanel`) reached via `AdvancedSettingsDrawer`; `Onboarding`'s three-way account fork (new
   family / sign in to join / kid device).
