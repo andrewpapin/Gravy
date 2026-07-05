@@ -5,7 +5,7 @@ import {
 import { DEFAULT_TIMEZONE } from '../data/timezones';
 import type { Goal, GravyRoot, GravyState } from './types';
 
-const FULL_TRAY = { fruit: 1, veggie: 1, protein: 1, dairy: 1, grain: 1 };
+const FULL_TRAY = { fruit: 1, veggie: 1, protein: 1, dairy: 1, grain: 1, sweets: 1 };
 
 const DAILY_GOAL: Goal = { id: 1, emoji: '📖', name: 'Read', pts: 10, isDaily: true };
 const BONUS_GOAL: Goal = { id: 2, emoji: '🎮', name: 'Extra reading', pts: 15, isDaily: false };

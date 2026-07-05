@@ -13,6 +13,7 @@ import {
 import { useGravy } from '../state/GravyContext';
 import { ONBOARDING_DONE_KEY } from '../state/defaultState';
 import { safeSetItem } from '../state/storage';
+import { FOODS } from '../data/foods';
 import { AccountSetupStep } from './AccountSetupStep';
 import { CopyCodeButton } from './CopyCodeButton';
 
@@ -31,7 +32,7 @@ const STEPS: WalkStep[] = [
   {
     icon: faUtensils,
     title: 'Earn Points',
-    desc: () => 'Tap each food group you eat and finish your goals to earn points. Eat all 5 for a bonus!',
+    desc: () => `Tap each food group you eat and finish your goals to earn points. Eat all ${FOODS.length} for a bonus!`,
   },
   {
     icon: faFire,

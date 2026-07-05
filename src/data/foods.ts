@@ -13,4 +13,5 @@ export const FOODS: Food[] = [
   { id: 'protein', emoji: '🍗', icon: 'drumstickBite', label: 'Protein' },
   { id: 'dairy', emoji: '🥛', icon: 'glassWater', label: 'Dairy' },
   { id: 'grain', emoji: '🍞', icon: 'breadSlice', label: 'Grain' },
+  { id: 'sweets', emoji: '🍬', icon: 'iceCream', label: 'Sweets' },
 ];

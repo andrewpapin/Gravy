@@ -57,7 +57,7 @@ export function PointsPanel() {
             Full tray bonus
             {savedField === 'bonusPts' && <FontAwesomeIcon icon={faCheck} className="saved-flash" />}
           </div>
-          <div className="settings-sub">Bonus for eating all 5 food groups</div>
+          <div className="settings-sub">Bonus for eating all {FOODS.length} food groups</div>
         </div>
         <input
           className="settings-input-compact"

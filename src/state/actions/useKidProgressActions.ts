@@ -68,7 +68,7 @@ export function useKidProgressActions(deps: KidProgressDeps) {
         const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
         const allDailyGoalsDone = dailyGoals.length > 0 && dailyGoals.every((g) => next.todayGoals.includes(g.id));
         if (allDailyGoalsDone) next.counters.comboDays++;
-        showCelebration(faUtensils, 'Full Tray!', `All 5 food groups eaten! +${next.settings.bonusPts} bonus!`);
+        showCelebration(faUtensils, 'Full Tray!', `All ${FOODS.length} food groups eaten! +${next.settings.bonusPts} bonus!`);
       }
       // Defer the rank-up announcement so it doesn't pile up on top of the celebration overlay.
       const delay = !wasFull && isFull ? 1400 : 0;
