@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoon } from '@fortawesome/free-solid-svg-icons';
 import { AppIcon } from './AppIcon';
+import { CollapsibleCard } from './CollapsibleCard';
 import { useGravy } from '../state/GravyContext';
 import { getDayLog } from '../state/dayLog';
 import { todayStr } from '../state/defaultState';
@@ -21,14 +22,13 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
   const allLogged = bonusItems.length > 0 && loggedCount === bonusItems.length;
 
   return (
-    <div className="card">
-      <div className="flex-between" style={{ marginBottom: 12 }}>
-        <div className="goal-card-title">Bonus Points</div>
-        {bonusItems.length > 0 && (
-          <div className={`goal-progress-badge ${allLogged ? 'done' : ''}`}>{loggedCount}/{bonusItems.length} logged</div>
-        )}
-      </div>
-
+    <CollapsibleCard
+      section="bonusPoints"
+      title="Bonus Points"
+      badge={bonusItems.length > 0 && (
+        <div className={`goal-progress-badge ${allLogged ? 'done' : ''}`}>{loggedCount}/{bonusItems.length} logged</div>
+      )}
+    >
       {bonusItems.length === 0 ? (
         <div className="empty-state">
           <span className="empty-state-emoji"><FontAwesomeIcon icon={faMoon} /></span>
@@ -78,6 +78,6 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
           })}
         </div>
       )}
-    </div>
+    </CollapsibleCard>
   );
 }

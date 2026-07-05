@@ -56,6 +56,8 @@ export interface Counters {
 
 export type Theme = 'capri' | 'classic' | 'midnight' | 'ocean' | 'bubblegum' | 'cyberpunk' | 'ranger';
 
+export type CollapsibleSection = 'foodGoals' | 'dailyGoals' | 'bonusPoints';
+
 export interface Settings {
   // Points awarded per food item, keyed by Food.id (see src/data/foods.ts) — each food group
   // has its own independently configurable point value.
@@ -71,6 +73,9 @@ export interface Settings {
   // SHARED_SETTING_KEYS in defaultState.ts. Determines the day boundary used by
   // todayStr()/applyDayRollover() regardless of any device's own system timezone.
   timezone: string;
+  // Which home-screen goal cards this kid has collapsed. Per-kid UI preference — not in
+  // SHARED_SETTING_KEYS, so each profile keeps its own.
+  collapsedSections: Partial<Record<CollapsibleSection, boolean>>;
 }
 
 export interface DayLog {

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faTriangleExclamation, faStar } from '@fortawesome/free-solid-svg-icons';
-import type { ActionLogEntry, DayLog, Goal, GravyRoot, GravyState, Reward, Theme } from './types';
+import type { ActionLogEntry, CollapsibleSection, DayLog, Goal, GravyRoot, GravyState, Reward, Theme } from './types';
 import {
   applyDayRollover,
   loadRoot,
@@ -78,6 +78,7 @@ interface GravyContextValue {
   showToast: (icon: IconDefinition | string, msg: string) => void;
   dismissToast: (id: number) => void;
   hideCelebration: () => void;
+  toggleSectionCollapsed: (section: CollapsibleSection) => void;
   logFood: (id: string) => void;
   removeFood: (id: string) => void;
   incrementGoal: (id: number) => void;
@@ -228,6 +229,19 @@ export function GravyProvider({ children }: { children: ReactNode }) {
 
   const hideCelebration = useCallback(() => setCelebration(null), []);
 
+  // Kid-facing UI preference (which home-screen goal cards are collapsed) — not audit-logged,
+  // unlike parent-driven settings changes.
+  const toggleSectionCollapsed = useCallback((section: CollapsibleSection) => {
+    setState((prev) => {
+      const next = clone(prev);
+      next.settings.collapsedSections = {
+        ...next.settings.collapsedSections,
+        [section]: !next.settings.collapsedSections[section],
+      };
+      return next;
+    });
+  }, [setState]);
+
   // Awards points and mutates the given draft state in place. Used for the positive flows
   // (food, daily goals, full-tray bonus) and their exact-inverse removals; the running
   // balance is intentionally NOT floored here so an award and its later removal cancel out
@@ -333,6 +347,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     showToast,
     dismissToast,
     hideCelebration,
+    toggleSectionCollapsed,
     grownUpUnlocked,
     householdCode,
     syncStatus,

@@ -1,4 +1,4 @@
-import type { ActionLogEntry, AuditLogEntry, GravyState, GravyRoot, ProfileEntry, Settings, Theme, Goal, Reward, PendingReward, PendingPointsAward, PendingPointsKind } from './types';
+import type { ActionLogEntry, AuditLogEntry, GravyState, GravyRoot, ProfileEntry, Settings, Theme, Goal, Reward, PendingReward, PendingPointsAward, PendingPointsKind, CollapsibleSection } from './types';
 import { FOODS } from '../data/foods';
 import { safeGetItem, safeSetItem } from './storage';
 import { DEFAULT_TIMEZONE, isValidTimezone } from '../data/timezones';
@@ -78,6 +78,7 @@ export const defaultState: GravyState = {
     avatarIconColor: '#2F3E46',
     avatarBgColor: '#FFFFFF',
     timezone: DEFAULT_TIMEZONE,
+    collapsedSections: {},
   },
 };
 
@@ -274,6 +275,19 @@ function sanitizeFoodPtsByItem(v: unknown): Record<string, number> {
   return result;
 }
 
+const COLLAPSIBLE_SECTIONS: CollapsibleSection[] = ['foodGoals', 'dailyGoals', 'bonusPoints'];
+
+// Keeps only the known section keys with boolean values — a stray/legacy key or a corrupted
+// non-boolean value is dropped rather than propagating into the collapse-toggle UI.
+function sanitizeCollapsedSections(v: unknown): Partial<Record<CollapsibleSection, boolean>> {
+  const obj = asPlainObject(v);
+  const result: Partial<Record<CollapsibleSection, boolean>> = {};
+  for (const key of COLLAPSIBLE_SECTIONS) {
+    if (typeof obj[key] === 'boolean') result[key] = obj[key] as boolean;
+  }
+  return result;
+}
+
 function asNumberArray(v: unknown): number[] {
   return Array.isArray(v) ? v.filter((x): x is number => typeof x === 'number') : [];
 }
@@ -390,6 +404,7 @@ function sanitizeState(state: GravyState): void {
   settings.foodPtsByItem = sanitizeFoodPtsByItem(settings.foodPtsByItem);
   settings.bonusPts = asFiniteNumber(settings.bonusPts, defaultState.settings.bonusPts);
   settings.timezone = isValidTimezone(settings.timezone) ? settings.timezone : defaultState.settings.timezone;
+  settings.collapsedSections = sanitizeCollapsedSections(settings.collapsedSections);
 }
 
 // Takes a raw parsed flat GravyState (or null/garbage), runs the legacy migration, backfills any
