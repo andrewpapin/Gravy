@@ -8,6 +8,7 @@
   --cream: #f2eee6;
   --sage: #a6c83b;
   --coral: #9c6bc4;
+  --teal: #0F766E;
   --dark: #2b2b30;
   --card: #ffffff;
   --bg: #f0ede6;
@@ -73,6 +74,7 @@
   --cream: #eaddcd;
   --sage: #749d8f;
   --coral: #df7a73;
+  --teal: #456280;
   --dark: #303336;
   --card: #fdfbf7;
   --bg: #f4ece4;
@@ -90,6 +92,7 @@
   --dark: #f5f6fa;
   --yellow: #00d4ff;
   --coral: #635bff;
+  --teal: #C2178A;
   --sage: #9d4edd;
   --success: #16a34a;
   --danger: #ef4444;
@@ -103,6 +106,7 @@
   --dark: #03045e;
   --yellow: #ffb703;
   --coral: #0077b6;
+  --teal: #007A6E;
   --sage: #0096c7;
   --success: #06a77d;
   --danger: #e63946;
@@ -116,6 +120,7 @@
   --dark: #590d22;
   --yellow: #ffb703;
   --coral: #ff0a54;
+  --teal: #8E4FC0;
   --sage: #fb6f92;
   --success: #1b998b;
   --danger: #d00000;
@@ -129,6 +134,7 @@
   --dark: #ffffff;
   --yellow: #00f0ff;
   --coral: #ff003c;
+  --teal: #0047FF;
   --sage: #b300ff;
   --success: #00c853;
   --danger: #ff1744;
@@ -142,6 +148,7 @@
   --dark: #2b252c;
   --yellow: #8dac50;
   --coral: #613b6f;
+  --teal: #3F7D5C;
   --sage: #1a48a0;
   --success: #2d6a4f;
   --danger: #9e2a2b;
@@ -571,7 +578,7 @@ button.calendar-day {
   box-shadow: 0 0 0 var(--dark);
 }
 .home-pill-daily { background: var(--sage); }
-.home-pill-stats { background: var(--coral); }
+.home-pill-stats { background: var(--teal); }
 .home-pill-prizes { background: var(--yellow); color: var(--dark); }
 
 .stats-rank-header {
