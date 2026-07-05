@@ -47,6 +47,13 @@ unintentional or unreported. Completed/decided items are condensed to one-liners
   `BACKLOG.md` into `BACKLOG_DONE.md` as a one-liner** (what + outcome + key file/PR/migration, under
   the same epic heading); a new gap gets an entry in `BACKLOG.md`, following the existing format.
 
+## Git & PR workflow
+
+`main` only accepts changes through a PR (`ci.yml` gates lint/test/build). Once a change is
+committed, pushed to the session's branch, and verified — `lint`/`test`/`build` green, plus a
+manual browser check for UI changes — open the pull request proactively; don't wait to be asked.
+Merging is a separate step and still needs explicit confirmation before it happens.
+
 ## Architecture
 
 Gravy is a gamified chores + nutrition + rewards PWA for kids: React 19 + TypeScript + Vite,
