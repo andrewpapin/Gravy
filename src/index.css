@@ -818,6 +818,7 @@ button.gtile.checked:disabled { transform: scale(1.03); }
 }
 .goal-row {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 12px;
   background: var(--cream);
@@ -835,8 +836,9 @@ button.gtile.checked:disabled { transform: scale(1.03); }
 .goal-row.done .goal-row-name { color: #fff; }
 .goal-row-pts { font-size: 0.72rem; font-weight: 700; color: var(--sage); margin-top: 2px; }
 .goal-row.done .goal-row-pts { color: #fff; }
-.goal-row-action { flex-shrink: 0; }
-.goal-row-stepper { flex-shrink: 0; }
+.goal-row-action { flex-shrink: 0; white-space: nowrap; }
+.goal-row-stepper { flex-shrink: 0; flex-wrap: nowrap; white-space: nowrap; }
+.goal-row-stepper .gstep-count { white-space: nowrap; }
 
 /* ===== GOAL TILES (Daily Goals / Bonus Points grid) ===== */
 .goal-grid {
