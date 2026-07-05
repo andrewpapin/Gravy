@@ -43,18 +43,18 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
           {bonusItems.map((g) => {
             const count = goalCounts[g.id] || 0;
             return (
-              <div key={g.id} className="goal-tile">
-                <span className={`pts-badge pts-badge-corner ${g.pts < 0 ? 'negative' : ''}`}>
+              <div key={g.id} className="gtile">
+                <span className={`tile-pts ${g.pts < 0 ? 'negative' : ''}`}>
                   {g.pts < 0 ? '−' : '+'}{Math.abs(g.pts)}
                 </span>
-                <div className="goal-tile-top">
-                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-tile-emoji" />
+                <div className="gtile-body">
+                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="gtile-icon" />
+                  <div className="gtile-name">{g.name}</div>
                 </div>
-                <div className="goal-tile-name">{g.name}</div>
-                <div className="goal-stepper">
+                <div className="gtile-stepper">
                   <button
                     type="button"
-                    className="stepper-btn"
+                    className="gstep-btn"
                     onClick={() => {
                       triggerHaptic();
                       if (isToday) undoBonusItem(g.id); else undoBonusItemForDay(day, g.id);
@@ -62,10 +62,10 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
                     disabled={count === 0}
                     aria-label={`Undo ${g.name}`}
                   >−</button>
-                  <span className="stepper-count">{count}</span>
+                  <span className="gstep-count">{count}</span>
                   <button
                     type="button"
-                    className="stepper-btn"
+                    className="gstep-btn"
                     onClick={() => {
                       triggerHaptic();
                       if (isToday) logBonusItem(g.id); else logBonusItemForDay(day, g.id);

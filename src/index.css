@@ -187,8 +187,8 @@
 :root[data-theme="midnight"] .card-title-icon.icon-yellow,
 :root[data-theme="midnight"] .btn-primary,
 :root[data-theme="midnight"] .btn-yellow,
-:root[data-theme="midnight"] .food-count-badge,
-:root[data-theme="midnight"] .tile-check-badge,
+:root[data-theme="midnight"] .tile-pts:not(.negative),
+:root[data-theme="midnight"] .tile-check,
 :root[data-theme="midnight"] .pts-badge:not(.negative),
 :root[data-theme="midnight"] .store-cost:not(.unaffordable),
 :root[data-theme="midnight"] .account-menu-option-icon,
@@ -204,8 +204,8 @@
 :root[data-theme="cyberpunk"] .card-title-icon.icon-yellow,
 :root[data-theme="cyberpunk"] .btn-primary,
 :root[data-theme="cyberpunk"] .btn-yellow,
-:root[data-theme="cyberpunk"] .food-count-badge,
-:root[data-theme="cyberpunk"] .tile-check-badge,
+:root[data-theme="cyberpunk"] .tile-pts:not(.negative),
+:root[data-theme="cyberpunk"] .tile-check,
 :root[data-theme="cyberpunk"] .pts-badge:not(.negative),
 :root[data-theme="cyberpunk"] .store-cost:not(.unaffordable),
 :root[data-theme="cyberpunk"] .account-menu-option-icon,
@@ -221,13 +221,11 @@
 /* cyberpunk's --cream is a bright accent too (midnight's stays dark, consistent with
    its own flipped --dark/--text), so the same ink fix applies again here, scoped to
    cyberpunk only, anywhere --cream is used as a background fill under --dark/--text ink. */
-:root[data-theme="cyberpunk"] .food-emoji,
-:root[data-theme="cyberpunk"] .food-label,
-:root[data-theme="cyberpunk"] .stepper-btn,
-:root[data-theme="cyberpunk"] .stepper-count,
+:root[data-theme="cyberpunk"] .gtile-icon,
+:root[data-theme="cyberpunk"] .gtile-name,
+:root[data-theme="cyberpunk"] .gstep-btn,
+:root[data-theme="cyberpunk"] .gstep-count,
 :root[data-theme="cyberpunk"] .goal-progress-badge:not(.done),
-:root[data-theme="cyberpunk"] .goal-tile-emoji,
-:root[data-theme="cyberpunk"] .goal-tile-name,
 :root[data-theme="cyberpunk"] .trophy-pill,
 :root[data-theme="cyberpunk"] .pending-item-emoji,
 :root[data-theme="cyberpunk"] .pending-item-name,
@@ -606,63 +604,66 @@ button.calendar-day {
   100% { box-shadow: 0 0 0 0 var(--yellow); }
 }
 
-/* ===== FOOD TRAY ===== */
-.tray-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-}
-.food-tile {
+/* ===== SHARED TILE (Food Goals / Daily Goals / Bonus Points) ===== */
+.gtile {
+  position: relative;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   border-radius: var(--radius-sm);
   border: var(--border-width-xl) solid var(--dark);
   background: var(--cream);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  cursor: pointer;
-  transition: box-shadow var(--transition), border-color var(--transition), background var(--transition), transform var(--transition);
   box-shadow: 3px 3px 0 var(--dark);
-  position: relative;
-  padding: 6px 4px;
+  text-align: left;
+  font-family: var(--font-display);
+  transition: background var(--transition), border-color var(--transition), transform var(--transition);
 }
-.food-tile:active { transform: scale(0.96); }
-.food-tile.checked {
-  border-color: var(--dark);
-  background: var(--success);
-  box-shadow: 3px 3px 0 var(--dark);
-  transform: scale(1.03);
+button.gtile { cursor: pointer; color: inherit; }
+button.gtile:active { transform: scale(0.97); }
+.gtile.checked { background: var(--success); transform: scale(1.03); }
+button.gtile.checked:active { transform: scale(0.99); }
+button.gtile:disabled { cursor: default; }
+button.gtile:disabled:active,
+button.gtile.checked:disabled:active { transform: none; }
+button.gtile.checked:disabled { transform: scale(1.03); }
+
+.gtile-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+.gtile-icon { font-size: 1.5rem; line-height: 1; color: var(--dark); }
+.gtile.checked .gtile-icon { color: #fff; animation: icon-pop 0.28s ease; }
+.gtile-name {
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-height: 2.5em;
 }
-.food-tile.checked:active { transform: scale(0.99); }
-.food-tile:disabled { cursor: default; }
-.food-tile:disabled:active,
-.food-tile.checked:disabled:active { transform: none; }
-.food-tile.checked:disabled { transform: scale(1.03); }
-.food-count-badge {
+.gtile.checked .gtile-name { color: white; }
+
+.tile-pts {
   position: absolute;
-  top: -6px; left: -6px;
+  top: 6px; left: 6px;
   background: var(--yellow);
   color: var(--dark);
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 900;
   min-width: 18px;
   height: 18px;
-  padding: 0 5px;
+  padding: 0 6px;
   border-radius: 50px;
   border: var(--border-width-md) solid var(--dark);
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
 }
-.food-emoji { font-size: 1.6rem; line-height: 1; color: var(--dark); }
-.food-label { font-size: var(--text-2xs); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: var(--dark); }
-.food-tile.checked .food-emoji { color: #fff; animation: icon-pop 0.28s ease; }
-.food-tile.checked .food-label { color: rgba(255,255,255,0.9); }
-.tile-check-badge {
+.tile-pts.negative { background: var(--danger); color: #fff; }
+.tile-check {
   position: absolute;
-  top: -6px; right: -6px;
+  top: 6px; right: 6px;
   width: 18px; height: 18px;
   border-radius: 50%;
   background: var(--yellow);
@@ -678,6 +679,34 @@ button.calendar-day {
   60% { transform: scale(1.2); }
   100% { transform: scale(1); }
 }
+
+/* ===== FOOD TRAY ===== */
+.tray-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.tray-grid .gtile {
+  height: 72px;
+  padding: 20px 4px 6px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+.tray-grid .gtile-icon { font-size: 1.6rem; }
+.tray-grid .gtile-name {
+  font-size: var(--text-2xs);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.tray-grid .tile-pts, .tray-grid .tile-check { width: 14px; height: 14px; min-width: 14px; top: 4px; font-size: 0.5rem; }
+.tray-grid .tile-pts { left: 4px; padding: 0 4px; }
+.tray-grid .tile-check { right: 4px; }
 .tray-progress-bonus {
   display: inline-flex;
   align-items: center;
@@ -686,13 +715,13 @@ button.calendar-day {
   font-weight: 900;
   color: var(--success);
 }
-.stepper-btn {
-  width: 36px;
-  height: 36px;
+.gstep-btn {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: var(--border-width-md) solid var(--dark);
   background: var(--cream);
-  font-size: 1rem;
+  font-size: 0.85rem;
   font-weight: 900;
   cursor: pointer;
   display: flex;
@@ -711,17 +740,17 @@ button.calendar-day {
 /* Invisible hit-area expansion (same trick as .stats-rank-info-btn::before)
    so the tappable area is closer to the ~44px touch-target guideline
    without growing the visible chip and crowding the goal grid. */
-.stepper-btn::before {
+.gstep-btn::before {
   content: '';
   position: absolute;
-  inset: -6px;
+  inset: -8px;
 }
-.stepper-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--dark); }
-.stepper-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.stepper-count {
+.gstep-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--dark); }
+.gstep-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.gstep-count {
   font-size: 0.72rem;
   font-weight: 900;
-  min-width: 14px;
+  min-width: 22px;
   text-align: center;
   color: var(--dark);
   line-height: 1;
@@ -777,16 +806,6 @@ button.calendar-day {
   border-color: var(--dark);
   color: white;
 }
-.goal-stepper {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-.goal-stepper .stepper-count {
-  min-width: 28px;
-  font-size: 0.78rem;
-}
 .goal-emoji { font-size: 1.3rem; color: var(--dark); }
 .goal-info { flex: 1; }
 .goal-name { font-size: 0.95rem; font-weight: 800; }
@@ -799,51 +818,8 @@ button.calendar-day {
   gap: 10px;
 }
 .goal-grid > *:nth-child(odd):last-child { grid-column: 1 / -1; }
-.goal-tile {
-  width: 100%;
-  border-radius: var(--radius-sm);
-  border: var(--border-width-xl) solid var(--dark);
-  background: var(--cream);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px;
-  box-shadow: 3px 3px 0 var(--dark);
-  transition: background var(--transition), border-color var(--transition), transform var(--transition);
-  text-align: left;
-  font-family: var(--font-display);
-  position: relative;
-}
-button.goal-tile { cursor: pointer; color: inherit; }
-button.goal-tile:active { transform: scale(0.97); }
-.goal-tile.checked { background: var(--success); transform: scale(1.03); }
-button.goal-tile.checked:active { transform: scale(0.99); }
-button.goal-tile:disabled { cursor: default; }
-button.goal-tile:disabled:active,
-button.goal-tile.checked:disabled:active { transform: none; }
-button.goal-tile.checked:disabled { transform: scale(1.03); }
-.goal-tile-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 6px;
-}
-.goal-tile-emoji { font-size: 1.5rem; line-height: 1; color: var(--dark); }
-.goal-tile.checked .goal-tile-emoji { color: #fff; animation: icon-pop 0.28s ease; }
-.goal-tile-name {
-  font-size: 0.85rem;
-  font-weight: 800;
-  line-height: 1.25;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.goal-tile.checked .goal-tile-name { color: white; }
-.goal-tile .goal-stepper {
-  align-self: flex-end;
-  margin-top: auto;
-}
+.goal-grid .gtile { height: 136px; padding: 26px 10px 10px; }
+.gtile-stepper { display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
 @media (max-width: 360px) {
   .goal-grid { grid-template-columns: 1fr; }
 }
@@ -883,11 +859,6 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
 .pts-badge.negative {
   background: var(--danger);
   color: white;
-}
-.pts-badge-corner {
-  position: absolute;
-  top: -6px;
-  left: -6px;
 }
 
 /* ===== STORE SCREEN ===== */
@@ -2429,10 +2400,10 @@ button.goal-tile.checked:disabled { transform: scale(1.03); }
   .tray-grid {
     gap: 14px;
   }
-  .food-tile {
+  .tray-grid .gtile {
+    height: 84px;
     max-width: 110px;
     margin: 0 auto;
-    width: 100%;
   }
   .store-grid {
     grid-template-columns: repeat(3, 1fr);
