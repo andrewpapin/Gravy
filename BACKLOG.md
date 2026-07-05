@@ -213,13 +213,15 @@ items below were deferred from that pass because they're larger, more
 opinionated changes that need a mockup before committing.
 
 - **Break the single-column home stack into a denser layout.** On a phone,
-  `StatsCard → GamesCard → FoodTray → DailyGoals → BonusPoints`
+  `QuickLinksRow → StatsCard → FoodTray → DailyGoals → BonusPoints`
   (`src/components/HomeScreen.tsx`) is one long vertical scroll — the biggest
-  "use the space differently" win. Candidates: a 2-up row pairing the Games
-  card with a compact stat, or Daily Goals / Bonus Points side-by-side on
-  wider phones (the `@media (min-width: 768px)` block in `src/index.css`
-  already does this kind of widening for the food/store grids). Needs a
-  mockup to compare against the current flow before building. *(P2, M.)*
+  "use the space differently" win. The Games card has since been folded into
+  `QuickLinksRow`'s 3-pill row alongside Stats/Prizes, but `StatsCard`, `FoodTray`,
+  `DailyGoals`, and `BonusPoints` still stack full-width. Remaining candidate:
+  Daily Goals / Bonus Points side-by-side on wider phones (the
+  `@media (min-width: 768px)` block in `src/index.css` already does this kind
+  of widening for the food/store grids). Needs a mockup to compare against the
+  current flow before building. *(P2, M.)*
 - **Modernize the shadow treatment.** The hard `Npx Npx 0` offset shadows are
   the heaviest part of the neo-brutalist look. Options: drop card shadows to
   `2px`, or move cards to a soft `0 2px 8px rgba()` while keeping hard offset

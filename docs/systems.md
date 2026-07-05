@@ -5,10 +5,13 @@ PWA update mechanism. CLAUDE.md links here; read the relevant section when touch
 
 ## Arcade (Games Hub)
 
-User-facing label is "Arcade" (`GamesCard`'s title, `GamesScreen`'s header/aria-labels) — kept
-distinct from the parent dashboard's "Game Settings" label so the two aren't confused; the
-underlying component/file/prop names (`GamesCard`, `GamesScreen`, `onOpenGames`, `gamesOpen`,
-`src/data/games.ts`, `completeGameRound`) are unchanged.
+User-facing label is "Arcade" (`GamesScreen`'s header/aria-labels) — kept distinct from the parent
+dashboard's "Game Settings" label so the two aren't confused; the underlying component/file/prop
+names (`GamesCard`, `GamesScreen`, `onOpenGames`, `gamesOpen`, `src/data/games.ts`,
+`completeGameRound`) are unchanged. `GamesCard`'s own home-screen pill label reads "Daily" (it
+sits in `HomeScreen`'s `QuickLinksRow` alongside `StatsPill`/`PrizesPill`, see `docs/ui-surfaces.md`)
+— the pill's text differs from the screen it opens on purpose, same as the parent-dashboard label
+split above.
 
 `GamesScreen` (opened from `HomeScreen`'s `GamesCard`) is a hub listing the catalog in
 `src/data/games.ts` (`GAMES: GameDef[]` — currently Hangman, Math Facts, Word Scramble, Memory

@@ -262,9 +262,10 @@ body {
 .topbar {
   color: var(--dark);
   padding: max(14px, env(safe-area-inset-top)) 16px 12px;
-  display: flex;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
+  gap: 8px;
 }
 .topbar-icon-btn {
   justify-self: end;
@@ -538,42 +539,37 @@ button.calendar-day {
 }
 .stats-rank:active { transform: scale(0.98); }
 
-/* ===== HOME SCREEN: PROFILE ROW (avatar + greeting + Arcade pill) ===== */
-.profile-row {
+/* ===== HOME SCREEN: QUICK-LINKS PILL ROW (Daily / Stats / Prizes) ===== */
+.pill-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 8px;
   margin-bottom: 10px;
 }
-.profile-row-left {
+.home-pill {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 8px;
   flex: 1;
   min-width: 0;
-}
-.arcade-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  background: var(--sage);
   color: white;
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 0.9rem;
-  padding: 10px 16px;
+  font-size: 0.85rem;
+  padding: 10px 12px;
   border-radius: 50px;
   border: var(--border-width-lg) solid var(--dark);
   box-shadow: 2px 2px 0 var(--dark);
   cursor: pointer;
   transition: transform var(--transition), box-shadow var(--transition);
 }
-.arcade-pill:active {
+.home-pill:active {
   transform: translate(2px, 2px);
   box-shadow: 0 0 0 var(--dark);
 }
+.home-pill-daily { background: var(--sage); }
+.home-pill-stats { background: var(--coral); }
+.home-pill-prizes { background: var(--yellow); color: var(--dark); }
 
 .stats-rank-header {
   display: flex;
@@ -868,6 +864,7 @@ button.gtile.checked:disabled { transform: scale(1.03); }
   display: flex;
   align-items: center;
   gap: 6px;
+  justify-self: end;
 }
 .trophy-pill {
   background: var(--cream);
