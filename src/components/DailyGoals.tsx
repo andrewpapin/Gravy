@@ -51,10 +51,12 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
 
             return (
               <div key={g.id} className={`goal-row ${done ? 'done' : ''}`}>
-                <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
-                <div className="goal-row-info">
-                  <div className="goal-row-name">{g.name}</div>
-                  <div className="goal-row-pts">+{g.pts}</div>
+                <div className="goal-row-box">
+                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
+                  <div className="goal-row-info">
+                    <div className="goal-row-name">{g.name}</div>
+                    <div className="goal-row-pts">+{g.pts}</div>
+                  </div>
                 </div>
                 {isStepper ? (
                   <div className="gtile-stepper goal-row-stepper">
@@ -76,7 +78,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                 ) : (
                   <button
                     type="button"
-                    className={`btn btn-sm goal-row-action ${done ? 'btn-ghost' : 'btn-green'}`}
+                    className={`goal-row-check ${done ? 'done' : ''}`}
                     onClick={() => {
                       triggerHaptic();
                       if (isToday) {
@@ -89,7 +91,6 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                     aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
                   >
                     <FontAwesomeIcon icon={done ? faRotateLeft : faCheck} />
-                    {done ? 'Undo' : 'Complete'}
                   </button>
                 )}
               </div>
