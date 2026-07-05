@@ -380,7 +380,7 @@ button.calendar-day {
   gap: 8px;
   flex: 1;
   min-width: 0;
-  background: var(--yellow);
+  background: var(--cream);
   border: none;
   border-right: var(--border-width-xl) solid var(--dark);
   padding: 10px 16px;
