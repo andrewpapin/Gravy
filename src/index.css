@@ -220,6 +220,8 @@
    cyberpunk only, anywhere --cream is used as a background fill under --dark/--text ink. */
 :root[data-theme="cyberpunk"] .gtile-icon,
 :root[data-theme="cyberpunk"] .gtile-name,
+:root[data-theme="cyberpunk"] .goal-row-icon,
+:root[data-theme="cyberpunk"] .goal-row-name,
 :root[data-theme="cyberpunk"] .gstep-btn,
 :root[data-theme="cyberpunk"] .gstep-count,
 :root[data-theme="cyberpunk"] .goal-progress-badge:not(.done),
@@ -808,39 +810,33 @@ button.gtile.checked:disabled { transform: scale(1.03); }
   background: var(--success);
   color: #fff;
 }
-.goal-item {
+/* ===== DAILY GOALS (horizontal rows) ===== */
+.goal-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.goal-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 0;
-  border-bottom: var(--border-width-md) solid var(--cream);
-  width: 100%;
-  min-height: 44px;
-  background: none;
-}
-.goal-item:last-child { border-bottom: none; }
-.goal-check {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  border: var(--border-width-xl) solid var(--dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  flex-shrink: 0;
-  transition: all 0.15s;
   background: var(--cream);
+  border-radius: var(--radius-sm);
+  border: var(--border-width-xl) solid var(--dark);
+  box-shadow: 3px 3px 0 var(--dark);
+  padding: 10px 12px;
+  transition: background var(--transition);
 }
-.goal-item.checked .goal-check {
-  background: var(--success);
-  border-color: var(--dark);
-  color: white;
-}
-.goal-emoji { font-size: 1.3rem; color: var(--dark); }
-.goal-info { flex: 1; }
-.goal-name { font-size: 0.95rem; font-weight: 800; }
-.goal-item.checked .goal-name { color: var(--muted); }
+.goal-row.done { background: var(--success); }
+.goal-row-icon { font-size: 1.4rem; color: var(--dark); flex-shrink: 0; width: 1.6rem; text-align: center; }
+.goal-row.done .goal-row-icon { color: #fff; }
+.goal-row-info { flex: 1; min-width: 0; }
+.goal-row-name { font-size: 0.9rem; font-weight: 800; color: var(--text); }
+.goal-row.done .goal-row-name { color: #fff; }
+.goal-row-pts { font-size: 0.72rem; font-weight: 700; color: var(--sage); margin-top: 2px; }
+.goal-row.done .goal-row-pts { color: #fff; }
+.goal-row-action { flex-shrink: 0; }
+.goal-row-stepper { flex-shrink: 0; }
 
 /* ===== GOAL TILES (Daily Goals / Bonus Points grid) ===== */
 .goal-grid {

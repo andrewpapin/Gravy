@@ -11,8 +11,11 @@ there is no router, just boolean open/close state per drawer.
 
 `HomeScreen` (avatar/greeting top bar, quick-links pill row, rank/streak stats card, food tray,
 daily goals, bonus items) plus drawers for the reward store, the Arcade (games), and the rank
-ladder. The three goal cards (`FoodTray`, `DailyGoals`, `BonusPoints`) share one 3-column tile
-grid (`.tray-grid`/`.goal-grid`, `.gtile`) and are each wrapped in `CollapsibleCard`
+ladder. `FoodTray` and `BonusPoints` share a 3-column tile grid (`.tray-grid`/`.goal-grid`,
+`.gtile`); `DailyGoals` instead renders as a vertical list of full-width horizontal rows
+(`.goal-rows`/`.goal-row`) — icon + name/points on the left, a Complete/Undo button (or the
+shared `.gtile-stepper` for multi-step goals) on the right. All three are each wrapped in
+`CollapsibleCard`
 (`src/components/CollapsibleCard.tsx`), which renders the header as a full-width toggle button
 (chevron + progress badge) and persists the collapsed/expanded state per kid via `Settings.
 collapsedSections` (`toggleSectionCollapsed` in `GravyContext`) — see `docs/state-model.md`'s

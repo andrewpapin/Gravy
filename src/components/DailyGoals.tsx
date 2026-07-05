@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMoon, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faMoon, faCheck, faRotateLeft } from '@fortawesome/free-solid-svg-icons';
 import { AppIcon } from './AppIcon';
 import { CollapsibleCard } from './CollapsibleCard';
 import { useGravy } from '../state/GravyContext';
@@ -42,26 +42,22 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
           </div>
         </div>
       ) : (
-        <div className="goal-grid">
+        <div className="goal-rows">
           {dailyGoals.map((g) => {
             const target = g.target || 1;
             const count = goalCounts[g.id] || 0;
             const done = isDone(g.id, target);
+            const isStepper = isToday && target > 1;
 
-            if (isToday && target > 1) {
-              return (
-                <div key={g.id} className={`gtile ${done ? 'checked' : ''}`}>
-                  <span className="tile-pts">+{g.pts}</span>
-                  {done && (
-                    <span className="tile-check" aria-hidden="true">
-                      <FontAwesomeIcon icon={faCheck} />
-                    </span>
-                  )}
-                  <div className="gtile-body">
-                    <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="gtile-icon" />
-                    <div className="gtile-name">{g.name}</div>
-                  </div>
-                  <div className="gtile-stepper">
+            return (
+              <div key={g.id} className={`goal-row ${done ? 'done' : ''}`}>
+                <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
+                <div className="goal-row-info">
+                  <div className="goal-row-name">{g.name}</div>
+                  <div className="goal-row-pts">+{g.pts}</div>
+                </div>
+                {isStepper ? (
+                  <div className="gtile-stepper goal-row-stepper">
                     <button
                       type="button"
                       className="gstep-btn"
@@ -77,37 +73,26 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                       aria-label={`Complete ${g.name}`}
                     >+</button>
                   </div>
-                </div>
-              );
-            }
-
-            return (
-              <button
-                key={g.id}
-                type="button"
-                className={`gtile ${done ? 'checked' : ''}`}
-                onClick={() => {
-                  triggerHaptic();
-                  if (isToday) {
-                    if (count > 0) decrementGoal(g.id); else incrementGoal(g.id);
-                  } else {
-                    toggleGoalForDay(day, g.id);
-                  }
-                }}
-                aria-pressed={done}
-                aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
-              >
-                <span className="tile-pts">+{g.pts}</span>
-                {done && (
-                  <span className="tile-check" aria-hidden="true">
-                    <FontAwesomeIcon icon={faCheck} />
-                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className={`btn btn-sm goal-row-action ${done ? 'btn-ghost' : 'btn-green'}`}
+                    onClick={() => {
+                      triggerHaptic();
+                      if (isToday) {
+                        if (count > 0) decrementGoal(g.id); else incrementGoal(g.id);
+                      } else {
+                        toggleGoalForDay(day, g.id);
+                      }
+                    }}
+                    aria-pressed={done}
+                    aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
+                  >
+                    <FontAwesomeIcon icon={done ? faRotateLeft : faCheck} />
+                    {done ? 'Undo' : 'Complete'}
+                  </button>
                 )}
-                <div className="gtile-body">
-                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="gtile-icon" />
-                  <div className="gtile-name">{g.name}</div>
-                </div>
-              </button>
+              </div>
             );
           })}
         </div>
