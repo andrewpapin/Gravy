@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
 
 import { RootMenu, type RootDest } from './RootMenu';
-import { GoalsPanel } from './GoalsPanel';
-import { StorePanel } from './StorePanel';
+import { GoalsStorePanel } from './GoalsStorePanel';
 import { ArcadePanel } from './ArcadePanel';
 
 type Root = 'menu' | RootDest;
 
 const ROOT_TITLES: Record<Exclude<Root, 'menu'>, string> = {
-  goals: 'Goals',
-  store: 'Store',
+  'goals-store': 'Goals & Store',
   arcade: 'Arcade',
 };
 
@@ -33,7 +31,6 @@ export function ParentDashboard({ onHeaderChange }: ParentDashboardProps) {
   if (root === 'menu') {
     return <RootMenu onNavigate={setRoot} />;
   }
-  if (root === 'goals') return <GoalsPanel />;
-  if (root === 'store') return <StorePanel />;
+  if (root === 'goals-store') return <GoalsStorePanel />;
   return <ArcadePanel />;
 }
