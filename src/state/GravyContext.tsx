@@ -35,11 +35,7 @@ export type { SyncStatus };
 const THEME_COLORS: Record<Theme, string> = {
   capri: '#f0ede6',
   classic: '#f4ece4',
-  midnight: '#1e1e24',
-  ocean: '#e0f7fa',
-  bubblegum: '#ffe5ec',
-  cyberpunk: '#fcee0a',
-  ranger: '#f1eef4',
+  twopointoh: '#f5f5f5',
 };
 
 export interface ToastItem {

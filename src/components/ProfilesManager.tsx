@@ -12,11 +12,7 @@ import { AVATAR_ICONS } from '../data/icons';
 const THEME_OPTIONS: { id: Theme; label: string }[] = [
   { id: 'capri', label: 'Capri' },
   { id: 'classic', label: 'Classic' },
-  { id: 'midnight', label: 'Midnight' },
-  { id: 'ocean', label: 'Ocean' },
-  { id: 'bubblegum', label: 'Bubblegum' },
-  { id: 'cyberpunk', label: 'Cyberpunk' },
-  { id: 'ranger', label: 'Space Ranger' },
+  { id: 'twopointoh', label: '2.0' },
 ];
 
 const AVATAR_COLORS: ColorOption[] = [

@@ -183,6 +183,13 @@ work lives in `BACKLOG.md`.
 
 ## Epic 13 — Engineering & Security Audit (July 2026)
 
+- **Theme set trimmed from seven to three (Capri/Classic/2.0)**, removing
+  `midnight`/`ocean`/`bubblegum`/`cyberpunk`/`ranger`. This eliminated the "dark-theme CSS
+  overrides are a growing, manually-maintained list" risk (`src/index.css:153-215+`) outright,
+  since `midnight`/`cyberpunk` were the only themes needing per-component ink overrides beyond
+  the token swap — the new `twopointoh` theme is a plain light theme (black ink on white) like
+  `capri`/`classic`, so it needs none. Saved profiles on a removed theme id fall back to
+  `'capri'` via the existing `validThemes` migration in `defaultState.ts`.
 - **`GoalsPanel` UX pass** — fixed a user-reported "confusing and inconsistent" Settings →
   Goals screen. Moved the Daily Goal/Bonus Points toggle above the add-goal fields it governs
   instead of below them; unified the toggle into one `GoalTypeToggle` component used by both
