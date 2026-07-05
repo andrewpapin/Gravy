@@ -180,7 +180,7 @@ single-profile save by wrapping it as a one-entry root.
   Tray!'`, `'All Goals Done!'`) — a toast covers the bonus award on past days instead. Multi-step
   goals (`target > 1`) only track step counts for today — past days store goal completion as a
   boolean (`goalIds` membership), so `DailyGoals` renders past-day multi-step goals as a simple
-  toggle tile rather than a stepper. There's no kid-facing calendar/history view — the Calendar is
+  toggle row rather than a stepper. There's no kid-facing calendar/history view — the Calendar is
   reached only through the account-gated parent dashboard described above. `TopBar`
   (`src/components/TopBar.tsx`) holds the avatar, `Greeting` (`src/components/Greeting.tsx`), a bell
   icon (opens `ApprovalsDrawer` directly, marked with a count pill for `pendingRewards.length +
