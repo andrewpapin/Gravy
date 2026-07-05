@@ -1,29 +1,18 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faBell } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
-import { AppIcon } from './AppIcon';
-import { Greeting } from './Greeting';
 
 interface TopBarProps {
-  dateStr: string;
   onOpenAccountMenu?: () => void;
   onOpenApprovals?: () => void;
 }
 
-export function TopBar({ dateStr, onOpenAccountMenu, onOpenApprovals }: TopBarProps) {
+export function TopBar({ onOpenAccountMenu, onOpenApprovals }: TopBarProps) {
   const { state } = useGravy();
   const pendingCount = state.pendingRewards.length + state.pendingPointsAwards.length;
 
   return (
     <div className="topbar">
-      <div
-        className="topbar-avatar"
-        aria-hidden="true"
-        style={{ background: state.settings.avatarBgColor, color: state.settings.avatarIconColor }}
-      >
-        <AppIcon iconKey={state.settings.avatarIcon} emojiFallback="😊" />
-      </div>
-      <Greeting dateStr={dateStr} />
       <div className="topbar-pills">
         {onOpenApprovals && (
           <button
