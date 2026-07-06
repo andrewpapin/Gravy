@@ -285,8 +285,8 @@ of that epic's existing RLS item. Everything else from the audit lands here.)*
 ### Architecture, Performance & Code Quality
 
 - **`GravyContext`'s value is unmemoized and unsliced.** `src/state/GravyContext.tsx:325-348`
-  — every `useGravy()` consumer re-renders on any state change (a toast fading re-renders the
-  whole tree); zero components anywhere use `React.memo`. Low pain today at this app's scale,
+  — every `useGravy()` consumer re-renders on any state change (a celebration overlay firing
+  re-renders the whole tree); zero components anywhere use `React.memo`. Low pain today at this app's scale,
   but the structural root cause worth fixing before state/screen count grows further. *(P2, M.)*
 - **`GoalsPanel`/`StorePanel` duplicate ~80 lines of CRUD/inline-edit scaffolding.**
   `src/components/parent/GoalsPanel.tsx` vs `StorePanel.tsx` — same edit-state shape and
@@ -314,9 +314,6 @@ of that epic's existing RLS item. Everything else from the audit lands here.)*
 
 ### Accessibility
 
-- **No `aria-live` region on toasts.** `src/components/ToastContainer.tsx:6-15` —
-  point-award/error/sync-status toasts are silent to screen readers, including the
-  storage-failure warning. *(P1, S.)*
 - **No automated a11y linting.** `eslint-plugin-jsx-a11y` isn't wired into
   `eslint.config.js`; existing good patterns rely on discipline, not tooling. *(P1, S.)*
 - **Several inputs identified only by placeholder text, no `<label>`.**
@@ -395,7 +392,7 @@ each is small enough to slot into any gap in the native work:
   as historical (P1/S) — both are currently "false confidence" artifacts.
 - Enable **TypeScript strict mode** (P1/S–M) while the codebase is still small enough for
   it to be a contained lift.
-- Add **`aria-live` to toasts** and wire up **`eslint-plugin-jsx-a11y`** (P1/S each) —
+- Wire up **`eslint-plugin-jsx-a11y`** (P1/S) —
   cheap, and accessibility carries extra weight for an app built for kids.
 - Everything else in Epic 13 (duplicated CRUD/router extraction, `GravyContext`
   memoization, `Onboarding.tsx` → `useReducer`, component test infra, and the remaining

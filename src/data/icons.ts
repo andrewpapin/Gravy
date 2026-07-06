@@ -177,10 +177,10 @@ export function resolveIcon(key?: string): IconDefinition | undefined {
 }
 
 /**
- * For toast/celebration call sites that accept `IconDefinition | string`:
+ * For celebration call sites that accept `IconDefinition | string`:
  * prefer the registered icon, else fall back to the legacy emoji string.
  */
-export function resolveToastIcon(key: string | undefined, emoji: string): IconDefinition | string {
+export function resolveCelebrationIcon(key: string | undefined, emoji: string): IconDefinition | string {
   return resolveIcon(key) ?? emoji;
 }
 

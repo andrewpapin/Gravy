@@ -1,21 +1,18 @@
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
-import { faCircleXmark, faCircleCheck, faTriangleExclamation, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import type { GravyState } from '../types';
 import { todayStr } from '../defaultState';
 import { appendActionLog, type LogActor } from '../actionLog';
 import { clone } from './shared';
-import type { ShowToast } from './types';
 
 export interface RewardDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
-  showToast: ShowToast;
   actorRef: MutableRefObject<LogActor | undefined>;
 }
 
 // Reward request/approve/decline flow. requestReward reserves points already promised to other
 // pending requests so a kid can't queue more than their balance covers.
 export function useRewardActions(deps: RewardDeps) {
-  const { setState, showToast, actorRef } = deps;
+  const { setState, actorRef } = deps;
 
   const requestReward = useCallback((id: number) => {
     setState((prev) => {
@@ -29,15 +26,11 @@ export function useRewardActions(deps: RewardDeps) {
         return sum + (r?.cost ?? 0);
       }, 0);
       const spendable = prev.points - reserved;
-      if (spendable < reward.cost) {
-        showToast(faCircleXmark, `Need ${reward.cost - spendable} more points!`);
-        return prev;
-      }
+      if (spendable < reward.cost) return prev;
       const next = clone(prev);
       const pr = { id: Date.now().toString(), rewardId: id };
       next.pendingRewards.push(pr);
       next.counters.totalRewards++;
-      showToast(faEnvelope, `${reward.name} requested!`);
       appendActionLog(next, actorRef.current, {
         type: 'rewardRequested',
         label: `${reward.name} requested!`,
@@ -47,7 +40,7 @@ export function useRewardActions(deps: RewardDeps) {
       });
       return next;
     });
-  }, [setState, showToast, actorRef]);
+  }, [setState, actorRef]);
 
   const approveReward = useCallback((prId: string) => {
     setState((prev) => {
@@ -62,7 +55,6 @@ export function useRewardActions(deps: RewardDeps) {
         const label = shortfall > 0
           ? `${reward.name} approved — balance was short by ${shortfall} pts`
           : `${reward.name} approved!`;
-        showToast(shortfall > 0 ? faTriangleExclamation : faCircleCheck, label);
         appendActionLog(next, actorRef.current, {
           type: 'rewardApproved',
           label,
@@ -73,13 +65,12 @@ export function useRewardActions(deps: RewardDeps) {
       }
       return next;
     });
-  }, [setState, showToast, actorRef]);
+  }, [setState, actorRef]);
 
   const declineReward = useCallback((prId: string) => {
     setState((prev) => {
       const next = clone(prev);
       next.pendingRewards = next.pendingRewards.filter((p) => p.id !== prId);
-      showToast(faCircleXmark, 'Request declined');
       appendActionLog(next, actorRef.current, {
         type: 'rewardDeclined',
         label: 'Request declined',
@@ -88,7 +79,7 @@ export function useRewardActions(deps: RewardDeps) {
       });
       return next;
     });
-  }, [setState, showToast, actorRef]);
+  }, [setState, actorRef]);
 
   return { requestReward, approveReward, declineReward };
 }

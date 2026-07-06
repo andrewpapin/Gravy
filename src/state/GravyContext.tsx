@@ -1,6 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import { faTriangleExclamation, faStar } from '@fortawesome/free-solid-svg-icons';
 import type { ActionLogEntry, CollapsibleSection, DayLog, Goal, GravyRoot, GravyState, Reward, Theme } from './types';
 import {
   applyDayRollover,
@@ -8,7 +7,7 @@ import {
   saveRoot,
   todayStr,
 } from './defaultState';
-import { resolveToastIcon } from '../data/icons';
+import { resolveCelebrationIcon } from '../data/icons';
 import { applyAward, applyAwardForDay } from './points';
 import { getRank, RANKS } from '../data/ranks';
 import {
@@ -39,12 +38,6 @@ const THEME_COLORS: Record<Theme, string> = {
   twopointoh: '#f5f5f5',
 };
 
-export interface ToastItem {
-  id: number;
-  icon: IconDefinition | string;
-  msg: string;
-}
-
 export interface CelebrationData {
   icon: IconDefinition | string;
   title: string;
@@ -69,11 +62,13 @@ interface GravyContextValue {
   addProfile: (name: string, opts?: ProfilePatch & { switchTo?: boolean }) => void;
   updateProfile: (id: string, patch: ProfilePatch) => void;
   deleteProfile: (id: string) => void;
-  toasts: ToastItem[];
   celebration: CelebrationData | null;
   confettiTrigger: number;
-  showToast: (icon: IconDefinition | string, msg: string) => void;
-  dismissToast: (id: number) => void;
+  // Set when a localStorage write fails (quota exceeded, or storage disabled in private
+  // browsing) — surfaced as a persistent, dismissible banner rather than an ephemeral toast
+  // since it flags an ongoing risk (progress isn't being saved), not a one-off event.
+  storageError: boolean;
+  dismissStorageError: () => void;
   hideCelebration: () => void;
   toggleSectionCollapsed: (section: CollapsibleSection) => void;
   logFood: (id: string) => void;
@@ -129,8 +124,6 @@ interface GravyContextValue {
 
 const GravyContext = createContext<GravyContextValue | null>(null);
 
-let toastIdCounter = 0;
-
 export function GravyProvider({ children }: { children: ReactNode }) {
   const [root, setRoot] = useState<GravyRoot>(() => loadRoot());
   const [state, setState] = useState<GravyState>(() => activeStateOf(root));
@@ -143,17 +136,11 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   const rootRef = useRef(root);
   // eslint-disable-next-line react-hooks/refs
   rootRef.current = root;
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
-  // Toasts are queued and shown one at a time — a burst of showToast() calls (e.g. several
-  // point awards in quick succession) must not stack multiple toasts on screen at once.
-  const toastQueueRef = useRef<ToastItem[]>([]);
-  const toastActiveRef = useRef(false);
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const showNextToastRef = useRef<() => void>(() => {});
   const [celebration, setCelebration] = useState<CelebrationData | null>(null);
   const [confettiTrigger, setConfettiTrigger] = useState(0);
   const pendingTimersRef = useRef<number[]>([]);
-  const storageWarnedRef = useRef(false);
+  const [storageError, setStorageError] = useState(false);
+  const storageErrorRef = useRef(false);
 
   // Cloud-sync + parent-account reactive layer: householdCode/syncStatus/authUser/authReady/
   // householdStatus state plus the Supabase realtime push/subscribe, auth-tracking, and
@@ -205,55 +192,21 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
-  const showNextToast = useCallback(() => {
-    const next = toastQueueRef.current.shift();
-    if (!next) {
-      toastActiveRef.current = false;
-      setToasts([]);
-      return;
-    }
-    toastActiveRef.current = true;
-    setToasts([next]);
-    toastTimerRef.current = setTimeout(() => {
-      toastTimerRef.current = null;
-      showNextToastRef.current();
-    }, 2800);
-  }, []);
-  // eslint-disable-next-line react-hooks/refs
-  showNextToastRef.current = showNextToast;
-
-  const showToast = useCallback((icon: IconDefinition | string, msg: string) => {
-    const id = ++toastIdCounter;
-    toastQueueRef.current.push({ id, icon, msg });
-    if (!toastActiveRef.current) {
-      showNextToast();
-    }
-  }, [showNextToast]);
-
   // Persist on every state/root change. localStorage can throw (quota exceeded, or storage
-  // disabled in private browsing) — warn once via toast rather than silently losing the
-  // kid's progress, but don't re-show it on every subsequent failed write.
+  // disabled in private browsing) — surface it via the persistent storageError banner (cleared
+  // again once a write succeeds) rather than silently losing the kid's progress. Only calls
+  // setStorageError on an actual transition, so a dismissed banner doesn't immediately reappear
+  // on every subsequent write while the same failure is ongoing.
   useEffect(() => {
     const saved = saveRoot(buildMergedRoot(root, state));
-    if (saved) {
-      storageWarnedRef.current = false;
-    } else if (!storageWarnedRef.current) {
-      storageWarnedRef.current = true;
-      showToast(faTriangleExclamation, "Couldn't save — this device's storage is full or unavailable");
+    const hasError = !saved;
+    if (hasError !== storageErrorRef.current) {
+      storageErrorRef.current = hasError;
+      setStorageError(hasError);
     }
-  }, [state, root, showToast]);
+  }, [state, root]);
 
-  const dismissToast = useCallback((id: number) => {
-    if (toasts.some((toast) => toast.id === id)) {
-      if (toastTimerRef.current !== null) {
-        clearTimeout(toastTimerRef.current);
-        toastTimerRef.current = null;
-      }
-      showNextToast();
-    } else {
-      toastQueueRef.current = toastQueueRef.current.filter((toast) => toast.id !== id);
-    }
-  }, [toasts, showNextToast]);
+  const dismissStorageError = useCallback(() => setStorageError(false), []);
 
   const showCelebration = useCallback((icon: IconDefinition | string, title: string, sub: string) => {
     setCelebration({ icon, title, sub });
@@ -282,30 +235,16 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   // Bonus-item penalties are handled separately in logBonusItem, where they're forgiven once
   // the balance hits zero. Negative balances are floored only where they're displayed
   // (TopBar / rank) and where they're spent (approveReward).
-  const awardPoints = useCallback(
-    (next: GravyState, pts: number, reason: string, opts?: { silent?: boolean }) => {
-      applyAward(next, pts);
-      if (!opts?.silent) {
-        const sign = pts < 0 ? '−' : '+';
-        showToast(faStar, `${sign}${Math.abs(pts)} ${reason}`.trim());
-      }
-    },
-    [showToast],
-  );
+  const awardPoints = useCallback((next: GravyState, pts: number) => {
+    applyAward(next, pts);
+  }, []);
 
   // Same as awardPoints, but for editing a past day from the Calendar (parent dashboard,
   // PIN-gated): targets that day's own log.points instead of todayPoints, while still
   // moving the live balance/lifetime total exactly like editing today does.
-  const awardPointsForDay = useCallback(
-    (next: GravyState, log: DayLog, pts: number, reason: string, opts?: { silent?: boolean }) => {
-      applyAwardForDay(next, log, pts);
-      if (!opts?.silent) {
-        const sign = pts < 0 ? '−' : '+';
-        showToast(faStar, `${sign}${Math.abs(pts)} ${reason}`.trim());
-      }
-    },
-    [showToast],
-  );
+  const awardPointsForDay = useCallback((next: GravyState, log: DayLog, pts: number) => {
+    applyAwardForDay(next, log, pts);
+  }, []);
 
   // Shows a full-screen celebration when totalPoints crosses into a new rank.
   // When delayMs is set, the announcement is deferred so it doesn't collide
@@ -316,7 +255,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
       const newIndex = getRank(next.totalPoints).index;
       if (newIndex <= prevIndex) return;
       const newRank = RANKS[newIndex];
-      const announce = () => showCelebration(resolveToastIcon(newRank.icon, newRank.emoji), 'Rank Up!', `You're now a ${newRank.name}!`);
+      const announce = () => showCelebration(resolveCelebrationIcon(newRank.icon, newRank.emoji), 'Rank Up!', `You're now a ${newRank.name}!`);
       if (delayMs > 0) {
         const timer = window.setTimeout(announce, delayMs);
         pendingTimersRef.current.push(timer);
@@ -330,29 +269,29 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   // Per-domain action groups, each relocated verbatim into its own hook (see ./actions/*).
   // They receive the shared state setters/refs and the helper callbacks above as dependencies.
   const kidProgress = useKidProgressActions({
-    setState, showToast, showCelebration, awardPoints, maybeCelebrateRankUp, actorRef,
+    setState, showCelebration, awardPoints, maybeCelebrateRankUp, actorRef,
     requiresApproval,
   });
   const dayEdit = useDayEditActions({
-    setState, stateRef, showToast, awardPointsForDay, maybeCelebrateRankUp, actorRef,
+    setState, stateRef, awardPointsForDay, maybeCelebrateRankUp, actorRef,
     removeFood: kidProgress.removeFood,
     decrementGoal: kidProgress.decrementGoal,
     undoBonusItem: kidProgress.undoBonusItem,
   });
-  const rewards = useRewardActions({ setState, showToast, actorRef });
+  const rewards = useRewardActions({ setState, actorRef });
   const pendingPoints = usePendingPointsActions({
-    setState, stateRef, showToast, maybeCelebrateRankUp, actorRef,
+    setState, stateRef, maybeCelebrateRankUp, actorRef,
     decrementGoal: kidProgress.decrementGoal,
     removeFood: kidProgress.removeFood,
     undoBonusItem: kidProgress.undoBonusItem,
     declineGameWin: kidProgress.declineGameWin,
   });
   const catalog = useCatalogActions({
-    setState, showToast, actorRef, pendingTimersRef, setHouseholdCode, lastSyncedRef, setSyncStatus,
+    setState, actorRef, pendingTimersRef, setHouseholdCode, lastSyncedRef, setSyncStatus,
   });
-  const profile = useProfileActions({ setState, setRoot, stateRef, rootRef, showToast, actorRef });
+  const profile = useProfileActions({ setState, setRoot, stateRef, rootRef, actorRef });
   const household = useHouseholdActions({
-    setState, setRoot, stateRef, rootRef, showToast, actorRef, setSyncStatus,
+    setState, setRoot, stateRef, rootRef, actorRef, setSyncStatus,
     setHouseholdCode, lastSyncedRef, pendingTimersRef, householdCode, authUser, setHouseholdStatus,
   });
 
@@ -374,11 +313,10 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     state,
     profiles,
     activeProfileId: root.activeProfileId,
-    toasts,
     celebration,
     confettiTrigger,
-    showToast,
-    dismissToast,
+    storageError,
+    dismissStorageError,
     hideCelebration,
     toggleSectionCollapsed,
     grownUpUnlocked,

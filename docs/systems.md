@@ -20,7 +20,7 @@ component calls `completeGameRound(gameId, won)` on finish. That action incremen
 `counters.gamesPlayed`/`gamesWon` and, on a win, awards `settings.gamePts` points — but only up to
 `DAILY_GAME_WIN_CAP` (3, defined in `src/state/actions/shared.ts`, re-exported from `GravyContext`)
 wins per day via `todayGameWins`, so a kid can't farm points by replaying an easy round; wins beyond
-the cap still show a toast but pay no points. `todayGameWins` resets at day rollover.
+the cap still count toward `gamesWon` but pay no points. `todayGameWins` resets at day rollover.
 
 ## Rank Ladder
 

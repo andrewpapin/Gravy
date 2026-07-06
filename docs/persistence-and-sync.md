@@ -24,8 +24,9 @@ Deep reference for localStorage persistence, Supabase cloud sync, the household 
   `gravy_create_household`/`gravy_upsert_household_state`/`gravy_rename_household`/
   `gravy_delete_household` each scope to one row by code, and `gravy_lookup_household` (called by
   `fetchHousehold()`) additionally rate-limits to 10 lookups per 5-minute window per source IP
-  before returning a code's state — exceeding it surfaces a "Too many attempts" toast from
-  `joinHousehold`. That function opportunistically deletes other rate-limit buckets whose window has
+  before returning a code's state — exceeding it fails `joinHousehold` (surfaced to the caller as
+  `syncStatus === 'error'`, shown inline by `SyncGateModal`/`SyncPanel`/`SignInPrompt`). That
+  function opportunistically deletes other rate-limit buckets whose window has
   lapsed on every call, so `household_lookup_attempts` stays bounded without a scheduled cleanup
   job. The table's SELECT grant/policy is open to `anon` **and** `authenticated` (both required for
   Realtime's `postgres_changes` delivery, which has no per-household auth claim to scope by), so this
@@ -89,8 +90,10 @@ Deep reference for localStorage persistence, Supabase cloud sync, the household 
   (`src/state/storage.ts`), which swallow the exception `localStorage` throws when storage is
   disabled or full (iOS private browsing, quota exceeded) instead of crashing the caller.
   `saveState`/`saveRoot` (`src/state/defaultState.ts`) return a boolean for this reason;
-  `GravyProvider`'s autosave effect shows a one-time "Couldn't save" toast on failure (suppressed on
-  repeat failures via `storageWarnedRef`, reset once a write succeeds again).
+  `GravyProvider`'s autosave effect sets `storageError` on a failed write (surfaced by
+  `StorageErrorBanner`, a persistent dismissible banner rather than a toast — dismissing it doesn't
+  suppress a *new* failure episode, only repeats of the same one; see `storageErrorRef`), cleared
+  again once a write succeeds.
 - `subscribeToHousehold` (`src/state/sync.ts`) checks an incoming realtime payload has a `profiles`
   array (`isValidHouseholdStatePayload`) before handing it to the app — a structurally malformed row
   is dropped rather than crashing the subscription callback. Deeper per-field validation happens via

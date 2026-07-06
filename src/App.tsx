@@ -3,7 +3,7 @@ import { GravyProvider } from './state/GravyContext';
 import { HomeScreen } from './components/HomeScreen';
 import { GrownUpsDrawer } from './components/parent/GrownUpsDrawer';
 import { AccountMenu } from './components/AccountMenu';
-import { ToastContainer } from './components/ToastContainer';
+import { StorageErrorBanner } from './components/StorageErrorBanner';
 import { UpdatePrompt } from './components/UpdatePrompt';
 import { ReleaseNotesDrawer } from './components/ReleaseNotesDrawer';
 import { Celebration } from './components/Celebration';
@@ -138,7 +138,7 @@ function AppShell() {
 
       <Celebration />
       <Confetti />
-      <ToastContainer />
+      <StorageErrorBanner />
       <UpdatePrompt />
       <Suspense fallback={null}>
         {onboarded ? <SyncGateModal /> : <Onboarding onComplete={() => setOnboarded(true)} />}

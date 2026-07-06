@@ -1,18 +1,16 @@
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
-import { faUserPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import type { GravyRoot, GravyState } from '../types';
 import { applyDayRollover, makeNewProfile } from '../defaultState';
 import { appendAuditLog } from '../auditLog';
 import type { LogActor } from '../actionLog';
 import { buildMergedRoot, clone } from './shared';
-import type { ProfilePatch, ShowToast } from './types';
+import type { ProfilePatch } from './types';
 
 export interface ProfileDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
   setRoot: Dispatch<SetStateAction<GravyRoot>>;
   stateRef: MutableRefObject<GravyState>;
   rootRef: MutableRefObject<GravyRoot>;
-  showToast: ShowToast;
   actorRef: MutableRefObject<LogActor | undefined>;
 }
 
@@ -20,7 +18,7 @@ export interface ProfileDeps {
 // root (buildMergedRoot) before mutating, and runs applyDayRollover on a newly-activated profile
 // since it may not have been opened today.
 export function useProfileActions(deps: ProfileDeps) {
-  const { setState, setRoot, stateRef, rootRef, showToast, actorRef } = deps;
+  const { setState, setRoot, stateRef, rootRef, actorRef } = deps;
 
   const switchProfile = useCallback((id: string) => {
     const prevRoot = rootRef.current;
@@ -57,9 +55,8 @@ export function useProfileActions(deps: ProfileDeps) {
         appendAuditLog(next, actorRef.current, { type: 'profileAdded', label: `Added profile "${entry.state.settings.childName}"` });
         return next;
       });
-      showToast(faUserPlus, `Added ${entry.state.settings.childName}`);
     },
-    [setState, setRoot, stateRef, rootRef, showToast, actorRef],
+    [setState, setRoot, stateRef, rootRef, actorRef],
   );
 
   const updateProfile = useCallback((id: string, patch: ProfilePatch) => {
@@ -110,9 +107,8 @@ export function useProfileActions(deps: ProfileDeps) {
         appendAuditLog(next, actorRef.current, { type: 'profileRemoved', label: `Deleted profile${removed ? ` "${removed.state.settings.childName}"` : ''}` });
         return next;
       });
-      if (removed) showToast(faTrashCan, `Deleted ${removed.state.settings.childName}`);
     },
-    [setState, setRoot, stateRef, rootRef, showToast, actorRef],
+    [setState, setRoot, stateRef, rootRef, actorRef],
   );
 
   return { switchProfile, addProfile, updateProfile, deleteProfile };

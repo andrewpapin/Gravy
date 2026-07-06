@@ -1,16 +1,14 @@
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
-import { faCircleCheck, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import type { GravyState } from '../types';
 import { todayStr } from '../defaultState';
 import { appendActionLog, type LogActor } from '../actionLog';
 import { applyAward, applyBonusItem } from '../points';
 import { clone } from './shared';
-import type { MaybeCelebrateRankUp, ShowToast } from './types';
+import type { MaybeCelebrateRankUp } from './types';
 
 export interface PendingPointsDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
   stateRef: MutableRefObject<GravyState>;
-  showToast: ShowToast;
   maybeCelebrateRankUp: MaybeCelebrateRankUp;
   actorRef: MutableRefObject<LogActor | undefined>;
   // The exact-inverse "today" actions (from useKidProgressActions) that cancel a still-pending
@@ -28,7 +26,7 @@ export interface PendingPointsDeps {
 // the opposite direction: the completion already happened live, only the point credit is gated.
 export function usePendingPointsActions(deps: PendingPointsDeps) {
   const {
-    setState, stateRef, showToast, maybeCelebrateRankUp, actorRef,
+    setState, stateRef, maybeCelebrateRankUp, actorRef,
     decrementGoal, removeFood, undoBonusItem, declineGameWin,
   } = deps;
 
@@ -46,8 +44,6 @@ export function usePendingPointsActions(deps: PendingPointsDeps) {
       } else {
         applyAward(next, pending.pts);
       }
-      const sign = pending.pts < 0 ? '−' : '+';
-      showToast(faCircleCheck, `${pending.label} approved — ${sign}${Math.abs(pending.pts)} pts`);
       appendActionLog(next, actorRef.current, {
         type: 'pointsApproved',
         label: `${pending.label} approved`,
@@ -58,7 +54,7 @@ export function usePendingPointsActions(deps: PendingPointsDeps) {
       maybeCelebrateRankUp(prev.totalPoints, next);
       return next;
     });
-  }, [setState, showToast, maybeCelebrateRankUp, actorRef]);
+  }, [setState, maybeCelebrateRankUp, actorRef]);
 
   const declinePendingPointsAward = useCallback((id: string) => {
     const pending = stateRef.current.pendingPointsAwards.find((p) => p.id === id);
@@ -91,8 +87,7 @@ export function usePendingPointsActions(deps: PendingPointsDeps) {
       });
       return next;
     });
-    showToast(faCircleXmark, `${pending.label} declined`);
-  }, [stateRef, setState, showToast, actorRef, decrementGoal, removeFood, undoBonusItem, declineGameWin]);
+  }, [stateRef, setState, actorRef, decrementGoal, removeFood, undoBonusItem, declineGameWin]);
 
   return { approvePendingPointsAward, declinePendingPointsAward };
 }

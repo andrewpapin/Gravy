@@ -1,5 +1,5 @@
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
-import { faUtensils, faListCheck, faStar, faGamepad, faHourglassHalf } from '@fortawesome/free-solid-svg-icons';
+import { faUtensils, faListCheck } from '@fortawesome/free-solid-svg-icons';
 import type { GravyState } from '../types';
 import { todayStr } from '../defaultState';
 import { appendActionLog, markMostRecentUndone, type LogActor } from '../actionLog';
@@ -8,11 +8,10 @@ import { GAMES } from '../../data/games';
 import { applyBonusItem, getFoodPts, reverseBonusItem } from '../points';
 import { queuePendingPoints, takeMostRecentPending } from '../pendingPoints';
 import { DAILY_GAME_WIN_CAP, clone } from './shared';
-import type { AwardPoints, MaybeCelebrateRankUp, ShowCelebration, ShowToast } from './types';
+import type { AwardPoints, MaybeCelebrateRankUp, ShowCelebration } from './types';
 
 export interface KidProgressDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
-  showToast: ShowToast;
   showCelebration: ShowCelebration;
   awardPoints: AwardPoints;
   maybeCelebrateRankUp: MaybeCelebrateRankUp;
@@ -28,7 +27,7 @@ export interface KidProgressDeps {
 // items, games). The point arithmetic lives in ../points.ts; these orchestrate counters, the
 // action log, and the celebration/rank-up side effects around it.
 export function useKidProgressActions(deps: KidProgressDeps) {
-  const { setState, showToast, showCelebration, awardPoints, maybeCelebrateRankUp, actorRef, requiresApproval } = deps;
+  const { setState, showCelebration, awardPoints, maybeCelebrateRankUp, actorRef, requiresApproval } = deps;
 
   const logFood = useCallback((id: string) => {
     setState((prev) => {
@@ -46,9 +45,8 @@ export function useKidProgressActions(deps: KidProgressDeps) {
       if (requiresApproval) {
         const totalPts = foodPts + (bonusTriggered ? next.settings.bonusPts : 0);
         queuePendingPoints(next, 'food', id, totalPts, label);
-        showToast(faHourglassHalf, `${label} — waiting for approval`);
       } else {
-        awardPoints(next, foodPts, label);
+        awardPoints(next, foodPts);
       }
       appendActionLog(next, actorRef.current, {
         type: 'food',
@@ -61,8 +59,7 @@ export function useKidProgressActions(deps: KidProgressDeps) {
       if (!wasFull && isFull) {
         next.counters.fullTrayDays++;
         if (bonusTriggered && !requiresApproval) {
-          // Silent — the celebration overlay already announces the bonus.
-          awardPoints(next, next.settings.bonusPts, '🎉 Full Tray Bonus!', { silent: true });
+          awardPoints(next, next.settings.bonusPts);
         }
         // Only daily goals count toward the combo counter
         const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
@@ -75,7 +72,7 @@ export function useKidProgressActions(deps: KidProgressDeps) {
       maybeCelebrateRankUp(prev.totalPoints, next, delay);
       return next;
     });
-  }, [setState, awardPoints, maybeCelebrateRankUp, showCelebration, showToast, actorRef, requiresApproval]);
+  }, [setState, awardPoints, maybeCelebrateRankUp, showCelebration, actorRef, requiresApproval]);
 
   const removeFood = useCallback((id: string) => {
     setState((prev) => {
@@ -127,9 +124,8 @@ export function useKidProgressActions(deps: KidProgressDeps) {
         const label = `${goal.name} done!`;
         if (requiresApproval) {
           queuePendingPoints(next, 'goal', id, goal.pts, label);
-          showToast(faHourglassHalf, `${label} — waiting for approval`);
         } else {
-          awardPoints(next, goal.pts, label);
+          awardPoints(next, goal.pts);
         }
         appendActionLog(next, actorRef.current, {
           type: 'goal',
@@ -153,7 +149,7 @@ export function useKidProgressActions(deps: KidProgressDeps) {
       }
       return next;
     });
-  }, [setState, awardPoints, maybeCelebrateRankUp, showCelebration, showToast, actorRef, requiresApproval]);
+  }, [setState, awardPoints, maybeCelebrateRankUp, showCelebration, actorRef, requiresApproval]);
 
   const decrementGoal = useCallback((id: number) => {
     setState((prev) => {
@@ -196,9 +192,8 @@ export function useKidProgressActions(deps: KidProgressDeps) {
           const label = `🎉 ${game?.name ?? 'Game'} win!`;
           if (requiresApproval) {
             queuePendingPoints(next, 'game', gameId, next.settings.gamePts, label);
-            showToast(faHourglassHalf, `${label} — waiting for approval`);
           } else {
-            awardPoints(next, next.settings.gamePts, label);
+            awardPoints(next, next.settings.gamePts);
           }
           appendActionLog(next, actorRef.current, {
             type: 'game',
@@ -207,14 +202,12 @@ export function useKidProgressActions(deps: KidProgressDeps) {
             dateStr: todayStr(next.settings.timezone),
             itemId: gameId,
           });
-        } else {
-          showToast(faGamepad, "Nice win! Today's game points are maxed — keep playing for fun!");
         }
         maybeCelebrateRankUp(prev.totalPoints, next);
       }
       return next;
     });
-  }, [setState, awardPoints, maybeCelebrateRankUp, showToast, actorRef, requiresApproval]);
+  }, [setState, awardPoints, maybeCelebrateRankUp, actorRef, requiresApproval]);
 
   // Reverses a still-pending game-win award (counters.gamesWon/todayGameWins) when a parent
   // declines it from Approvals — there's no kid-facing "undo" for a game round, so this is only
@@ -247,7 +240,6 @@ export function useKidProgressActions(deps: KidProgressDeps) {
         // Forgiveness (see applyBonusItem) depends on the live balance, which hasn't been
         // touched yet — it's computed at approval time instead, against the balance then.
         queuePendingPoints(next, 'bonus', id, goal.pts, label);
-        showToast(faHourglassHalf, `${goal.name} — waiting for approval`);
         appendActionLog(next, actorRef.current, {
           type: 'bonus',
           label,
@@ -258,7 +250,6 @@ export function useKidProgressActions(deps: KidProgressDeps) {
       } else {
         const applied = applyBonusItem(next, goal.pts);
         next.todayBonusApplied[id] = (next.todayBonusApplied[id] || 0) + applied;
-        showToast(faStar, label);
         appendActionLog(next, actorRef.current, {
           type: 'bonus',
           label,
@@ -270,7 +261,7 @@ export function useKidProgressActions(deps: KidProgressDeps) {
       maybeCelebrateRankUp(prev.totalPoints, next);
       return next;
     });
-  }, [setState, showToast, maybeCelebrateRankUp, actorRef, requiresApproval]);
+  }, [setState, maybeCelebrateRankUp, actorRef, requiresApproval]);
 
   const undoBonusItem = useCallback((id: number) => {
     setState((prev) => {
