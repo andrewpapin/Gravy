@@ -42,7 +42,7 @@ export interface HouseholdSyncValue {
 // Owns the cloud-sync + parent-account reactive layer: the household code / sync status / auth /
 // ownership-status state and the four effects that wire Supabase realtime (push/subscribe), auth
 // tracking, and ownership-status refresh. Extracted from GravyContext so the provider keeps only its
-// local concerns (toasts/celebration/theme/rollover/persist) and this sync engine reads on its own.
+// local concerns (celebration/theme/rollover/persist) and this sync engine reads on its own.
 // The imperative create/join/leave/claim actions live in `./actions/useHouseholdActions.ts`; this
 // hook is the reactive half they share state with via the setters/refs returned here.
 export function useHouseholdSync({ root, state, setRoot, setState }: HouseholdSyncDeps): HouseholdSyncValue {

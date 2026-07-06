@@ -19,8 +19,11 @@ All state flows through a single React Context in `src/state/GravyContext.tsx`, 
   `<meta theme-color>` before paint, avoiding a flash of the wrong theme).
 - Day-rollover re-check on `visibilitychange`, applied to **every** profile (not just the active
   one), so a kid not opened in days still has correct streaks/cleared "today" state when picked.
-- Toast notifications (plain, no undo — undo lives in the Log) and celebration/confetti
-  triggers — run after each state-mutating action.
+- Celebration/confetti triggers — run after certain state-mutating actions (full tray, all daily
+  goals, rank-up). There is no toast/notification system — everyday actions (points, goals, catalog
+  edits, sync) rely on the already-visible state change (checkmark, counter, list update) as
+  feedback instead; the one exception is `storageError` (see `docs/persistence-and-sync.md`), a
+  persistent dismissible banner (`StorageErrorBanner`) for the one case with no other visible signal.
 - `actionLog: ActionLogEntry[]` (per-profile) — append-only history of kid-progress/reward actions,
   capped at `ACTION_LOG_MAX_ENTRIES` (500, FIFO). `src/state/actionLog.ts` holds the pure helpers:
   `appendActionLog(next, actor, entry)` (push + cap, stamps `actorUserId`/`actorLabel` from the
@@ -48,7 +51,7 @@ All state flows through a single React Context in `src/state/GravyContext.tsx`, 
 
 The provider's imperative actions are split into per-domain custom hooks, each called once inside
 `GravyProvider` and receiving the shared state setters/refs and helper callbacks
-(`showToast`/`showCelebration`/`awardPoints`/`awardPointsForDay`/
+(`showCelebration`/`awardPoints`/`awardPointsForDay`/
 `maybeCelebrateRankUp`/`actorRef`) as explicit deps:
 
 - `useKidProgressActions.ts` — live "today" actions: `logFood`, `removeFood`, `incrementGoal`,
@@ -88,7 +91,7 @@ create/join/leave/claim actions stay in `useHouseholdActions.ts` — that hook a
 through the refs/setters returned here.
 
 GravyContext keeps the local `useState`/`useRef` declarations, the theme/day-rollover/persist
-effects (the sync/auth effects moved to `useHouseholdSync`), the toast/celebration/award/rank
+effects (the sync/auth effects moved to `useHouseholdSync`), the celebration/award/rank
 helper callbacks, the `profiles` derivation, the assembled `value`, and `useGravy`. The pure point
 arithmetic still lives in `src/state/points.ts`.
 
@@ -177,7 +180,8 @@ single-profile save by wrapping it as a one-entry root.
   `maybeCelebrateRankUp()`, and apply the same unfloored exact-inverse
   arithmetic and bonus-item forgiveness/exact-undo tracking (`DayLog.bonusApplied`). The one thing
   intentionally *not* ported is the food/goal-specific full-screen celebration overlays (`'Full
-  Tray!'`, `'All Goals Done!'`) — a toast covers the bonus award on past days instead. Multi-step
+  Tray!'`, `'All Goals Done!'`) — the edited day's own updated state (points, checkmarks) is the
+  only feedback for a past-day bonus award. Multi-step
   goals (`target > 1`) only track step counts for today — past days store goal completion as a
   boolean (`goalIds` membership), so `DailyGoals` renders past-day multi-step goals as a simple
   toggle row rather than a stepper. There's no kid-facing calendar/history view — the Calendar is

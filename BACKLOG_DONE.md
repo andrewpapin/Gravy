@@ -183,6 +183,15 @@ work lives in `BACKLOG.md`.
 
 ## Epic 13 — Engineering & Security Audit (July 2026)
 
+- **Toast/notification system removed entirely** (product decision, not a bug fix) — resolves
+  the "no `aria-live` region on toasts" a11y gap by eliminating the toast system it applied to.
+  `showToast`/`dismissToast`/`ToastItem`/`ToastContainer` deleted from `GravyContext` and every
+  call site (`src/state/actions/*`, `CopyCodeButton`, `CalendarGrid`); everyday confirmations
+  (points, goals, catalog/profile/sync edits) now rely on the already-visible state change
+  (checkmark, counter, list update) instead. `CopyCodeButton` grew its own inline
+  copied/failed icon state; the one true "no other feedback" case — a failed `localStorage`
+  write — became `storageError`, a persistent dismissible banner (`StorageErrorBanner`,
+  `src/components/StorageErrorBanner.tsx`) rather than an ephemeral toast.
 - **Theme set trimmed from seven to three (Capri/Classic/2.0)**, removing
   `midnight`/`ocean`/`bubblegum`/`cyberpunk`/`ranger`. This eliminated the "dark-theme CSS
   overrides are a growing, manually-maintained list" risk (`src/index.css:153-215+`) outright,

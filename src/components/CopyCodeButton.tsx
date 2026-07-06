@@ -1,28 +1,24 @@
 import { useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCopy, faCheck, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { useGravy } from '../state/GravyContext';
 
 interface CopyCodeButtonProps {
   code: string;
 }
 
 export function CopyCodeButton({ code }: CopyCodeButtonProps) {
-  const { showToast } = useGravy();
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
   const timerRef = useRef<number | null>(null);
 
   const handleCopy = async () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     try {
       await navigator.clipboard.writeText(code);
+      setStatus('copied');
     } catch {
-      showToast(faTriangleExclamation, "Couldn't copy — write it down instead");
-      return;
+      setStatus('failed');
     }
-    showToast(faCheck, 'Code copied!');
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setCopied(true);
-    timerRef.current = window.setTimeout(() => setCopied(false), 1400);
+    timerRef.current = window.setTimeout(() => setStatus('idle'), 1400);
   };
 
   return (
@@ -30,9 +26,9 @@ export function CopyCodeButton({ code }: CopyCodeButtonProps) {
       type="button"
       className="copy-code-btn"
       onClick={handleCopy}
-      aria-label="Copy household code to clipboard"
+      aria-label={status === 'failed' ? "Couldn't copy — write the code down instead" : 'Copy household code to clipboard'}
     >
-      <FontAwesomeIcon icon={copied ? faCheck : faCopy} />
+      <FontAwesomeIcon icon={status === 'copied' ? faCheck : status === 'failed' ? faTriangleExclamation : faCopy} />
     </button>
   );
 }

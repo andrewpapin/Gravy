@@ -1,5 +1,4 @@
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
-import { faCircleCheck, faTrashCan, faCartShopping, faRotate, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import type { Goal, GravyState, Reward } from '../types';
 import { applyDayRollover, cloneDefaultState } from '../defaultState';
 import { appendAuditLog } from '../auditLog';
@@ -8,7 +7,7 @@ import { FOODS } from '../../data/foods';
 import { isValidTimezone } from '../../data/timezones';
 import { safeRemoveItem } from '../storage';
 import { HOUSEHOLD_CODE_KEY, SYNC_SKIPPED_KEY, clone } from './shared';
-import type { SettableSettingKey, ShowToast, SyncStatus } from './types';
+import type { SettableSettingKey, SyncStatus } from './types';
 
 // Friendly names for the Admin Log's settingChanged entries (Epic 8 item 6).
 const SETTING_LABELS: Partial<Record<SettableSettingKey, string>> = {
@@ -24,7 +23,6 @@ const SETTING_LABELS: Partial<Record<SettableSettingKey, string>> = {
 
 export interface CatalogDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
-  showToast: ShowToast;
   actorRef: MutableRefObject<LogActor | undefined>;
   // resetAll disconnects sync before wiping, so it needs these provider-level handles.
   pendingTimersRef: MutableRefObject<number[]>;
@@ -36,17 +34,16 @@ export interface CatalogDeps {
 // Parent catalog CRUD (goals, rewards), settings, and the danger-zone resets.
 // These append to the shared household auditLog (not the per-kid actionLog) and are never undoable.
 export function useCatalogActions(deps: CatalogDeps) {
-  const { setState, showToast, actorRef, pendingTimersRef, setHouseholdCode, lastSyncedRef, setSyncStatus } = deps;
+  const { setState, actorRef, pendingTimersRef, setHouseholdCode, lastSyncedRef, setSyncStatus } = deps;
 
   const addGoal = useCallback((goal: Omit<Goal, 'id'>) => {
     setState((prev) => {
       const next = clone(prev);
       next.goals.push({ id: Date.now(), ...goal });
       appendAuditLog(next, actorRef.current, { type: 'goalAdded', label: `Added ${goal.isDaily === false ? 'bonus item' : 'goal'} "${goal.name}"` });
-      showToast(faCircleCheck, `"${goal.name}" added!`);
       return next;
     });
-  }, [setState, showToast, actorRef]);
+  }, [setState, actorRef]);
 
   const removeGoal = useCallback((id: number) => {
     setState((prev) => {
@@ -56,10 +53,9 @@ export function useCatalogActions(deps: CatalogDeps) {
       next.goals = next.goals.filter((g) => g.id !== id);
       next.todayGoals = next.todayGoals.filter((g) => g !== id);
       appendAuditLog(next, actorRef.current, { type: 'goalRemoved', label: `Removed goal "${goal.name}"` });
-      showToast(faTrashCan, `"${goal.name}" removed`);
       return next;
     });
-  }, [setState, showToast, actorRef]);
+  }, [setState, actorRef]);
 
   const updateGoal = useCallback((id: number, patch: Partial<Omit<Goal, 'id'>>) => {
     setState((prev) => {
@@ -85,10 +81,9 @@ export function useCatalogActions(deps: CatalogDeps) {
       const next = clone(prev);
       next.rewards.push({ id: Date.now(), ...reward });
       appendAuditLog(next, actorRef.current, { type: 'rewardAdded', label: `Added reward "${reward.name}" (${reward.cost} pts)` });
-      showToast(faCartShopping, `"${reward.name}" added to store!`);
       return next;
     });
-  }, [setState, showToast, actorRef]);
+  }, [setState, actorRef]);
 
   const updateReward = useCallback((id: number, patch: Partial<Omit<Reward, 'id'>>) => {
     setState((prev) => {
@@ -109,10 +104,9 @@ export function useCatalogActions(deps: CatalogDeps) {
       next.rewards = next.rewards.filter((r) => r.id !== id);
       next.pendingRewards = next.pendingRewards.filter((pr) => pr.rewardId !== id);
       appendAuditLog(next, actorRef.current, { type: 'rewardRemoved', label: `Removed reward "${reward.name}"` });
-      showToast(faTrashCan, `"${reward.name}" removed`);
       return next;
     });
-  }, [setState, showToast, actorRef]);
+  }, [setState, actorRef]);
 
   const saveSetting = useCallback((key: SettableSettingKey, val: string) => {
     setState((prev) => {
@@ -175,13 +169,12 @@ export function useCatalogActions(deps: CatalogDeps) {
       next.todayGoalCounts = {};
       next.todayBonusApplied = {};
       appendAuditLog(next, actorRef.current, { type: 'resetToday', label: "Reset today's progress" });
-      showToast(faRotate, "Today reset!");
       return next;
     });
-  }, [setState, showToast, actorRef]);
+  }, [setState, actorRef]);
 
   const resetAll = useCallback(() => {
-    // Cancel any deferred celebration toasts queued by an action just before the
+    // Cancel any deferred rank-up celebrations queued by an action just before the
     // reset — otherwise one could still fire afterward, announcing progress that no longer exists.
     pendingTimersRef.current.forEach((t) => clearTimeout(t));
     pendingTimersRef.current = [];
@@ -205,10 +198,9 @@ export function useCatalogActions(deps: CatalogDeps) {
       // its own evidence), then record the reset itself.
       next.auditLog = prev.auditLog;
       appendAuditLog(next, actorRef.current, { type: 'resetAll', label: 'Reset everything' });
-      showToast(faTriangleExclamation, 'Everything reset');
       return applyDayRollover(next);
     });
-  }, [setState, showToast, actorRef, pendingTimersRef, setHouseholdCode, lastSyncedRef, setSyncStatus]);
+  }, [setState, actorRef, pendingTimersRef, setHouseholdCode, lastSyncedRef, setSyncStatus]);
 
   return { addGoal, removeGoal, updateGoal, addReward, updateReward, removeReward, saveSetting, saveFoodPts, resetToday, resetAll };
 }

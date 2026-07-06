@@ -63,7 +63,8 @@ beyond `HomeScreen` is an overlay drawer/modal toggled by boolean state in `AppS
 
 All state flows through one React Context (`src/state/GravyContext.tsx`), consumed via `useGravy()`.
 It owns the multi-profile `GravyRoot`, the active profile's `GravyState`, local persistence/theme/
-day-rollover effects, and toasts/celebrations. The cloud-sync + parent-account
+day-rollover effects, and celebrations. There is no toast/notification system — see
+`docs/state-model.md`. The cloud-sync + parent-account
 reactive layer (household code/status, Supabase realtime push/subscribe, auth tracking) lives in its
 own `src/state/useHouseholdSync.ts` hook. The provider's imperative actions are split into
 per-domain custom hooks under `src/state/actions/` (kid-progress, day-edit, rewards, catalog,

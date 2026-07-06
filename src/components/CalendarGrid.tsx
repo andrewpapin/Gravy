@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faChevronRight, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import { todayStr } from '../state/defaultState';
 import { getDayLog, hasAnyLog } from '../state/dayLog';
@@ -22,7 +22,7 @@ interface CalendarGridProps {
 }
 
 export function CalendarGrid({ onPickDate }: CalendarGridProps) {
-  const { state, showToast } = useGravy();
+  const { state } = useGravy();
   const today = todayStr(state.settings.timezone);
   const [todayYear, todayMonth] = today.split('-').map(Number);
   const [viewYear, setViewYear] = useState(todayYear);
@@ -40,10 +40,7 @@ export function CalendarGrid({ onPickDate }: CalendarGridProps) {
   };
 
   const nextMonth = () => {
-    if (isCurrentMonth) {
-      showToast(faCalendarDays, "Can't peek into the future yet!");
-      return;
-    }
+    if (isCurrentMonth) return;
     if (viewMonth === 11) {
       setViewYear((y) => y + 1);
       setViewMonth(0);

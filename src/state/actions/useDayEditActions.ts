@@ -3,15 +3,13 @@ import type { ActionLogEntry, GravyState } from '../types';
 import { backfillStreaksFromLogs, todayStr } from '../defaultState';
 import { appendActionLog, markMostRecentUndone, type LogActor } from '../actionLog';
 import { FOODS } from '../../data/foods';
-import { resolveToastIcon } from '../../data/icons';
 import { applyBonusItemForDay, getFoodPts, reverseBonusItem } from '../points';
 import { clone } from './shared';
-import type { AwardPointsForDay, MaybeCelebrateRankUp, ShowToast } from './types';
+import type { AwardPointsForDay, MaybeCelebrateRankUp } from './types';
 
 export interface DayEditDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
   stateRef: MutableRefObject<GravyState>;
-  showToast: ShowToast;
   awardPointsForDay: AwardPointsForDay;
   maybeCelebrateRankUp: MaybeCelebrateRankUp;
   actorRef: MutableRefObject<LogActor | undefined>;
@@ -26,7 +24,7 @@ export interface DayEditDeps {
 // so editing a past day moves the live balance exactly as if it were edited today.
 export function useDayEditActions(deps: DayEditDeps) {
   const {
-    setState, stateRef, showToast, awardPointsForDay, maybeCelebrateRankUp, actorRef,
+    setState, stateRef, awardPointsForDay, maybeCelebrateRankUp, actorRef,
     removeFood, decrementGoal, undoBonusItem,
   } = deps;
 
@@ -48,7 +46,7 @@ export function useDayEditActions(deps: DayEditDeps) {
       const food = FOODS.find((f) => f.id === foodId);
       const label = `${food?.label ?? ''} added!`;
       const foodPts = getFoodPts(next.settings, foodId);
-      awardPointsForDay(next, log, foodPts, label);
+      awardPointsForDay(next, log, foodPts);
       appendActionLog(next, actorRef.current, {
         type: 'food',
         label,
@@ -61,7 +59,7 @@ export function useDayEditActions(deps: DayEditDeps) {
       if (!wasFullTray && isFullTray) {
         next.counters.fullTrayDays++;
         if (next.settings.bonusPts > 0) {
-          awardPointsForDay(next, log, next.settings.bonusPts, 'Full Tray Bonus!', { silent: true });
+          awardPointsForDay(next, log, next.settings.bonusPts);
         }
         const dailyGoals = next.goals.filter((g) => g.isDaily !== false);
         if (dailyGoals.length > 0 && dailyGoals.every((g) => log.goalIds.includes(g.id))) {
@@ -149,7 +147,7 @@ export function useDayEditActions(deps: DayEditDeps) {
         // Editing a past day from the Calendar (now PIN-gated under Grown-Ups) flows into
         // the live balance/lifetime total exactly like completing the goal today does.
         const label = `${goal.name} logged!`;
-        awardPointsForDay(next, log, goal.pts, label);
+        awardPointsForDay(next, log, goal.pts);
         appendActionLog(next, actorRef.current, {
           type: 'goal',
           label,
@@ -187,7 +185,6 @@ export function useDayEditActions(deps: DayEditDeps) {
       log.bonusApplied[goalId] = (log.bonusApplied[goalId] || 0) + applied;
 
       const sign = goal.pts < 0 ? '−' : '+';
-      showToast(resolveToastIcon(goal.icon, goal.emoji), `${sign}${Math.abs(goal.pts)} ${goal.name}`);
       appendActionLog(next, actorRef.current, {
         type: 'bonus',
         label: `${sign}${Math.abs(goal.pts)} ${goal.name}`,
@@ -198,7 +195,7 @@ export function useDayEditActions(deps: DayEditDeps) {
       maybeCelebrateRankUp(prev.totalPoints, next);
       return next;
     });
-  }, [setState, showToast, maybeCelebrateRankUp, actorRef]);
+  }, [setState, maybeCelebrateRankUp, actorRef]);
 
   const undoBonusItemForDay = useCallback((dateStr: string, goalId: number) => {
     setState((prev) => {
