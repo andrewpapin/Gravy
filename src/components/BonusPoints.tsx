@@ -48,19 +48,7 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
             };
             return (
               <div key={g.id} className="goal-row">
-                <div
-                  className="goal-row-box goal-row-box-clickable"
-                  role="button"
-                  tabIndex={0}
-                  onClick={logItem}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      logItem();
-                    }
-                  }}
-                  aria-label={`Log ${g.name}`}
-                >
+                <div className="goal-row-box">
                   <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
                   <div className="goal-row-info">
                     <div className="goal-row-name">{g.name}</div>
