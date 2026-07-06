@@ -51,15 +51,49 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
             const done = isDone(g.id, target);
             const isStepper = isToday && target > 1;
 
+            const toggleCheck = () => {
+              triggerHaptic();
+              guardClick(g.id, () => {
+                if (isToday) {
+                  if (count > 0) decrementGoal(g.id); else incrementGoal(g.id);
+                } else {
+                  toggleGoalForDay(day, g.id);
+                }
+              });
+            };
+
             return (
               <div key={g.id} className={`goal-row ${done ? 'done' : ''}`}>
-                <div className="goal-row-box">
-                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
-                  <div className="goal-row-info">
-                    <div className="goal-row-name">{g.name}</div>
-                    <div className="goal-row-pts">+{g.pts}</div>
+                {isStepper ? (
+                  <div className="goal-row-box">
+                    <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
+                    <div className="goal-row-info">
+                      <div className="goal-row-name">{g.name}</div>
+                      <div className="goal-row-pts">+{g.pts}</div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div
+                    className="goal-row-box goal-row-box-clickable"
+                    role="button"
+                    tabIndex={0}
+                    onClick={toggleCheck}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleCheck();
+                      }
+                    }}
+                    aria-pressed={done}
+                    aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
+                  >
+                    <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
+                    <div className="goal-row-info">
+                      <div className="goal-row-name">{g.name}</div>
+                      <div className="goal-row-pts">+{g.pts}</div>
+                    </div>
+                  </div>
+                )}
                 {isStepper ? (
                   <div className="gtile-stepper goal-row-stepper">
                     <button
@@ -81,16 +115,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                   <button
                     type="button"
                     className={`goal-row-check ${done ? 'done' : ''}`}
-                    onClick={() => {
-                      triggerHaptic();
-                      guardClick(g.id, () => {
-                        if (isToday) {
-                          if (count > 0) decrementGoal(g.id); else incrementGoal(g.id);
-                        } else {
-                          toggleGoalForDay(day, g.id);
-                        }
-                      });
-                    }}
+                    onClick={toggleCheck}
                     aria-pressed={done}
                     aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
                   >
