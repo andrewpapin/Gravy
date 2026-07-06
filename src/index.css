@@ -700,6 +700,8 @@ button.gtile.checked:disabled { transform: scale(1.03); }
   transition: background var(--transition);
 }
 .goal-row.done .goal-row-box { background: var(--success); }
+.goal-row-box-clickable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.goal-row-box-clickable:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--dark); }
 .goal-row-icon { font-size: 1.4rem; color: var(--dark); flex-shrink: 0; width: 1.6rem; text-align: center; }
 .goal-row.done .goal-row-icon { color: #fff; }
 .goal-row-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
