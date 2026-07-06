@@ -42,9 +42,25 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
         <div className="goal-rows">
           {bonusItems.map((g) => {
             const count = goalCounts[g.id] || 0;
+            const logItem = () => {
+              triggerHaptic();
+              if (isToday) logBonusItem(g.id); else logBonusItemForDay(day, g.id);
+            };
             return (
               <div key={g.id} className="goal-row">
-                <div className="goal-row-box">
+                <div
+                  className="goal-row-box goal-row-box-clickable"
+                  role="button"
+                  tabIndex={0}
+                  onClick={logItem}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      logItem();
+                    }
+                  }}
+                  aria-label={`Log ${g.name}`}
+                >
                   <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
                   <div className="goal-row-info">
                     <div className="goal-row-name">{g.name}</div>
@@ -68,10 +84,7 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
                   <button
                     type="button"
                     className="gstep-btn"
-                    onClick={() => {
-                      triggerHaptic();
-                      if (isToday) logBonusItem(g.id); else logBonusItemForDay(day, g.id);
-                    }}
+                    onClick={logItem}
                     aria-label={`Log ${g.name}`}
                   >+</button>
                 </div>
