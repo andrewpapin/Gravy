@@ -2224,6 +2224,18 @@ button.gtile.checked:disabled { transform: scale(1.03); }
   max-width: 360px;
   animation: toastIn 0.3s ease;
 }
+.update-prompt span { flex: 1; }
+.update-prompt-dismiss {
+  background: none;
+  border: none;
+  color: var(--dark);
+  font-weight: 900;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  opacity: 0.6;
+}
+.update-prompt-dismiss:active { opacity: 1; }
 
 /* ===== CONFETTI ===== */
 .confetti-canvas {
