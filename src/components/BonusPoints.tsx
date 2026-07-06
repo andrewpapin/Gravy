@@ -39,19 +39,21 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
           </div>
         </div>
       ) : (
-        <div className="goal-grid">
+        <div className="goal-rows">
           {bonusItems.map((g) => {
             const count = goalCounts[g.id] || 0;
             return (
-              <div key={g.id} className="gtile">
-                <span className={`tile-pts ${g.pts < 0 ? 'negative' : ''}`}>
-                  {g.pts < 0 ? '−' : '+'}{Math.abs(g.pts)}
-                </span>
-                <div className="gtile-body">
-                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="gtile-icon" />
-                  <div className="gtile-name">{g.name}</div>
+              <div key={g.id} className="goal-row">
+                <div className="goal-row-box">
+                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
+                  <div className="goal-row-info">
+                    <div className="goal-row-name">{g.name}</div>
+                    <div className={`goal-row-pts ${g.pts < 0 ? 'negative' : ''}`}>
+                      {g.pts < 0 ? '−' : '+'}{Math.abs(g.pts)}
+                    </div>
+                  </div>
                 </div>
-                <div className="gtile-stepper">
+                <div className="gtile-stepper goal-row-stepper">
                   <button
                     type="button"
                     className="gstep-btn"

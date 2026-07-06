@@ -706,6 +706,7 @@ button.gtile.checked:disabled { transform: scale(1.03); }
 .goal-row-name { font-size: 0.9rem; font-weight: 800; color: var(--text); }
 .goal-row.done .goal-row-name { color: #fff; }
 .goal-row-pts { font-size: 0.72rem; font-weight: 700; color: var(--sage); margin-top: 2px; }
+.goal-row-pts.negative { color: var(--danger); }
 .goal-row.done .goal-row-pts { color: #fff; }
 /* Complete button lives outside the goal-row-box, as its own circular tap target */
 .goal-row-check {
@@ -731,22 +732,7 @@ button.gtile.checked:disabled { transform: scale(1.03); }
 .goal-row-stepper { flex-shrink: 0; flex-wrap: nowrap; white-space: nowrap; }
 .goal-row-stepper .gstep-count { white-space: nowrap; }
 
-/* ===== GOAL TILES (Daily Goals / Bonus Points grid) ===== */
-.goal-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-.goal-grid > *:nth-child(3n+1):last-child { grid-column: 1 / -1; }
-.goal-grid .gtile { min-height: 144px; padding: 24px 8px 8px; }
 .gtile-stepper { display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
-.goal-grid .gtile-stepper { gap: 6px; }
-.goal-grid .gstep-btn { width: 24px; height: 24px; font-size: 0.75rem; }
-.goal-grid .gstep-count { font-size: 0.68rem; min-width: 26px; }
-@media (max-width: 360px) {
-  .goal-grid { grid-template-columns: 1fr; }
-}
-
 
 /* ===== TROPHY PILL ===== */
 .topbar-pills {
@@ -2307,18 +2293,6 @@ button.gtile.checked:disabled { transform: scale(1.03); }
     margin: 0 auto;
   }
   .tray-grid .gtile-icon { font-size: 2.25rem; }
-  .goal-grid {
-    gap: 16px;
-  }
-  .goal-grid .gtile {
-    min-height: 150px;
-    max-width: 190px;
-    margin: 0 auto;
-  }
-  .goal-grid .gtile-icon { font-size: 1.75rem; }
-  .goal-grid .gtile-stepper { gap: 8px; }
-  .goal-grid .gstep-btn { width: 28px; height: 28px; font-size: 0.85rem; }
-  .goal-grid .gstep-count { font-size: 0.72rem; min-width: 22px; }
   .store-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
