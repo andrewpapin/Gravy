@@ -614,8 +614,8 @@ button.gtile.checked:disabled:active { transform: none; }
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: var(--border-width-md) solid var(--dark);
-  background: var(--cream);
+  border: none;
+  background: transparent;
   font-size: 0.85rem;
   font-weight: 900;
   cursor: pointer;
@@ -628,19 +628,19 @@ button.gtile.checked:disabled:active { transform: none; }
   font-family: var(--font-display);
   color: var(--dark);
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 2px 2px 0 var(--dark);
-  transition: transform 0.08s, box-shadow 0.08s;
+  transition: transform 0.08s;
   position: relative;
 }
-/* Invisible hit-area expansion (same trick as .stats-rank-info-btn::before)
-   so the tappable area is closer to the ~44px touch-target guideline
-   without growing the visible chip and crowding the goal grid. */
+/* Invisible hit-area expansion (same trick as .stats-rank-info-btn::before), skewed away from
+   the count in the middle so it doesn't eat into the other button's tap target. */
 .gstep-btn::before {
   content: '';
   position: absolute;
   inset: -8px;
 }
-.gstep-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--dark); }
+.gtile-stepper .gstep-btn:first-child::before { inset: -8px 0 -8px -8px; }
+.gtile-stepper .gstep-btn:last-child::before { inset: -8px -8px -8px 0; }
+.gstep-btn:active { transform: scale(0.85); }
 .gstep-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .gstep-count {
   font-size: 0.72rem;
@@ -649,6 +649,9 @@ button.gtile.checked:disabled:active { transform: none; }
   text-align: center;
   color: var(--dark);
   line-height: 1;
+  padding: 0 8px;
+  border-left: var(--border-width-sm) solid var(--dark);
+  border-right: var(--border-width-sm) solid var(--dark);
 }
 
 /* ===== GOALS ===== */
@@ -742,7 +745,18 @@ button.gtile.checked:disabled:active { transform: none; }
 .goal-row-stepper { flex-shrink: 0; flex-wrap: nowrap; white-space: nowrap; }
 .goal-row-stepper .gstep-count { white-space: nowrap; }
 
-.gtile-stepper { display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
+.gtile-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  flex-shrink: 0;
+  background: var(--cream);
+  border: var(--border-width-xl) solid var(--dark);
+  border-radius: 50px;
+  box-shadow: var(--shadow);
+  padding: 3px;
+}
 
 /* ===== TROPHY PILL ===== */
 .topbar-pills {

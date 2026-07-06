@@ -42,52 +42,63 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
         <div className="goal-rows">
           {bonusItems.map((g) => {
             const count = goalCounts[g.id] || 0;
+            const started = count > 0;
             const logItem = () => {
               triggerHaptic();
               if (isToday) logBonusItem(g.id); else logBonusItemForDay(day, g.id);
             };
-            return (
-              <div key={g.id} className="goal-row">
-                <div
-                  className="goal-row-box goal-row-box-clickable"
-                  role="button"
-                  tabIndex={0}
-                  onClick={logItem}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      logItem();
-                    }
-                  }}
-                  aria-label={`Log ${g.name}`}
-                >
-                  <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
-                  <div className="goal-row-info">
-                    <div className="goal-row-name">{g.name}</div>
-                    <div className={`goal-row-pts ${g.pts < 0 ? 'negative' : ''}`}>
-                      {g.pts < 0 ? '−' : '+'}{Math.abs(g.pts)}
-                    </div>
+            const rowContent = (
+              <>
+                <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
+                <div className="goal-row-info">
+                  <div className="goal-row-name">{g.name}</div>
+                  <div className={`goal-row-pts ${g.pts < 0 ? 'negative' : ''}`}>
+                    {g.pts < 0 ? '−' : '+'}{Math.abs(g.pts)}
                   </div>
                 </div>
-                <div className="gtile-stepper goal-row-stepper">
-                  <button
-                    type="button"
-                    className="gstep-btn"
-                    onClick={() => {
-                      triggerHaptic();
-                      if (isToday) undoBonusItem(g.id); else undoBonusItemForDay(day, g.id);
-                    }}
-                    disabled={count === 0}
-                    aria-label={`Undo ${g.name}`}
-                  >−</button>
-                  <span className="gstep-count">{count}</span>
-                  <button
-                    type="button"
-                    className="gstep-btn"
+              </>
+            );
+            return (
+              <div key={g.id} className="goal-row">
+                {started ? (
+                  <div className="goal-row-box">{rowContent}</div>
+                ) : (
+                  <div
+                    className="goal-row-box goal-row-box-clickable"
+                    role="button"
+                    tabIndex={0}
                     onClick={logItem}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        logItem();
+                      }
+                    }}
                     aria-label={`Log ${g.name}`}
-                  >+</button>
-                </div>
+                  >
+                    {rowContent}
+                  </div>
+                )}
+                {started && (
+                  <div className="gtile-stepper goal-row-stepper">
+                    <button
+                      type="button"
+                      className="gstep-btn"
+                      onClick={() => {
+                        triggerHaptic();
+                        if (isToday) undoBonusItem(g.id); else undoBonusItemForDay(day, g.id);
+                      }}
+                      aria-label={`Undo ${g.name}`}
+                    >−</button>
+                    <span className="gstep-count">{count}</span>
+                    <button
+                      type="button"
+                      className="gstep-btn"
+                      onClick={logItem}
+                      aria-label={`Log ${g.name}`}
+                    >+</button>
+                  </div>
+                )}
               </div>
             );
           })}

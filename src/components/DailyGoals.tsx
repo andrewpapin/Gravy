@@ -50,6 +50,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
             const count = goalCounts[g.id] || 0;
             const done = isDone(g.id, target);
             const isStepper = isToday && target > 1;
+            const stepperStarted = isStepper && count > 0;
 
             const toggleCheck = () => {
               triggerHaptic();
@@ -61,16 +62,37 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                 }
               });
             };
+            const logStep = () => { triggerHaptic(); incrementGoal(g.id); };
+
+            const rowContent = (
+              <>
+                <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
+                <div className="goal-row-info">
+                  <div className="goal-row-name">{g.name}</div>
+                  <div className="goal-row-pts">+{g.pts}</div>
+                </div>
+              </>
+            );
 
             return (
               <div key={g.id} className={`goal-row ${done ? 'done' : ''}`}>
-                {isStepper ? (
-                  <div className="goal-row-box">
-                    <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
-                    <div className="goal-row-info">
-                      <div className="goal-row-name">{g.name}</div>
-                      <div className="goal-row-pts">+{g.pts}</div>
-                    </div>
+                {stepperStarted ? (
+                  <div className="goal-row-box">{rowContent}</div>
+                ) : isStepper ? (
+                  <div
+                    className="goal-row-box goal-row-box-clickable"
+                    role="button"
+                    tabIndex={0}
+                    onClick={logStep}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        logStep();
+                      }
+                    }}
+                    aria-label={`Log ${g.name}`}
+                  >
+                    {rowContent}
                   </div>
                 ) : (
                   <div
@@ -87,31 +109,26 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                     aria-pressed={done}
                     aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
                   >
-                    <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="goal-row-icon" />
-                    <div className="goal-row-info">
-                      <div className="goal-row-name">{g.name}</div>
-                      <div className="goal-row-pts">+{g.pts}</div>
-                    </div>
+                    {rowContent}
                   </div>
                 )}
-                {isStepper ? (
+                {stepperStarted ? (
                   <div className="gtile-stepper goal-row-stepper">
                     <button
                       type="button"
                       className="gstep-btn"
                       onClick={() => { triggerHaptic(); decrementGoal(g.id); }}
-                      disabled={count === 0}
                       aria-label={`Undo ${g.name}`}
                     >−</button>
                     <span className="gstep-count">{count}/{target}</span>
                     <button
                       type="button"
                       className="gstep-btn"
-                      onClick={() => { triggerHaptic(); incrementGoal(g.id); }}
+                      onClick={logStep}
                       aria-label={`Complete ${g.name}`}
                     >+</button>
                   </div>
-                ) : (
+                ) : isStepper ? null : (
                   <button
                     type="button"
                     className={`goal-row-check ${done ? 'done' : ''}`}
