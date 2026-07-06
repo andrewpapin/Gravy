@@ -714,7 +714,7 @@ button.gtile.checked:disabled { transform: scale(1.03); }
   text-overflow: ellipsis;
 }
 .goal-row.done .goal-row-name { color: #fff; }
-.goal-row-pts { flex-shrink: 0; font-size: 0.72rem; font-weight: 700; color: var(--sage); }
+.goal-row-pts { flex-shrink: 0; font-size: 0.72rem; font-weight: 700; color: var(--success); }
 .goal-row-pts.negative { color: var(--danger); }
 .goal-row.done .goal-row-pts { color: #fff; }
 /* Complete button lives outside the goal-row-box, as its own circular tap target */
