@@ -702,10 +702,19 @@ button.gtile.checked:disabled { transform: scale(1.03); }
 .goal-row.done .goal-row-box { background: var(--success); }
 .goal-row-icon { font-size: 1.4rem; color: var(--dark); flex-shrink: 0; width: 1.6rem; text-align: center; }
 .goal-row.done .goal-row-icon { color: #fff; }
-.goal-row-info { flex: 1; min-width: 0; }
-.goal-row-name { font-size: 0.9rem; font-weight: 800; color: var(--text); }
+.goal-row-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
+.goal-row-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .goal-row.done .goal-row-name { color: #fff; }
-.goal-row-pts { font-size: 0.72rem; font-weight: 700; color: var(--sage); margin-top: 2px; }
+.goal-row-pts { flex-shrink: 0; font-size: 0.72rem; font-weight: 700; color: var(--sage); }
 .goal-row-pts.negative { color: var(--danger); }
 .goal-row.done .goal-row-pts { color: #fff; }
 /* Complete button lives outside the goal-row-box, as its own circular tap target */
