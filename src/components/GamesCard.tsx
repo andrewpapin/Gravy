@@ -7,7 +7,7 @@ interface GamesCardProps {
 
 export function GamesCard({ onOpen }: GamesCardProps) {
   return (
-    <button className="home-pill home-pill-daily" onClick={onOpen} type="button">
+    <button className="home-pill home-pill-daily" onClick={onOpen} type="button" data-tour-id="games">
       <FontAwesomeIcon icon={faGamepad} />
       <span>Daily</span>
     </button>

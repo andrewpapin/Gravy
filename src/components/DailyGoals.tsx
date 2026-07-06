@@ -30,6 +30,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
     <CollapsibleCard
       section="dailyGoals"
       title="Daily Goals"
+      tourId="goals"
       badge={dailyGoals.length > 0 && (
         <div className={`goal-progress-badge ${allDone ? 'done' : ''}`}>{completedGoals}/{dailyGoals.length} done</div>
       )}

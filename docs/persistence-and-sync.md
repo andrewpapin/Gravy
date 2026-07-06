@@ -56,6 +56,12 @@ Deep reference for localStorage persistence, Supabase cloud sync, the household 
   `anon`/`authenticated` (Supabase's schema default-privileges auto-grant required an explicit
   per-role revoke). Tightening the still-open `anon`/`authenticated` SELECT into
   `auth.uid()`-scoped RLS is deferred to Epic 9.
+  `gravy_my_household_code()` (authenticated-only) is the one lookup keyed by the caller's identity
+  rather than a code — `select household_code from household_members where user_id = auth.uid()
+  order by (role = 'owner') desc, created_at desc limit 1`, or `null` if the account has none. This
+  is what lets the "Existing Parent" onboarding fork auto-attach a second device to its household
+  without re-typing the code (`findMyHouseholdCode` in `src/state/auth.ts` wraps it; the client
+  falls back to manual join-by-code if it returns `null`).
 - `leaveHousehold()` ("Turn off cloud sync" in `SyncPanel`) only disconnects the current device —
   the household row keeps existing for any other device still using that code.
   `deleteHouseholdEverywhere()` ("Delete household everywhere", same panel) is the separate, more
@@ -105,15 +111,25 @@ Creating a parent account (email/password or magic link) is **mandatory** — ev
 that reaches parental controls goes through `AccountSetupStep` first (see `docs/ui-surfaces.md`);
 the only account-free path is the "kid's device" onboarding fork, which by design never reaches
 those controls. `src/state/auth.ts` is the only module that touches `supabase.auth` — it exposes
-`signUpWithPassword`/`signInWithPassword`/`sendMagicLink`/`signOut`, an `onAuthChange` subscription,
-the ownership RPC wrappers (`claimHousehold`/`getHouseholdStatus`, plus the pure
-`normalizeHouseholdStatus` covered by `auth.test.ts`), and **`isGrownUpUnlocked(authUser,
-householdStatus)`** — the pure predicate (`!!authUser && !!householdStatus?.isMember`, also
+`signUpWithPassword`/`signInWithPassword`/`sendMagicLink`/`resendSignUpConfirmation`/`signOut`, an
+`onAuthChange` subscription, the ownership RPC wrappers (`claimHousehold`/`getHouseholdStatus`/
+`findMyHouseholdCode`, plus the pure `normalizeHouseholdStatus` covered by `auth.test.ts`), and
+**`isGrownUpUnlocked(authUser, householdStatus)`** — the pure predicate
+(`!!authUser && !!householdStatus?.isMember`, also
 unit-tested in `auth.test.ts`) that `GravyContext` uses to derive `grownUpUnlocked` every render.
 `useHouseholdSync` (`src/state/useHouseholdSync.ts`, the sync/auth reactive hook `GravyContext`
 calls) tracks `authUser`/`authReady` and re-checks `householdStatus` on code/account change. Once
 signed in, `createHousehold` automatically sets `owner_id` (supabase-js sends the JWT to the RPC) —
 there's no unclaimed state left to separately "claim" (see the Ownership bullet above).
+
+`signUpWithPassword` sets `emailRedirectTo` (same pattern as `sendMagicLink`) and returns
+`SignUpResult = { ok: true; needsConfirmation: boolean } | { ok: false; error }` instead of the
+plain `AuthResult` the other auth calls use — `needsConfirmation` is `!data.session` from
+Supabase's own signup response, true only when the project's dashboard-configured "Confirm email"
+setting (not visible in this repo) requires it. `AccountSetupStep` shows a "Check Your Email"
+screen in that case, with `resendSignUpConfirmation` available if the email doesn't arrive; no
+polling is needed for it to continue once confirmed — Supabase mirrors the session to every tab via
+localStorage, so the existing `authUser` reactivity picks it up on its own.
 
 There is no PIN. `grownUpUnlocked` — the single gate for Approvals/Profiles/Game Settings/Calendar/
 Log/Advanced Settings — is derived, not stored: a device unlocks those screens only by having a

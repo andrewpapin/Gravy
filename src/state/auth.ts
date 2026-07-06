@@ -20,6 +20,11 @@ export interface AuthUser {
 
 export type AuthResult = { ok: true } | { ok: false; error: string };
 
+// signUp's session is only non-null when the Supabase project doesn't require confirming email
+// (dashboard-configured, not visible in this repo) — needsConfirmation tells the UI which branch
+// it's in so it can show a "check your email" screen only when one is actually needed.
+export type SignUpResult = { ok: true; needsConfirmation: boolean } | { ok: false; error: string };
+
 // Supabase surfaces auth failures with reasonably friendly messages already; this just gives a
 // stable fallback and trims the noisy ones we know about.
 function authError(err: { message?: string } | null): string {
@@ -44,8 +49,20 @@ export function onAuthChange(cb: (user: AuthUser | null) => void): () => void {
   return () => data.subscription.unsubscribe();
 }
 
-export async function signUpWithPassword(email: string, password: string): Promise<AuthResult> {
-  const { error } = await supabase.auth.signUp({ email: email.trim(), password });
+export async function signUpWithPassword(email: string, password: string): Promise<SignUpResult> {
+  const { data, error } = await supabase.auth.signUp({
+    email: email.trim(),
+    password,
+    options: { emailRedirectTo: window.location.origin + window.location.pathname },
+  });
+  if (error) return { ok: false, error: authError(error) };
+  return { ok: true, needsConfirmation: !data.session };
+}
+
+// Re-sends the "confirm your signup" email — used by the pending-confirmation screen if the
+// first one didn't arrive.
+export async function resendSignUpConfirmation(email: string): Promise<AuthResult> {
+  const { error } = await supabase.auth.resend({ type: 'signup', email: email.trim() });
   return error ? { ok: false, error: authError(error) } : { ok: true };
 }
 
@@ -97,6 +114,16 @@ export async function claimHousehold(code: string): Promise<GravyRoot> {
   const { data, error } = await supabase.rpc('gravy_claim_household', { p_code: code });
   if (error) throw error;
   return data as GravyRoot;
+}
+
+// Looks up the signed-in caller's own household by membership, not by code — used by the
+// "Existing Parent" onboarding fork so a second device can auto-attach without re-typing the
+// family code. Returns null if the account has no household yet (fresh account, or a lookup
+// failure) — the caller falls back to manual join-by-code in that case.
+export async function findMyHouseholdCode(): Promise<string | null> {
+  const { data, error } = await supabase.rpc('gravy_my_household_code');
+  if (error) return null;
+  return (data as string | null) ?? null;
 }
 
 // Whether a code is claimed at all, and the caller's relationship to it — drives the

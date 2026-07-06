@@ -1603,6 +1603,57 @@ button.gtile.checked:disabled:active { transform: none; }
   gap: var(--space-sm);
 }
 
+/* First-run guided tour (post-onboarding, spotlights real home-screen elements) */
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  pointer-events: none;
+}
+.tour-spotlight {
+  position: fixed;
+  box-shadow: 0 0 0 9999px rgba(47, 62, 70, 0.72);
+  pointer-events: none;
+  transition: top var(--transition-slow), left var(--transition-slow), width var(--transition-slow), height var(--transition-slow);
+}
+.tour-spotlight-full {
+  inset: 0;
+  box-shadow: none;
+  background: rgba(47, 62, 70, 0.72);
+}
+.tour-callout {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(320px, calc(100vw - 32px));
+  background: var(--cream);
+  border: var(--border-width-xl) solid var(--dark);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 18px 16px;
+  pointer-events: all;
+  animation: tourPopIn 0.3s ease;
+}
+.tour-callout-center { top: 50%; transform: translate(-50%, -50%); }
+.tour-callout-header { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: 6px; }
+.tour-callout-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--yellow);
+  color: var(--dark);
+  border: var(--border-width-md) solid var(--dark);
+}
+.tour-callout-title { font-size: var(--text-lg); font-weight: 900; color: var(--dark); }
+.tour-callout-desc { font-size: var(--text-sm); font-weight: 700; color: var(--muted); line-height: 1.4; text-align: left; }
+.tour-dots { display: flex; gap: 6px; justify-content: center; margin-top: 12px; }
+.tour-callout-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+@keyframes tourPopIn { from { opacity: 0; transform: translateY(-12px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
 /* Confirm dialog */
 .confirm-dialog-overlay {
   position: fixed;

@@ -292,10 +292,11 @@ of that epic's existing RLS item. Everything else from the audit lands here.)*
   `src/components/parent/GoalsPanel.tsx` vs `StorePanel.tsx` — same edit-state shape and
   save/cancel handlers, copy-pasted rather than shared; a validation fix to one won't
   propagate to the other. *(P2, M — extract a shared `useEditableList` hook.)*
-- **`Onboarding.tsx` (306 lines, largest component) models its 6-phase wizard as flat
-  sibling `useState`s** with a hand-rolled back-navigation if/else chain (`handleBack`,
-  lines 125-141) that has to independently know every phase's provenance. *(P2, M —
-  candidate for `useReducer`.)*
+- **`Onboarding.tsx` (180 lines, shrunk from 306/6 phases by the onboarding revamp — see
+  BACKLOG_DONE.md Epic 14) still models its 4-phase wizard as flat sibling `useState`s**
+  with a hand-rolled back-navigation if/else chain (`handleBack`) that has to independently
+  know every phase's provenance. *(P2, S — candidate for `useReducer`, smaller now than
+  before.)*
 - **`AppShell` tracks overlay visibility via ten independent booleans**
   (`src/App.tsx:53-62`) rather than one discriminated-union `activeOverlay` state; permits
   two overlays open at once in principle and adds a boolean per future drawer. *(P2, S.)*

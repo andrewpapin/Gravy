@@ -14,6 +14,7 @@ import {
   type AuthResult,
   type AuthUser,
   type HouseholdStatus,
+  type SignUpResult,
   isGrownUpUnlocked,
 } from './auth';
 import { SYNC_SKIPPED_KEY, DAILY_GAME_WIN_CAP, activeStateOf, buildMergedRoot, clone } from './actions/shared';
@@ -112,9 +113,14 @@ interface GravyContextValue {
   // --- Parent account (Epic 8) ---
   authUser: AuthUser | null;
   authReady: boolean;
-  signUp: (email: string, password: string) => Promise<AuthResult>;
+  signUp: (email: string, password: string) => Promise<SignUpResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   sendSignInLink: (email: string) => Promise<AuthResult>;
+  resendConfirmation: (email: string) => Promise<AuthResult>;
+  // Looks up the signed-in caller's own household by account membership (not by code) — used to
+  // auto-attach the "Existing Parent" onboarding fork without a manual code. Null = no household
+  // found for this account (fresh account, or a lookup failure) — caller falls back to manual join.
+  findMyHousehold: () => Promise<string | null>;
   signOutAccount: () => Promise<void>;
   // Whether the current synced household is owned by an account (claimed). null = unknown/not
   // checked yet (e.g. no household, or offline). Drives the "secure this household" prompt.

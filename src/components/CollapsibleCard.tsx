@@ -10,14 +10,15 @@ interface CollapsibleCardProps {
   title: string;
   badge?: ReactNode;
   children: ReactNode;
+  tourId?: string;
 }
 
-export function CollapsibleCard({ section, title, badge, children }: CollapsibleCardProps) {
+export function CollapsibleCard({ section, title, badge, children, tourId }: CollapsibleCardProps) {
   const { state, toggleSectionCollapsed } = useGravy();
   const collapsed = !!state.settings.collapsedSections[section];
 
   return (
-    <div className="card">
+    <div className="card" data-tour-id={tourId}>
       <button
         type="button"
         className="card-collapse-toggle flex-between"
