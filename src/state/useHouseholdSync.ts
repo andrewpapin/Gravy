@@ -10,6 +10,7 @@ import {
   type HouseholdStatus,
   claimHousehold,
   getHouseholdStatus,
+  isPasswordRecoveryRedirect,
   onAuthChange,
   onPasswordRecovery,
 } from './auth';
@@ -62,7 +63,11 @@ export function useHouseholdSync({ root, state, setRoot, setState }: HouseholdSy
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [householdStatus, setHouseholdStatus] = useState<HouseholdStatus | null>(null);
-  const [passwordRecovery, setPasswordRecovery] = useState(false);
+  // Seeded from the URL synchronously (see isPasswordRecoveryRedirect in auth.ts) rather than
+  // false — the onPasswordRecovery effect below is a same-tab fallback for Supabase's own async
+  // event, which fires after a network round trip and can be missed if it beats this effect's
+  // subscription (see that export's comment for why this isn't just belt-and-suspenders).
+  const [passwordRecovery, setPasswordRecovery] = useState(isPasswordRecoveryRedirect);
   const lastSyncedRef = useRef<string | null>(null);
   const actorRef = useRef<LogActor | undefined>(undefined);
   // Latest root/state mirrored into refs so the realtime-receive effect (which only re-subscribes
