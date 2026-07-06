@@ -105,11 +105,19 @@ Creating a parent account (email/password or magic link) is **mandatory** — ev
 that reaches parental controls goes through `AccountSetupStep` first (see `docs/ui-surfaces.md`);
 the only account-free path is the "kid's device" onboarding fork, which by design never reaches
 those controls. `src/state/auth.ts` is the only module that touches `supabase.auth` — it exposes
-`signUpWithPassword`/`signInWithPassword`/`sendMagicLink`/`signOut`, an `onAuthChange` subscription,
-the ownership RPC wrappers (`claimHousehold`/`getHouseholdStatus`, plus the pure
-`normalizeHouseholdStatus` covered by `auth.test.ts`), and **`isGrownUpUnlocked(authUser,
-householdStatus)`** — the pure predicate (`!!authUser && !!householdStatus?.isMember`, also
-unit-tested in `auth.test.ts`) that `GravyContext` uses to derive `grownUpUnlocked` every render.
+`signUpWithPassword`/`signInWithPassword`/`sendMagicLink`/`signOut`, `sendPasswordReset`/
+`updatePassword` (the forgot-password flow: the former wraps `resetPasswordForEmail`, the latter
+`auth.updateUser({ password })` and is also reused for a signed-in parent changing their password),
+an `onAuthChange` subscription plus the separate `onPasswordRecovery` one (fires on the
+`PASSWORD_RECOVERY` event Supabase emits when a parent lands via the reset email's link, distinct
+from an ordinary sign-in even though both establish a session), the ownership RPC wrappers
+(`claimHousehold`/`getHouseholdStatus`, plus the pure `normalizeHouseholdStatus` covered by
+`auth.test.ts`), and **`isGrownUpUnlocked(authUser, householdStatus)`** — the pure predicate
+(`!!authUser && !!householdStatus?.isMember`, also unit-tested in `auth.test.ts`) that
+`GravyContext` uses to derive `grownUpUnlocked` every render. `useHouseholdSync` turns the recovery
+event into a `passwordRecovery` context flag (cleared by `clearPasswordRecovery`), which
+`AppShell` (`src/App.tsx`) uses to show the mandatory `ResetPasswordScreen` overlay — see
+`docs/ui-surfaces.md`.
 `useHouseholdSync` (`src/state/useHouseholdSync.ts`, the sync/auth reactive hook `GravyContext`
 calls) tracks `authUser`/`authReady` and re-checks `householdStatus` on code/account change. Once
 signed in, `createHousehold` automatically sets `owner_id` (supabase-js sends the JWT to the RPC) —

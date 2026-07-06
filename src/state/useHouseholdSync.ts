@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
+import { useCallback, useEffect, useRef, useState, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { GravyRoot, GravyState, ProfileEntry } from './types';
 import { hydrateState, mirrorSharedFields } from './defaultState';
 import type { LogActor } from './actionLog';
@@ -11,6 +11,7 @@ import {
   claimHousehold,
   getHouseholdStatus,
   onAuthChange,
+  onPasswordRecovery,
 } from './auth';
 import { HOUSEHOLD_CODE_KEY, activeStateOf, buildMergedRoot } from './actions/shared';
 import type { SyncStatus } from './actions/types';
@@ -31,6 +32,11 @@ export interface HouseholdSyncValue {
   authReady: boolean;
   householdStatus: HouseholdStatus | null;
   setHouseholdStatus: Dispatch<SetStateAction<HouseholdStatus | null>>;
+  // True from the moment the user lands via a password-reset email link until they finish
+  // setting a new password (ResetPasswordScreen calls clearPasswordRecovery). Drives that
+  // screen's mandatory-overlay visibility, the same way onboarding/SyncGateModal work.
+  passwordRecovery: boolean;
+  clearPasswordRecovery: () => void;
   // Last root JSON we pushed to / received from Supabase, so the outgoing-push effect can skip
   // echoing a snapshot the realtime subscription just handed us.
   lastSyncedRef: MutableRefObject<string | null>;
@@ -56,6 +62,7 @@ export function useHouseholdSync({ root, state, setRoot, setState }: HouseholdSy
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [householdStatus, setHouseholdStatus] = useState<HouseholdStatus | null>(null);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
   const lastSyncedRef = useRef<string | null>(null);
   const actorRef = useRef<LogActor | undefined>(undefined);
   // Latest root/state mirrored into refs so the realtime-receive effect (which only re-subscribes
@@ -78,6 +85,15 @@ export function useHouseholdSync({ root, state, setRoot, setState }: HouseholdSy
     });
     return unsub;
   }, []);
+
+  // Track password-recovery links separately from ordinary sign-in — landing via one still
+  // fires onAuthChange above (a session is established either way), but this flags the
+  // ResetPasswordScreen overlay so the user sets a new password before doing anything else.
+  useEffect(() => {
+    return onPasswordRecovery(() => setPasswordRecovery(true));
+  }, []);
+
+  const clearPasswordRecovery = useCallback(() => setPasswordRecovery(false), []);
 
   // Refresh whether the current household is claimed whenever the code or the signed-in account
   // changes. Also self-heals households created before accounts were mandatory: those rows have
@@ -187,6 +203,7 @@ export function useHouseholdSync({ root, state, setRoot, setState }: HouseholdSy
     syncStatus, setSyncStatus,
     authUser, authReady,
     householdStatus, setHouseholdStatus,
+    passwordRecovery, clearPasswordRecovery,
     lastSyncedRef, actorRef,
   };
 }

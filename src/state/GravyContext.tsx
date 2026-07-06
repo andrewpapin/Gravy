@@ -116,6 +116,12 @@ interface GravyContextValue {
   signIn: (email: string, password: string) => Promise<AuthResult>;
   sendSignInLink: (email: string) => Promise<AuthResult>;
   signOutAccount: () => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<AuthResult>;
+  updatePassword: (newPassword: string) => Promise<AuthResult>;
+  // True while the user is mid password-reset (landed via the email link, hasn't set a new
+  // password yet) — drives the mandatory ResetPasswordScreen overlay in App.tsx.
+  passwordRecovery: boolean;
+  clearPasswordRecovery: () => void;
   // Whether the current synced household is owned by an account (claimed). null = unknown/not
   // checked yet (e.g. no household, or offline). Drives the "secure this household" prompt.
   householdStatus: HouseholdStatus | null;
@@ -151,6 +157,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     syncStatus, setSyncStatus,
     authUser, authReady,
     householdStatus, setHouseholdStatus,
+    passwordRecovery, clearPasswordRecovery,
     lastSyncedRef, actorRef,
   } = useHouseholdSync({ root, state, setRoot, setState });
 
@@ -325,6 +332,8 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     authUser,
     authReady,
     householdStatus,
+    passwordRecovery,
+    clearPasswordRecovery,
     ...kidProgress,
     ...dayEdit,
     ...rewards,
