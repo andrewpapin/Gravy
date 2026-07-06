@@ -114,10 +114,16 @@ from an ordinary sign-in even though both establish a session), the ownership RP
 (`claimHousehold`/`getHouseholdStatus`, plus the pure `normalizeHouseholdStatus` covered by
 `auth.test.ts`), and **`isGrownUpUnlocked(authUser, householdStatus)`** — the pure predicate
 (`!!authUser && !!householdStatus?.isMember`, also unit-tested in `auth.test.ts`) that
-`GravyContext` uses to derive `grownUpUnlocked` every render. `useHouseholdSync` turns the recovery
-event into a `passwordRecovery` context flag (cleared by `clearPasswordRecovery`), which
-`AppShell` (`src/App.tsx`) uses to show the mandatory `ResetPasswordScreen` overlay — see
-`docs/ui-surfaces.md`.
+`GravyContext` uses to derive `grownUpUnlocked` every render. `useHouseholdSync` seeds its
+`passwordRecovery` context flag (cleared by `clearPasswordRecovery`) from
+`isPasswordRecoveryRedirect` — a synchronous, module-load-time read of `type=recovery` off the
+URL hash — rather than waiting on the `onPasswordRecovery` event alone: that event only fires
+after supabase-js completes an async network round trip exchanging the link's token for a
+session, so a React effect subscribing to it can lose the race and silently miss it (this was a
+real bug — the recovery link's session got established either way, but nothing told the UI to
+show the reset screen, leaving the parent stuck looking "signed in" with no way to set a new
+password). The event listener still runs too, as a fallback. `AppShell` (`src/App.tsx`) uses the
+flag to show the mandatory `ResetPasswordScreen` overlay — see `docs/ui-surfaces.md`.
 `useHouseholdSync` (`src/state/useHouseholdSync.ts`, the sync/auth reactive hook `GravyContext`
 calls) tracks `authUser`/`authReady` and re-checks `householdStatus` on code/account change. Once
 signed in, `createHousehold` automatically sets `owner_id` (supabase-js sends the JWT to the RPC) —
