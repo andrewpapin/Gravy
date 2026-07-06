@@ -144,6 +144,12 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/refs
   rootRef.current = root;
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  // Toasts are queued and shown one at a time — a burst of showToast() calls (e.g. several
+  // point awards in quick succession) must not stack multiple toasts on screen at once.
+  const toastQueueRef = useRef<ToastItem[]>([]);
+  const toastActiveRef = useRef(false);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showNextToastRef = useRef<() => void>(() => {});
   const [celebration, setCelebration] = useState<CelebrationData | null>(null);
   const [confettiTrigger, setConfettiTrigger] = useState(0);
   const pendingTimersRef = useRef<number[]>([]);
@@ -199,13 +205,30 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
-  const showToast = useCallback((icon: IconDefinition | string, msg: string) => {
-    const id = ++toastIdCounter;
-    setToasts((t) => [...t, { id, icon, msg }]);
-    setTimeout(() => {
-      setToasts((t) => t.filter((toast) => toast.id !== id));
+  const showNextToast = useCallback(() => {
+    const next = toastQueueRef.current.shift();
+    if (!next) {
+      toastActiveRef.current = false;
+      setToasts([]);
+      return;
+    }
+    toastActiveRef.current = true;
+    setToasts([next]);
+    toastTimerRef.current = setTimeout(() => {
+      toastTimerRef.current = null;
+      showNextToastRef.current();
     }, 2800);
   }, []);
+  // eslint-disable-next-line react-hooks/refs
+  showNextToastRef.current = showNextToast;
+
+  const showToast = useCallback((icon: IconDefinition | string, msg: string) => {
+    const id = ++toastIdCounter;
+    toastQueueRef.current.push({ id, icon, msg });
+    if (!toastActiveRef.current) {
+      showNextToast();
+    }
+  }, [showNextToast]);
 
   // Persist on every state/root change. localStorage can throw (quota exceeded, or storage
   // disabled in private browsing) — warn once via toast rather than silently losing the
@@ -221,8 +244,16 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   }, [state, root, showToast]);
 
   const dismissToast = useCallback((id: number) => {
-    setToasts((t) => t.filter((toast) => toast.id !== id));
-  }, []);
+    if (toasts.some((toast) => toast.id === id)) {
+      if (toastTimerRef.current !== null) {
+        clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = null;
+      }
+      showNextToast();
+    } else {
+      toastQueueRef.current = toastQueueRef.current.filter((toast) => toast.id !== id);
+    }
+  }, [toasts, showNextToast]);
 
   const showCelebration = useCallback((icon: IconDefinition | string, title: string, sub: string) => {
     setCelebration({ icon, title, sub });
