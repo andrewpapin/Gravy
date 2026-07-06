@@ -44,6 +44,33 @@ export function onAuthChange(cb: (user: AuthUser | null) => void): () => void {
   return () => data.subscription.unsubscribe();
 }
 
+// Fires when the user lands back in the app via a password-reset email link — Supabase
+// exchanges the link's token for a session and emits this event rather than a normal sign-in,
+// so the app can distinguish "here to set a new password" from an ordinary sign-in. Returns an
+// unsubscribe function.
+export function onPasswordRecovery(cb: () => void): () => void {
+  const { data } = supabase.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') cb();
+  });
+  return () => data.subscription.unsubscribe();
+}
+
+// Sends a password-reset email; the link returns the user to the app's current origin, where
+// onPasswordRecovery fires so the UI can prompt for a new password.
+export async function sendPasswordReset(email: string): Promise<AuthResult> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: window.location.origin + window.location.pathname,
+  });
+  return error ? { ok: false, error: authError(error) } : { ok: true };
+}
+
+// Sets a new password for the currently-authenticated session — used both for the password-reset
+// flow (session established via the recovery link) and a signed-in parent changing their password.
+export async function updatePassword(newPassword: string): Promise<AuthResult> {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  return error ? { ok: false, error: authError(error) } : { ok: true };
+}
+
 export async function signUpWithPassword(email: string, password: string): Promise<AuthResult> {
   const { error } = await supabase.auth.signUp({ email: email.trim(), password });
   return error ? { ok: false, error: authError(error) } : { ok: true };
