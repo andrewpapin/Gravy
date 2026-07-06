@@ -6,6 +6,7 @@ import { useGravy } from '../state/GravyContext';
 import { getDayLog } from '../state/dayLog';
 import { todayStr } from '../state/defaultState';
 import { triggerHaptic } from '../lib/haptics';
+import { useClickGuard } from '../lib/clickGuard';
 
 interface DailyGoalsProps {
   dateStr?: string;
@@ -13,6 +14,7 @@ interface DailyGoalsProps {
 
 export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
   const { state, incrementGoal, decrementGoal, toggleGoalForDay } = useGravy();
+  const guardClick = useClickGuard();
   const today = todayStr(state.settings.timezone);
   const day = dateStr ?? today;
   const isToday = day === today;
@@ -81,11 +83,13 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                     className={`goal-row-check ${done ? 'done' : ''}`}
                     onClick={() => {
                       triggerHaptic();
-                      if (isToday) {
-                        if (count > 0) decrementGoal(g.id); else incrementGoal(g.id);
-                      } else {
-                        toggleGoalForDay(day, g.id);
-                      }
+                      guardClick(g.id, () => {
+                        if (isToday) {
+                          if (count > 0) decrementGoal(g.id); else incrementGoal(g.id);
+                        } else {
+                          toggleGoalForDay(day, g.id);
+                        }
+                      });
                     }}
                     aria-pressed={done}
                     aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}

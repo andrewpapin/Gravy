@@ -8,6 +8,7 @@ import { getDayLog } from '../state/dayLog';
 import { todayStr } from '../state/defaultState';
 import { getFoodPts } from '../state/points';
 import { triggerHaptic } from '../lib/haptics';
+import { useClickGuard } from '../lib/clickGuard';
 
 interface FoodTrayProps {
   dateStr?: string;
@@ -15,6 +16,7 @@ interface FoodTrayProps {
 
 export function FoodTray({ dateStr }: FoodTrayProps = {}) {
   const { state, logFood, removeFood, logFoodForDay, removeFoodForDay } = useGravy();
+  const guardClick = useClickGuard();
   const today = todayStr(state.settings.timezone);
   const day = dateStr ?? today;
   const isToday = day === today;
@@ -45,11 +47,13 @@ export function FoodTray({ dateStr }: FoodTrayProps = {}) {
               className={`gtile ${logged ? 'checked' : ''}`}
               onClick={() => {
                 triggerHaptic();
-                if (isToday) {
-                  if (logged) removeFood(f.id); else logFood(f.id);
-                } else {
-                  if (logged) removeFoodForDay(day, f.id); else logFoodForDay(day, f.id);
-                }
+                guardClick(f.id, () => {
+                  if (isToday) {
+                    if (logged) removeFood(f.id); else logFood(f.id);
+                  } else {
+                    if (logged) removeFoodForDay(day, f.id); else logFoodForDay(day, f.id);
+                  }
+                });
               }}
               aria-label={logged ? `${f.label}, logged. Tap to undo.` : `${f.label}. Tap to log.`}
             >
