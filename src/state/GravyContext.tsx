@@ -6,6 +6,7 @@ import {
   applyDayRollover,
   loadRoot,
   saveRoot,
+  todayStr,
 } from './defaultState';
 import { resolveToastIcon } from '../data/icons';
 import { applyAward, applyAwardForDay } from './points';
@@ -177,17 +178,22 @@ export function GravyProvider({ children }: { children: ReactNode }) {
 
   // Re-check the day rollover whenever the tab regains focus — for every profile, not just the
   // active one, so a kid not opened in days still has correct streaks/cleared "today" when picked.
+  // Skip the setState/setRoot calls entirely when the day hasn't actually changed, so merely
+  // switching tabs/apps and coming back (far more common than an actual day change) doesn't force
+  // a full-tree re-render and a redundant localStorage write.
   useEffect(() => {
     const onVisible = () => {
-      if (document.visibilityState === 'visible') {
-        setState((s) => applyDayRollover(clone(s)));
-        setRoot((r) => ({
-          ...r,
-          profiles: r.profiles.map((p) =>
-            p.id === r.activeProfileId ? p : { id: p.id, state: applyDayRollover(clone(p.state)) },
-          ),
-        }));
-      }
+      if (document.visibilityState !== 'visible') return;
+      setState((s) => (s.lastActiveDate === todayStr(s.settings.timezone) ? s : applyDayRollover(clone(s))));
+      setRoot((r) => {
+        let changed = false;
+        const profiles = r.profiles.map((p) => {
+          if (p.id === r.activeProfileId || p.state.lastActiveDate === todayStr(p.state.settings.timezone)) return p;
+          changed = true;
+          return { id: p.id, state: applyDayRollover(clone(p.state)) };
+        });
+        return changed ? { ...r, profiles } : r;
+      });
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
