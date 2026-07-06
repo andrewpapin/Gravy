@@ -725,8 +725,8 @@ button.gtile.checked:disabled { transform: scale(1.03); }
   border-radius: 50%;
   border: var(--border-width-xl) solid var(--dark);
   box-shadow: 3px 3px 0 var(--dark);
-  background: var(--success);
-  color: #fff;
+  background: var(--cream);
+  color: var(--dark);
   font-size: 1.05rem;
   display: flex;
   align-items: center;
@@ -737,7 +737,7 @@ button.gtile.checked:disabled { transform: scale(1.03); }
   transition: transform 0.08s, box-shadow 0.08s, background var(--transition), color var(--transition);
 }
 .goal-row-check:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--dark); }
-.goal-row-check.done { background: var(--cream); color: var(--dark); }
+.goal-row-check.done { background: var(--success); color: #fff; }
 .goal-row-stepper { flex-shrink: 0; flex-wrap: nowrap; white-space: nowrap; }
 .goal-row-stepper .gstep-count { white-space: nowrap; }
 
