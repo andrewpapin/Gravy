@@ -15,15 +15,16 @@ import { useGravy } from '../state/GravyContext';
 // authUser/householdStatus update, so AccountMenu just watches that and closes this prompt itself.
 export function SignInPrompt() {
   const {
-    authUser, signUp, signIn, sendSignInLink,
+    authUser, signUp, signIn, sendSignInLink, sendPasswordReset,
     householdCode, householdStatus, joinHousehold, syncStatus,
   } = useGravy();
-  const [mode, setMode] = useState<'signup' | 'signin'>('signin');
+  const [mode, setMode] = useState<'signup' | 'signin' | 'forgot'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [linkSent, setLinkSent] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const [joinCode, setJoinCode] = useState(householdCode ?? '');
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -53,6 +54,12 @@ export function SignInPrompt() {
   const handleJoin = () => {
     if (!joinCode.trim()) return;
     joinHousehold(joinCode);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!emailValid || busy) return;
+    const ok = await run(() => sendPasswordReset(email));
+    if (ok) setResetSent(true);
   };
 
   // Case 2: signed in already, just not a member of this device's household yet.
@@ -87,6 +94,54 @@ export function SignInPrompt() {
     );
   }
 
+  // Case 1b: forgot-password sub-flow, reachable from case 1's sign-in mode.
+  if (mode === 'forgot') {
+    return (
+      <div className="pin-screen">
+        <div style={{ fontSize: '3rem' }}><FontAwesomeIcon icon={faEnvelope} /></div>
+        <div className="pin-title">Reset Your Password</div>
+        <div className="pin-sub">
+          Enter your parent email and we'll send you a link to set a new password.
+        </div>
+        <div className="flex-row-full" style={{ flexDirection: 'column', width: '100%', maxWidth: 280, gap: 8 }}>
+          <input
+            type="email"
+            autoComplete="email"
+            placeholder="Parent email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setError(null); setResetSent(false); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleForgotPassword(); }}
+            autoFocus
+          />
+        </div>
+        {error && (
+          <div className="settings-sub sync-gate-status sync-gate-error">
+            <FontAwesomeIcon icon={faTriangleExclamation} /> {error}
+          </div>
+        )}
+        {resetSent && (
+          <div className="settings-sub sync-gate-status">
+            <FontAwesomeIcon icon={faEnvelope} /> Reset link sent — check your email.
+          </div>
+        )}
+        <button
+          className="btn btn-primary"
+          onClick={handleForgotPassword}
+          disabled={!emailValid || busy}
+          style={{ marginTop: 8 }}
+        >
+          Send Reset Link
+        </button>
+        <button
+          className="onb-link"
+          onClick={() => { setMode('signin'); setError(null); setResetSent(false); }}
+        >
+          Back to sign in
+        </button>
+      </div>
+    );
+  }
+
   // Case 1: not signed in at all.
   return (
     <div className="pin-screen">
@@ -112,6 +167,15 @@ export function SignInPrompt() {
           onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
         />
       </div>
+      {mode === 'signin' && (
+        <button
+          className="onb-link"
+          style={{ marginTop: -4 }}
+          onClick={() => { setMode('forgot'); setError(null); }}
+        >
+          Forgot password?
+        </button>
+      )}
       {error && (
         <div className="settings-sub sync-gate-status sync-gate-error">
           <FontAwesomeIcon icon={faTriangleExclamation} /> {error}

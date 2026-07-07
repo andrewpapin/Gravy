@@ -55,7 +55,15 @@ style whenever `grownUpUnlocked` is false, so the menu's shape is visible but in
 Tapping the button when locked swaps the body (title becomes "Sign In", and a back-chevron appears
 via `Modal`'s `onBack`) to render `SignInPrompt` (`src/components/SignInPrompt.tsx`) inline — either
 a sign-up/sign-in/magic-link form (not signed in at all) or a family-code join prompt (signed in but
-not yet a member of this device's household). There's no explicit "unlock" call: `grownUpUnlocked`
+not yet a member of this device's household). The sign-in form's "Forgot password?" link swaps to a
+third internal mode that just collects an email and calls `sendPasswordReset` (`src/state/auth.ts`,
+wrapping `supabase.auth.resetPasswordForEmail`) — the reset email's link returns the user to the
+app's origin, where Supabase fires a `PASSWORD_RECOVERY` auth event (`onPasswordRecovery` in
+`auth.ts`) that `useHouseholdSync` turns into the `passwordRecovery` context flag. `AppShell`
+(`src/App.tsx`) renders the full-screen `ResetPasswordScreen` overlay whenever that flag is true,
+above every other overlay (mounted last, after `ReleaseNotesDrawer`) since a parent can land on that
+link at any point in the app; it collects a new password, calls `updatePassword`, and the "Continue"
+button clears the flag once the parent confirms. There's no explicit "unlock" call: `grownUpUnlocked`
 recomputes automatically once `authUser`/`householdStatus` update, and a `useEffect` in `AccountMenu`
 watches it and closes the prompt back to the item list once it flips true. Tapping the button when
 unlocked calls `signOutAccount()` directly — logging out is what re-locks the device, there's no
@@ -221,7 +229,9 @@ for fork 1, `'signin'` for fork 2) and reports which mode was actually used back
 (now `emailRedirectTo`-aware) returns `{ ok: true, needsConfirmation }`; when `needsConfirmation` is
 true, the component shows "Check Your Email" (with a "Resend confirmation email" action via
 `resendConfirmation`) until the existing `if (authUser)` branch picks up the session on its own.
-There's no "Skip for now" — account creation is mandatory on every path that reaches this phase.
+There's no "Skip for now" — account creation is mandatory on every path that reaches this phase. Its
+sign-in mode has the same "Forgot password?" sub-flow as `SignInPrompt` (see above), reusing
+`sendPasswordReset`.
 
 ## First-Run Guided Tour (`src/components/tour/`)
 

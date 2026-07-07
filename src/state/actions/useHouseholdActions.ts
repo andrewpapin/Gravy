@@ -20,9 +20,11 @@ import {
   getHouseholdStatus,
   resendSignUpConfirmation,
   sendMagicLink,
+  sendPasswordReset as sendPasswordResetSupabase,
   signInWithPassword,
   signOut as signOutSupabase,
   signUpWithPassword,
+  updatePassword as updatePasswordSupabase,
 } from '../auth';
 import { HOUSEHOLD_CODE_KEY, activeStateOf, buildMergedRoot, clone } from './shared';
 import type { SyncStatus } from './types';
@@ -209,6 +211,14 @@ export function useHouseholdActions(deps: HouseholdDeps) {
     await signOutSupabase();
   }, []);
 
+  const sendPasswordReset = useCallback(async (email: string) => {
+    return sendPasswordResetSupabase(email);
+  }, []);
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    return updatePasswordSupabase(newPassword);
+  }, []);
+
   // Secures the currently-synced household to the signed-in account (the claim-or-deprecate
   // path for an existing PIN-only household). No-ops harmlessly if already owned by this account.
   const claimHousehold = useCallback(async () => {
@@ -228,5 +238,6 @@ export function useHouseholdActions(deps: HouseholdDeps) {
   return {
     createHousehold, joinHousehold, leaveHousehold, deleteHouseholdEverywhere, changeHouseholdCode,
     signUp, signIn, sendSignInLink, resendConfirmation, findMyHousehold, signOutAccount, claimHousehold,
+    sendPasswordReset, updatePassword,
   };
 }

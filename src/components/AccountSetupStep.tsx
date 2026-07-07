@@ -15,8 +15,8 @@ interface AccountSetupStepProps {
 // automatically), with no separate "claim" needed later. COPPA: collects only a parent email,
 // never any child data.
 export function AccountSetupStep({ initialMode = 'signup', onDone }: AccountSetupStepProps) {
-  const { authUser, signUp, signIn, sendSignInLink, resendConfirmation } = useGravy();
-  const [mode, setMode] = useState<'signup' | 'signin'>(initialMode);
+  const { authUser, signUp, signIn, sendSignInLink, resendConfirmation, sendPasswordReset } = useGravy();
+  const [mode, setMode] = useState<'signup' | 'signin' | 'forgot'>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -24,6 +24,7 @@ export function AccountSetupStep({ initialMode = 'signup', onDone }: AccountSetu
   const [linkSent, setLinkSent] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState(false);
   const [resent, setResent] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const canSubmit = emailValid && password.length >= 6 && !busy;
@@ -58,6 +59,51 @@ export function AccountSetupStep({ initialMode = 'signup', onDone }: AccountSetu
     const ok = await run(() => sendSignInLink(email));
     if (ok) setLinkSent(true);
   };
+
+  const handleForgotPassword = async () => {
+    if (!emailValid || busy) return;
+    const ok = await run(() => sendPasswordReset(email));
+    if (ok) setResetSent(true);
+  };
+
+  if (mode === 'forgot') {
+    return (
+      <>
+        <span className="onb-icon-badge"><FontAwesomeIcon icon={faEnvelope} /></span>
+        <div className="onb-title">Reset Your Password</div>
+        <div className="onb-desc">
+          Enter your parent email and we'll send you a link to set a new password.
+        </div>
+        <input
+          type="email"
+          autoComplete="email"
+          className="onb-input"
+          placeholder="Parent email"
+          value={email}
+          onChange={(e) => { setEmail(e.target.value); setError(null); setResetSent(false); }}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleForgotPassword(); }}
+        />
+        {error && (
+          <div className="settings-sub sync-gate-status sync-gate-error">
+            <FontAwesomeIcon icon={faTriangleExclamation} /> {error}
+          </div>
+        )}
+        {resetSent && (
+          <div className="settings-sub sync-gate-status">
+            <FontAwesomeIcon icon={faEnvelope} /> Reset link sent — check your email.
+          </div>
+        )}
+        <div className="onb-actions">
+          <button className="btn btn-primary" onClick={handleForgotPassword} disabled={!emailValid || busy}>
+            Send Reset Link
+          </button>
+          <button className="onb-link" onClick={() => { setMode('signin'); setError(null); setResetSent(false); }}>
+            Back to sign in
+          </button>
+        </div>
+      </>
+    );
+  }
 
   const handleResend = async () => {
     if (busy) return;
@@ -142,6 +188,11 @@ export function AccountSetupStep({ initialMode = 'signup', onDone }: AccountSetu
         onChange={(e) => { setPassword(e.target.value); setError(null); }}
         onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
       />
+      {mode === 'signin' && (
+        <button className="onb-link" onClick={() => { setMode('forgot'); setError(null); }}>
+          Forgot password?
+        </button>
+      )}
       {error && (
         <div className="settings-sub sync-gate-status sync-gate-error">
           <FontAwesomeIcon icon={faTriangleExclamation} /> {error}

@@ -111,12 +111,26 @@ Creating a parent account (email/password or magic link) is **mandatory** — ev
 that reaches parental controls goes through `AccountSetupStep` first (see `docs/ui-surfaces.md`);
 the only account-free path is the "kid's device" onboarding fork, which by design never reaches
 those controls. `src/state/auth.ts` is the only module that touches `supabase.auth` — it exposes
-`signUpWithPassword`/`signInWithPassword`/`sendMagicLink`/`resendSignUpConfirmation`/`signOut`, an
-`onAuthChange` subscription, the ownership RPC wrappers (`claimHousehold`/`getHouseholdStatus`/
-`findMyHouseholdCode`, plus the pure `normalizeHouseholdStatus` covered by `auth.test.ts`), and
+`signUpWithPassword`/`signInWithPassword`/`sendMagicLink`/`resendSignUpConfirmation`/`signOut`,
+`sendPasswordReset`/`updatePassword` (the forgot-password flow: the former wraps
+`resetPasswordForEmail`, the latter `auth.updateUser({ password })` and is also reused for a
+signed-in parent changing their password), an `onAuthChange` subscription plus the separate
+`onPasswordRecovery` one (fires on the `PASSWORD_RECOVERY` event Supabase emits when a parent lands
+via the reset email's link, distinct from an ordinary sign-in even though both establish a
+session), the ownership RPC wrappers (`claimHousehold`/`getHouseholdStatus`/`findMyHouseholdCode`,
+plus the pure `normalizeHouseholdStatus` covered by `auth.test.ts`), and
 **`isGrownUpUnlocked(authUser, householdStatus)`** — the pure predicate
-(`!!authUser && !!householdStatus?.isMember`, also
-unit-tested in `auth.test.ts`) that `GravyContext` uses to derive `grownUpUnlocked` every render.
+(`!!authUser && !!householdStatus?.isMember`, also unit-tested in `auth.test.ts`) that
+`GravyContext` uses to derive `grownUpUnlocked` every render. `useHouseholdSync` seeds its
+`passwordRecovery` context flag (cleared by `clearPasswordRecovery`) from
+`isPasswordRecoveryRedirect` — a synchronous, module-load-time read of `type=recovery` off the
+URL hash — rather than waiting on the `onPasswordRecovery` event alone: that event only fires
+after supabase-js completes an async network round trip exchanging the link's token for a
+session, so a React effect subscribing to it can lose the race and silently miss it (this was a
+real bug — the recovery link's session got established either way, but nothing told the UI to
+show the reset screen, leaving the parent stuck looking "signed in" with no way to set a new
+password). The event listener still runs too, as a fallback. `AppShell` (`src/App.tsx`) uses the
+flag to show the mandatory `ResetPasswordScreen` overlay — see `docs/ui-surfaces.md`.
 `useHouseholdSync` (`src/state/useHouseholdSync.ts`, the sync/auth reactive hook `GravyContext`
 calls) tracks `authUser`/`authReady` and re-checks `householdStatus` on code/account change. Once
 signed in, `createHousehold` automatically sets `owner_id` (supabase-js sends the JWT to the RPC) —

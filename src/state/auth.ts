@@ -49,6 +49,54 @@ export function onAuthChange(cb: (user: AuthUser | null) => void): () => void {
   return () => data.subscription.unsubscribe();
 }
 
+// Detects a password-recovery redirect straight from the URL, computed once at module load —
+// i.e. before Supabase's own async recovery detection (see below) can win the race against it.
+// Supabase's implicit-flow verify redirect puts `type=recovery` in the *hash* fragment (e.g.
+// `#access_token=...&type=recovery&...`); this reads it directly rather than waiting on the SDK.
+function detectPasswordRecoveryFromUrl(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  return hashParams.get('type') === 'recovery';
+}
+
+// True if the page was loaded from a password-reset email link. Computed once, synchronously,
+// at import time — this module is imported (transitively, via supabaseClient.ts) before the
+// Supabase client's own async session-from-URL detection reaches its first `await`, so this
+// always sees the hash before the SDK's later cleanup clears it. It's the reliable half of
+// recovery detection; onPasswordRecovery below is a same-tab fallback for the SDK's own event,
+// which arrives only after a network round trip and can otherwise be missed if a subscriber
+// (e.g. a React effect) hasn't attached yet by the time it fires — the exact bug this fixes:
+// the reset link's session gets established either way, but without this, the app had no
+// reliable signal to show the "set a new password" screen instead of silently landing signed in.
+export const isPasswordRecoveryRedirect = detectPasswordRecoveryFromUrl();
+
+// Fires when the user lands back in the app via a password-reset email link — Supabase
+// exchanges the link's token for a session and emits this event rather than a normal sign-in,
+// so the app can distinguish "here to set a new password" from an ordinary sign-in. Returns an
+// unsubscribe function.
+export function onPasswordRecovery(cb: () => void): () => void {
+  const { data } = supabase.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') cb();
+  });
+  return () => data.subscription.unsubscribe();
+}
+
+// Sends a password-reset email; the link returns the user to the app's current origin, where
+// onPasswordRecovery fires so the UI can prompt for a new password.
+export async function sendPasswordReset(email: string): Promise<AuthResult> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: window.location.origin + window.location.pathname,
+  });
+  return error ? { ok: false, error: authError(error) } : { ok: true };
+}
+
+// Sets a new password for the currently-authenticated session — used both for the password-reset
+// flow (session established via the recovery link) and a signed-in parent changing their password.
+export async function updatePassword(newPassword: string): Promise<AuthResult> {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  return error ? { ok: false, error: authError(error) } : { ok: true };
+}
+
 export async function signUpWithPassword(email: string, password: string): Promise<SignUpResult> {
   const { data, error } = await supabase.auth.signUp({
     email: email.trim(),

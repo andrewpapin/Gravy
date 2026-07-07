@@ -1,5 +1,5 @@
 import { useState, Component, lazy, Suspense, type ReactNode } from 'react';
-import { GravyProvider } from './state/GravyContext';
+import { GravyProvider, useGravy } from './state/GravyContext';
 import { HomeScreen } from './components/HomeScreen';
 import { GrownUpsDrawer } from './components/parent/GrownUpsDrawer';
 import { AccountMenu } from './components/AccountMenu';
@@ -26,6 +26,7 @@ const SyncGateModal = lazy(() => import('./components/SyncGateModal').then((m) =
 const Onboarding = lazy(() => import('./components/Onboarding').then((m) => ({ default: m.Onboarding })));
 const FirstKidPrompt = lazy(() => import('./components/tour/FirstKidPrompt').then((m) => ({ default: m.FirstKidPrompt })));
 const HomeTour = lazy(() => import('./components/tour/HomeTour').then((m) => ({ default: m.HomeTour })));
+const ResetPasswordScreen = lazy(() => import('./components/ResetPasswordScreen').then((m) => ({ default: m.ResetPasswordScreen })));
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -53,6 +54,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 }
 
 function AppShell() {
+  const { passwordRecovery } = useGravy();
   const [storeOpen, setStoreOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
   const [rankOpen, setRankOpen] = useState(false);
@@ -169,6 +171,13 @@ function AppShell() {
       {/* Rendered last so it stacks above the sync gate/onboarding/tour — release notes are
           dismissible and shouldn't get silently buried behind a mandatory-looking overlay. */}
       <ReleaseNotesDrawer />
+      {/* Rendered after everything else so a password-reset link (which can land at any point —
+          the app may already be mid-onboarding or showing release notes) always takes over. */}
+      {passwordRecovery && (
+        <Suspense fallback={null}>
+          <ResetPasswordScreen />
+        </Suspense>
+      )}
     </>
   );
 }
