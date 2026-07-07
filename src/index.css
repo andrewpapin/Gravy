@@ -1185,6 +1185,135 @@ button.gtile.checked:disabled:active { transform: none; }
   transition: width 0.5s ease;
 }
 
+/* ===== STATS PAGE (charts) =====
+   Section wrappers + hand-rolled chart primitives (Sparkline/BarChart/HeatmapGrid/StatTile)
+   appended below the rank ladder in RankScreen. No charting library in this app's dependency
+   tree — every chart here is plain SVG/CSS, themed entirely off existing CSS vars. */
+.stats-section {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: var(--border-width-md) dashed var(--cream);
+}
+.stats-section-title {
+  font-size: var(--text-base);
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.stats-section-subtitle {
+  font-size: var(--text-sm);
+  font-weight: 800;
+  color: var(--muted);
+  margin: 14px 0 8px;
+}
+.stats-section-caption {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.stats-section-empty {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+  padding: 12px 0;
+}
+
+.sparkline { display: block; width: 100%; height: 64px; }
+.sparkline-empty { height: 64px; border-radius: var(--radius-sm); background: var(--cream); }
+.sparkline-area { fill: var(--teal); opacity: 0.15; }
+.sparkline-line { stroke: var(--teal); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.sparkline-highlight { fill: var(--yellow); stroke: var(--dark); stroke-width: 1; }
+
+.bar-chart-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bar-chart-row:last-child { margin-bottom: 0; }
+.bar-chart-row-icon-circle {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--cream);
+  border: var(--border-width-md) solid var(--dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bar-chart-row-icon { font-size: 0.9rem; color: var(--coral); }
+.bar-chart-row-info { flex: 1; min-width: 0; }
+.bar-chart-row-label-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--text-xs);
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.bar-chart-row-label { color: var(--text); overflow-wrap: break-word; }
+.bar-chart-row-value { color: var(--muted); white-space: nowrap; }
+.games-breakdown-bar-chart { margin-top: 14px; }
+
+.heatmap-grid { display: grid; gap: 3px; overflow-x: auto; padding-bottom: 4px; }
+.heatmap-col { display: grid; grid-template-rows: repeat(7, 1fr); gap: 3px; }
+.heatmap-cell { width: 11px; height: 11px; border-radius: 3px; background: var(--teal); opacity: 0.12; }
+.heatmap-cell-pad { background: transparent; opacity: 0; }
+.heat-0 { opacity: 0.12; }
+.heat-1 { opacity: 0.35; }
+.heat-2 { opacity: 0.6; }
+.heat-3 { opacity: 0.8; }
+.heat-4 { opacity: 1; }
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  color: var(--muted);
+}
+.heatmap-legend .heatmap-cell { width: 10px; height: 10px; }
+
+.stat-tile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 10px; }
+.stat-tile {
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  border: var(--border-width-lg) solid var(--dark);
+  box-shadow: 2px 2px 0 var(--dark);
+  padding: 12px 8px;
+  text-align: center;
+}
+.stat-tile-icon-circle {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 6px;
+  border-radius: 50%;
+  background: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stat-tile-icon { font-size: 0.9rem; color: var(--coral); }
+.stat-tile-value { font-size: var(--text-lg); font-weight: 900; color: var(--text); }
+.stat-tile-label { font-size: var(--text-2xs); font-weight: 700; color: var(--muted); margin-top: 2px; }
+
+.rewards-history-list { display: flex; flex-direction: column; gap: 8px; }
+.rewards-history-row { display: flex; align-items: center; gap: 10px; }
+.rewards-history-row-icon-circle {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--cream);
+  border: var(--border-width-md) solid var(--dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rewards-history-row-icon { font-size: 0.9rem; color: var(--coral); }
+.rewards-history-row-info { display: flex; flex-direction: column; min-width: 0; }
+.rewards-history-row-label { font-size: var(--text-xs); font-weight: 800; color: var(--text); overflow-wrap: break-word; }
+.rewards-history-row-date { font-size: var(--text-2xs); font-weight: 600; color: var(--muted); }
+
 /* ===== GAMES HUB ===== */
 .games-cap-banner {
   display: flex;
