@@ -33,6 +33,18 @@ a second Reward Store entry point live in `StatsCard`'s coins row. There is no k
 calendar/history icon or screen; the only calendar surface is the PIN-gated parent `CalendarPanel`
 (see below), reached via `AccountMenu` → "Calendar".
 
+`RankScreen` (opened by both `StatsPill` and `StatsCard`) is more than a rank ladder: below the
+24-tier ladder and the 4 streak chips, it renders a run of kid-facing chart sections —
+`src/components/stats/*` — covering points/rank growth over time, a 12-week GitHub-style activity
+heatmap, personal bests (best day ever, lifetime full-tray/combo days, longest-ever streaks),
+a 4-week daily-goals trend, favorite foods, a games/win-rate breakdown, and recent reward
+redemptions. All of it is derived client-side from existing state (`dayLogs`/`counters`/
+`actionLog` — see `src/state/statsSnapshot.ts` and the memoizing `useStatsSnapshot` hook); no new
+persisted fields or backend calls. Charts are hand-rolled SVG/CSS (`src/components/charts/
+{Sparkline,BarChart,HeatmapGrid,StatTile}.tsx`) since the app has no charting library dependency.
+`RankScreen` itself was migrated from its old hand-rolled bottom-sheet markup onto the shared
+`Modal` component as part of this, matching every other drawer.
+
 The bell icon opens `ApprovalsDrawer` directly — Approvals is no longer an `AccountMenu` item (it
 used to be the first one); it's its own top-level entry point next to the hamburger, marked with a
 count pill via the `nav-badge` CSS class with `data-count={pendingRewards.length + pendingPointsAwards.length}`.
