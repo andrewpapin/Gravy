@@ -15,13 +15,15 @@ interface AccountSetupStepProps {
 // automatically), with no separate "claim" needed later. COPPA: collects only a parent email,
 // never any child data.
 export function AccountSetupStep({ initialMode = 'signup', onDone }: AccountSetupStepProps) {
-  const { authUser, signUp, signIn, sendSignInLink, sendPasswordReset } = useGravy();
+  const { authUser, signUp, signIn, sendSignInLink, resendConfirmation, sendPasswordReset } = useGravy();
   const [mode, setMode] = useState<'signup' | 'signin' | 'forgot'>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [linkSent, setLinkSent] = useState(false);
+  const [pendingConfirmation, setPendingConfirmation] = useState(false);
+  const [resent, setResent] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -36,9 +38,20 @@ export function AccountSetupStep({ initialMode = 'signup', onDone }: AccountSetu
     return res.ok;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) return;
-    run(() => (mode === 'signup' ? signUp(email, password) : signIn(email, password)));
+    if (mode === 'signin') {
+      run(() => signIn(email, password));
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const res = await signUp(email, password);
+    setBusy(false);
+    if (!res.ok) { setError(res.error); return; }
+    // If not, `authUser` below will flip truthy on its own once onAuthChange reports a session —
+    // no polling needed, Supabase mirrors the session to every tab via localStorage.
+    if (res.needsConfirmation) setPendingConfirmation(true);
   };
 
   const handleMagicLink = async () => {
@@ -92,6 +105,46 @@ export function AccountSetupStep({ initialMode = 'signup', onDone }: AccountSetu
     );
   }
 
+  const handleResend = async () => {
+    if (busy) return;
+    setBusy(true);
+    setResent(false);
+    const res = await resendConfirmation(email);
+    setBusy(false);
+    if (res.ok) setResent(true);
+    else setError(res.error);
+  };
+
+  // Signup succeeded but the project requires confirming email first — wait for the user to tap
+  // the link (in any tab); `authUser` below will pick it up automatically once it does.
+  if (pendingConfirmation && !authUser) {
+    return (
+      <>
+        <span className="onb-icon-badge"><FontAwesomeIcon icon={faEnvelope} /></span>
+        <div className="onb-title">Check Your Email</div>
+        <div className="onb-desc">
+          We sent a confirmation link to {email}. Tap it to finish creating your account — this
+          screen will continue automatically, no need to come back here.
+        </div>
+        {error && (
+          <div className="settings-sub sync-gate-status sync-gate-error">
+            <FontAwesomeIcon icon={faTriangleExclamation} /> {error}
+          </div>
+        )}
+        {resent && !error && (
+          <div className="settings-sub sync-gate-status">
+            <FontAwesomeIcon icon={faEnvelope} /> Sent again — check your inbox.
+          </div>
+        )}
+        <div className="onb-actions">
+          <button className="btn btn-sm btn-ghost" onClick={handleResend} disabled={busy}>
+            Resend confirmation email
+          </button>
+        </div>
+      </>
+    );
+  }
+
   // Once signed in, confirm and let them continue into household setup.
   if (authUser) {
     return (
@@ -100,8 +153,8 @@ export function AccountSetupStep({ initialMode = 'signup', onDone }: AccountSetu
         <div className="onb-title">You're Signed In</div>
         <div className="onb-desc">
           {mode === 'signup'
-            ? `Signed in as ${authUser.email ?? 'your account'}. We'll set up your family's code next.`
-            : `Signed in as ${authUser.email ?? 'your account'}. Enter your family code next to join.`}
+            ? `Signed in as ${authUser.email ?? 'your account'}. We'll get your family set up next.`
+            : `Signed in as ${authUser.email ?? 'your account'}. We'll get you connected to your family next.`}
         </div>
         <div className="onb-actions">
           <button className="btn btn-primary" onClick={() => onDone(mode)}>Continue</button>

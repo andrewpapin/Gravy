@@ -7,6 +7,11 @@ export const STORAGE_KEY = 'gravy_v1';
 // Lives here (not in Onboarding.tsx) so App.tsx can read it without a static import that
 // would pull the lazy-loaded Onboarding component back into the main bundle.
 export const ONBOARDING_DONE_KEY = 'gravy_onboarded';
+// First-run guided tour (post-onboarding), same "lives in App.tsx's bundle, not the lazy
+// component's" reasoning as ONBOARDING_DONE_KEY above. Never re-shown once set, and never shown
+// retroactively to installs that already had ONBOARDING_DONE_KEY or STORAGE_KEY before this
+// shipped — see the bypass check alongside `onboarded` in AppShell.
+export const HOME_TOUR_DONE_KEY = 'gravy_home_tour_done';
 // Fallback points for a food item with no configured value (e.g. one added to FOODS after a
 // save was written) — mirrors the points-per-food-group default every FOODS entry starts at.
 export const DEFAULT_FOOD_PTS = 10;

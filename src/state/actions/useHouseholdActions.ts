@@ -16,7 +16,9 @@ import {
   type AuthUser,
   type HouseholdStatus,
   claimHousehold as claimHouseholdRpc,
+  findMyHouseholdCode,
   getHouseholdStatus,
+  resendSignUpConfirmation,
   sendMagicLink,
   sendPasswordReset as sendPasswordResetSupabase,
   signInWithPassword,
@@ -196,6 +198,15 @@ export function useHouseholdActions(deps: HouseholdDeps) {
     return sendMagicLink(email);
   }, []);
 
+  const resendConfirmation = useCallback(async (email: string) => {
+    return resendSignUpConfirmation(email);
+  }, []);
+
+  // Looks up the signed-in caller's own household by account membership — see gravy_my_household_code.
+  const findMyHousehold = useCallback(async () => {
+    return findMyHouseholdCode();
+  }, []);
+
   const signOutAccount = useCallback(async () => {
     await signOutSupabase();
   }, []);
@@ -226,7 +237,7 @@ export function useHouseholdActions(deps: HouseholdDeps) {
 
   return {
     createHousehold, joinHousehold, leaveHousehold, deleteHouseholdEverywhere, changeHouseholdCode,
-    signUp, signIn, sendSignInLink, signOutAccount, claimHousehold,
+    signUp, signIn, sendSignInLink, resendConfirmation, findMyHousehold, signOutAccount, claimHousehold,
     sendPasswordReset, updatePassword,
   };
 }

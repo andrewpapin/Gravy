@@ -47,6 +47,7 @@ export function TopBar({ dateStr, onOpenAccountMenu, onOpenApprovals }: TopBarPr
             onClick={onOpenAccountMenu}
             aria-label="Open grown-up menu"
             type="button"
+            data-tour-id="account-menu"
           >
             <FontAwesomeIcon icon={faBars} />
           </button>

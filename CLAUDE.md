@@ -97,14 +97,18 @@ Deep detail lives in `docs/`. Read the linked file when working in that area.
   `ArcadePanel`, each its own `RootMenu` destination); `ApprovalsPanel`/`CalendarPanel` reached
   directly from
   `AccountMenu` via `ApprovalsDrawer`/`CalendarDrawer`, plus `SettingsPanel` (including the nested
-  `LogPanel`) reached via `AdvancedSettingsDrawer`; `Onboarding`'s three-way account fork (new
-  family / sign in to join / kid device).
+  `LogPanel`) reached via `AdvancedSettingsDrawer`; `Onboarding`'s three-button fork (New Family /
+  Existing Parent / Existing Kid), including New Family's pending-email-confirmation screen and
+  Existing Parent's auto-attach-by-account (falling back to manual code entry); the post-onboarding
+  `FirstKidPrompt` + spotlight `HomeTour` (`src/components/tour/`), mounted on top of the live
+  `HomeScreen` rather than as part of `Onboarding`.
 - **Subsystems** (`docs/systems.md`) — Arcade/games hub (`src/data/games.ts`, `completeGameRound`,
   `DAILY_GAME_WIN_CAP`); Rank ladder (`src/data/ranks.ts`, `getRank`, `useTodaySnapshot`); Icon system (`src/data/icons.ts`,
   `AppIcon`); Theming (`Settings.theme`, `src/index.css`); Time zone (`Settings.timezone`,
   `todayStr`, `src/data/timezones.ts`); Deployment (`deploy.yml`); Version display
   (`__APP_VERSION__`); PWA update (`UpdatePrompt.tsx`, `vite-plugin-pwa`); Release notes drawer
-  (`src/data/releaseNotes.ts`, `src/state/releaseNotes.ts`, `ReleaseNotesDrawer.tsx`).
+  (`src/data/releaseNotes.ts`, `src/state/releaseNotes.ts`, `ReleaseNotesDrawer.tsx`); First-run
+  guided tour (`src/components/tour/`, `src/data/tourSteps.ts`, `HOME_TOUR_DONE_KEY`).
 - **Native wrap** (`docs/capacitor.md`) — Capacitor packaging spike (Epic 10): `capacitor.config.ts`,
   the `--mode capacitor` root-relative build (`npm run build:native`/`cap:sync`), and why
   `ios/`/`android/` are gitignored. Read before touching the native build path.

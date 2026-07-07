@@ -191,33 +191,66 @@ which settings section (if any) is drilled into.
 
 First-run users (no `localStorage[STORAGE_KEY]` and no `ONBOARDING_DONE_KEY = 'gravy_onboarded'`)
 see `Onboarding` instead of the normal home screen — see the check in `AppShell` (`src/App.tsx`).
-It's a phase state machine (`welcome → name → walkthrough → account → creating`, with a parallel
-`join` phase) built around a three-way fork at `'welcome'`, since account creation is now mandatory
-and there's no PIN — a device's only way into parental controls is a signed-in account that's a
-member of its synced household (see `isGrownUpUnlocked` in `src/state/auth.ts`):
+It's a phase state machine (`welcome → account → join → creating`) built around a three-button
+fork at `'welcome'` — **New Family**, **Existing Parent**, **Existing Kid** — since account creation
+is now mandatory and there's no PIN — a device's only way into parental controls is a signed-in
+account that's a member of its synced household (see `isGrownUpUnlocked` in `src/state/auth.ts`).
+The kid's name and the guided app tour both happen *after* this component hands off to the main
+app, not as part of it — see "First-Run Guided Tour" below.
 
-1. **Set up a new family** — `'name'` (kid's name) → `'walkthrough'` (product tour) → `'account'`
-   forced into `signup` mode → on success, `createHousehold()` auto-fires (no custom-code option
-   here; that's still available later via `SyncPanel` → "Customize code") → `'creating'` reveals the
-   generated code → `finish()`.
-2. **"I'm a parent — sign in to join my family"** (link on `'welcome'`) — skips straight to
-   `'account'` forced into `signin` mode (no name/walkthrough, since joining pulls the existing
-   family's kid profiles) → on success, `'join'` prompts for the family code → `joinHousehold(code)`
-   (signed in, so `gravy_lookup_household` auto-adds this account as a `household_members` row —
-   the same mechanism a co-parent uses) → `finish()`.
-3. **"This is my kid's device — just enter a family code"** (link on `'welcome'`) — skips `'account'`
-   entirely, straight to `'join'` → `joinHousehold(code)` called anonymously → `finish()`. This
-   device never has an account, so `grownUpUnlocked` stays false on it permanently unless someone
-   signs in later via `SignInPrompt` (see above) — which doesn't change this device's own
-   no-account default once they sign back out.
+1. **New Family** — `'account'` forced into `signup` mode. Signing up may land on a "Check Your
+   Email" pending-confirmation screen inside `AccountSetupStep` first (see below) if the Supabase
+   project requires confirming email — a dashboard setting, not visible in this repo. Once
+   `authUser` resolves (immediately, or after the confirmation link is opened in any tab —
+   Supabase mirrors sessions across tabs via localStorage, so no polling is needed), `onDone('signup')`
+   fires `startCreate()` → `createHousehold()` (no custom-code option here; that's still available
+   later via `SyncPanel` → "Customize code") → on success, `finish({ isNewFamily: true })` directly.
+   There's no code-reveal screen anymore — the family code is instead one of the guided tour's steps.
+2. **Existing Parent** — `'account'` forced into `signin` mode → on success, `onDone('signin')` calls
+   `findMyHousehold()` (wraps the `gravy_my_household_code` RPC, keyed by the signed-in account's
+   `household_members` row rather than a code) and, if it returns one, `joinHousehold(code)`
+   automatically — no manual code entry. If the account has no household yet (a fresh account, or
+   the lookup failed), falls back to the same manual `'join'` phase fork 3 uses, with an explanatory
+   note.
+3. **Existing Kid** — skips `'account'` entirely, straight to `'join'` → `joinHousehold(code)` called
+   anonymously → `finish({ isNewFamily: false })`. This device never has an account, so
+   `grownUpUnlocked` stays false on it permanently unless someone signs in later via `SignInPrompt`
+   (see above) — which doesn't change this device's own no-account default once they sign back out.
 
-`'join'` tracks a `JoinOrigin` (`'welcome' | 'account'`) so Back returns to the right place. Existing
-users (saved progress before this feature shipped) are detected via the `STORAGE_KEY` check and skip
-past onboarding entirely.
+`Onboarding`'s `onComplete` prop is `(result: { isNewFamily: boolean }) => void` — the one signal
+`AppShell` needs to decide whether the kid-name prompt should run before the tour (fork 1 only;
+joining an existing household means its kid profiles already synced in). Existing users (saved
+progress before this feature shipped) are detected via the `STORAGE_KEY` check and skip past
+onboarding entirely.
 
 `AccountSetupStep` (`src/components/AccountSetupStep.tsx`) takes an `initialMode` prop (`'signup'`
 for fork 1, `'signin'` for fork 2) and reports which mode was actually used back to `Onboarding` via
-`onDone(mode)`, so the caller can branch (auto-create a household vs. prompt for a code to join).
+`onDone(mode)`. For signup, it also handles the pending-confirmation branch: `signUpWithPassword`
+(now `emailRedirectTo`-aware) returns `{ ok: true, needsConfirmation }`; when `needsConfirmation` is
+true, the component shows "Check Your Email" (with a "Resend confirmation email" action via
+`resendConfirmation`) until the existing `if (authUser)` branch picks up the session on its own.
 There's no "Skip for now" — account creation is mandatory on every path that reaches this phase. Its
 sign-in mode has the same "Forgot password?" sub-flow as `SignInPrompt` (see above), reusing
 `sendPasswordReset`.
+
+## First-Run Guided Tour (`src/components/tour/`)
+
+Once `Onboarding` completes, `AppShell` mounts two more on-top-of-`HomeScreen` overlays (not part of
+`Onboarding` itself — the main app is already live underneath them), gated by their own
+`localStorage` flags so they only ever run once per device, exactly mirroring `ONBOARDING_DONE_KEY`'s
+existing bypass for installs that predate this feature:
+
+- **`FirstKidPrompt`** — New-Family-only (`needsFirstKid`, set from `Onboarding`'s
+  `onComplete({ isNewFamily })`). Asks for the first kid's name (more can be added later via
+  Profiles) and calls the same `saveSetting('childName', ...)` the old in-onboarding `'name'` phase
+  used to call.
+- **`HomeTour`** — runs after `FirstKidPrompt` (or immediately, for forks 2/3) once per device, via
+  `HOME_TOUR_DONE_KEY = 'gravy_home_tour_done'` (`src/state/defaultState.ts`). Steps through
+  `src/data/tourSteps.ts`'s `TOUR_STEPS`, spotlighting real elements by `data-tour-id` (added to
+  `GamesCard`, `StatsPill`, `PrizesPill`, `TopBar`'s hamburger button, and `CollapsibleCard` via a
+  `tourId` prop passed from `FoodTray`/`DailyGoals`) instead of the old static 4-slide walkthrough.
+  `Spotlight` (`src/components/tour/Spotlight.tsx`) is the dependency-free cutout primitive: a fixed
+  div sized to the target's `getBoundingClientRect()` with a huge spread `box-shadow` dimming
+  everywhere else; the one step with no target (the opening slide) dims the whole screen instead.
+  The last step shows the real household code, folding in what used to be a dedicated
+  post-creation code-reveal screen.

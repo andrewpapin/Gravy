@@ -8,7 +8,7 @@ import { UpdatePrompt } from './components/UpdatePrompt';
 import { ReleaseNotesDrawer } from './components/ReleaseNotesDrawer';
 import { Celebration } from './components/Celebration';
 import { Confetti } from './components/Confetti';
-import { STORAGE_KEY, ONBOARDING_DONE_KEY } from './state/defaultState';
+import { STORAGE_KEY, ONBOARDING_DONE_KEY, HOME_TOUR_DONE_KEY } from './state/defaultState';
 import { safeGetItem } from './state/storage';
 
 // These are all overlays/modals that aren't needed for the initial kid-facing paint (closed
@@ -24,6 +24,8 @@ const CalendarDrawer = lazy(() => import('./components/parent/CalendarDrawer').t
 const ApprovalsDrawer = lazy(() => import('./components/parent/ApprovalsDrawer').then((m) => ({ default: m.ApprovalsDrawer })));
 const SyncGateModal = lazy(() => import('./components/SyncGateModal').then((m) => ({ default: m.SyncGateModal })));
 const Onboarding = lazy(() => import('./components/Onboarding').then((m) => ({ default: m.Onboarding })));
+const FirstKidPrompt = lazy(() => import('./components/tour/FirstKidPrompt').then((m) => ({ default: m.FirstKidPrompt })));
+const HomeTour = lazy(() => import('./components/tour/HomeTour').then((m) => ({ default: m.HomeTour })));
 const ResetPasswordScreen = lazy(() => import('./components/ResetPasswordScreen').then((m) => ({ default: m.ResetPasswordScreen })));
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -64,9 +66,14 @@ function AppShell() {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [approvalsOpen, setApprovalsOpen] = useState(false);
   // Returning users who already had saved progress before this feature shipped
-  // shouldn't suddenly see the walkthrough — only brand-new installs get it.
-  const [onboarded, setOnboarded] = useState(
-    () => safeGetItem(ONBOARDING_DONE_KEY) === 'true' || safeGetItem(STORAGE_KEY) !== null,
+  // shouldn't suddenly see onboarding or the first-run tour — only brand-new installs get either.
+  const alreadyHadProgress = safeGetItem(ONBOARDING_DONE_KEY) === 'true' || safeGetItem(STORAGE_KEY) !== null;
+  const [onboarded, setOnboarded] = useState(() => alreadyHadProgress);
+  // Set from Onboarding's onComplete — only the "New Family" path needs the kid-name prompt
+  // before the tour; joining an existing household means its kid profiles already synced in.
+  const [needsFirstKid, setNeedsFirstKid] = useState(false);
+  const [tourDone, setTourDone] = useState(
+    () => alreadyHadProgress || safeGetItem(HOME_TOUR_DONE_KEY) === 'true',
   );
 
   return (
@@ -143,9 +150,25 @@ function AppShell() {
       <StorageErrorBanner />
       <UpdatePrompt />
       <Suspense fallback={null}>
-        {onboarded ? <SyncGateModal /> : <Onboarding onComplete={() => setOnboarded(true)} />}
+        {onboarded ? (
+          <SyncGateModal />
+        ) : (
+          <Onboarding
+            onComplete={({ isNewFamily }) => { setOnboarded(true); setNeedsFirstKid(isNewFamily); }}
+          />
+        )}
       </Suspense>
-      {/* Rendered last so it stacks above the sync gate/onboarding — release notes are
+      {onboarded && needsFirstKid && (
+        <Suspense fallback={null}>
+          <FirstKidPrompt onDone={() => setNeedsFirstKid(false)} />
+        </Suspense>
+      )}
+      {onboarded && !needsFirstKid && !tourDone && (
+        <Suspense fallback={null}>
+          <HomeTour onDone={() => setTourDone(true)} />
+        </Suspense>
+      )}
+      {/* Rendered last so it stacks above the sync gate/onboarding/tour — release notes are
           dismissible and shouldn't get silently buried behind a mandatory-looking overlay. */}
       <ReleaseNotesDrawer />
       {/* Rendered after everything else so a password-reset link (which can land at any point —

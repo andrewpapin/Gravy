@@ -225,3 +225,32 @@ work lives in `BACKLOG.md`.
   `20260627132616_auth_household_ownership.sql`,
   `20260701234953_require_account_for_household.sql`) so the repo's migration ledger matches
   production exactly.
+
+## Epic 14 — Onboarding Revamp & First-Run Guided Tour
+
+- **Onboarding redesigned around a clear three-button fork** (New Family / Existing Parent /
+  Existing Kid), replacing the old one-button-plus-two-links `'welcome'` screen and the
+  `name → walkthrough → account → creating` phase order. `Onboarding.tsx` shrank from a 6-phase
+  wizard to 4 (`welcome → account → join → creating`); the kid's-name ask and the product tour
+  both moved out of it entirely, into new post-onboarding components mounted on top of the
+  already-live `HomeScreen` (`src/components/tour/FirstKidPrompt.tsx`,
+  `src/components/tour/HomeTour.tsx`) rather than blocking the main app behind them.
+- **Real pending-email-confirmation screen** — `signUpWithPassword` (`src/state/auth.ts`) now
+  sets `emailRedirectTo` and returns `SignUpResult`'s `needsConfirmation` (from Supabase's own
+  `!data.session` signal) instead of silently discarding it; `AccountSetupStep` shows a "Check
+  Your Email" screen with a `resendSignUpConfirmation` retry, auto-continuing once `authUser`
+  resolves (no polling — Supabase mirrors the session across tabs via localStorage).
+- **"Existing Parent" auto-attaches to its household with no manual code** — new
+  `gravy_my_household_code()` RPC (`supabase/migrations/20260706210522_my_household_code_rpc.sql`),
+  keyed by the caller's `household_members` row (prefers `role = 'owner'`, else most recent)
+  instead of a code, wrapped as `findMyHouseholdCode`/`findMyHousehold`. Falls back to the
+  existing manual join-by-code UI if the account has no household yet.
+- **Family-code reveal folded into the guided tour** instead of a dedicated post-creation
+  screen — `'creating'` is now a plain spinner/retry state with no code display.
+- **First-run guided tour built from scratch** (`src/components/tour/Spotlight.tsx` — a
+  dependency-free `box-shadow` cutout, no SVG mask, no library) spotlights real home-screen
+  elements via new `data-tour-id` hooks (`GamesCard`, `StatsPill`, `PrizesPill`, `TopBar`'s
+  hamburger button, plus a new `tourId` prop on `CollapsibleCard` for `FoodTray`/`DailyGoals`)
+  instead of the old 4-slide abstract walkthrough. Runs once per device across every onboarding
+  path (`HOME_TOUR_DONE_KEY`), bypassed retroactively for installs that predate this feature —
+  same pattern as `ONBOARDING_DONE_KEY`.

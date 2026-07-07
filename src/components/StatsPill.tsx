@@ -7,7 +7,7 @@ interface StatsPillProps {
 
 export function StatsPill({ onOpen }: StatsPillProps) {
   return (
-    <button className="home-pill home-pill-stats" onClick={onOpen} type="button">
+    <button className="home-pill home-pill-stats" onClick={onOpen} type="button" data-tour-id="stats">
       <FontAwesomeIcon icon={faTrophy} />
       <span>Stats</span>
     </button>

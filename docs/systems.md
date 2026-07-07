@@ -155,3 +155,32 @@ after a deploy is what makes "loads with a new version" and "a PR merged to main
 from the client's point of view. Mounted last in `AppShell` (`App.tsx`) and given
 `overlayClassName="release-notes-overlay"` (z-index 1200) so it always stacks above the cloud-sync
 gate (`SyncGateModal`, z-index 1100) rather than getting silently buried behind it.
+
+## First-Run Guided Tour
+
+`src/components/tour/` — a spotlight/coachmark walkthrough that points at real home-screen
+elements, mounted from `AppShell` on top of the already-live `HomeScreen` once `Onboarding`
+completes (not part of `Onboarding` itself; see `docs/ui-surfaces.md` for the full onboarding flow).
+Runs once per device across every onboarding path, gated by `HOME_TOUR_DONE_KEY =
+'gravy_home_tour_done'` (`src/state/defaultState.ts`), set on both finishing and skipping, and
+bypassed retroactively for installs that already had saved progress before this feature shipped
+(same `alreadyHadProgress` check `ONBOARDING_DONE_KEY` uses).
+
+- **Targeting**: elements carry a `data-tour-id` attribute (`GamesCard`, `StatsPill`, `PrizesPill`,
+  `TopBar`'s hamburger button; `CollapsibleCard` takes an optional `tourId` prop for `FoodTray`/
+  `DailyGoals`, since it always renders a fixed wrapper div with no other passthrough).
+  `src/data/tourSteps.ts`'s `TOUR_STEPS` maps each step to a `targetId` (or `null` for the
+  centered opening slide), an icon, a title, and a `desc(householdCode)` — the last step reads the
+  live household code from context, folding in what used to be a dedicated post-creation
+  code-reveal screen.
+- **`Spotlight`** (`src/components/tour/Spotlight.tsx`) is the dependency-free cutout: a
+  `position: fixed` div sized to the target's `getBoundingClientRect()` with a huge spread
+  `box-shadow: 0 0 0 9999px rgba(...)` that dims everything else; with no target, it dims the whole
+  screen instead (no SVG mask, no library).
+- **`HomeTour`** (`src/components/tour/HomeTour.tsx`) measures the current step's target on mount
+  and on window resize / `.scroll-area` scroll, `scrollIntoView`s it before re-measuring, and
+  renders the callout above or below the target (`placement.ts`'s `placementFor`, kept in its own
+  module since a file exporting both a component and a plain function breaks fast refresh).
+- **`FirstKidPrompt`** (`src/components/tour/FirstKidPrompt.tsx`) is a separate, New-Family-only
+  overlay that runs *before* `HomeTour` (gated by `Onboarding`'s `onComplete({ isNewFamily })`
+  result, not a `HOME_TOUR_DONE_KEY`-style flag of its own) — see `docs/ui-surfaces.md`.

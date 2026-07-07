@@ -28,6 +28,7 @@ export function FoodTray({ dateStr }: FoodTrayProps = {}) {
     <CollapsibleCard
       section="foodGoals"
       title="Food Goals"
+      tourId="food"
       badge={<div className={`goal-progress-badge ${allEaten ? 'done' : ''}`}>{eatenCount}/{FOODS.length} done</div>}
     >
       {allEaten && (

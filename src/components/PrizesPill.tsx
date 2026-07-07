@@ -7,7 +7,7 @@ interface PrizesPillProps {
 
 export function PrizesPill({ onOpen }: PrizesPillProps) {
   return (
-    <button className="home-pill home-pill-prizes" onClick={onOpen} type="button">
+    <button className="home-pill home-pill-prizes" onClick={onOpen} type="button" data-tour-id="store">
       <FontAwesomeIcon icon={faGift} />
       <span>Prizes</span>
     </button>
