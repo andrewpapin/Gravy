@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPen, faCheck, faXmark, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../../state/GravyContext';
@@ -35,51 +35,63 @@ interface GoalFormFieldsProps {
   isDaily: boolean;
   target: string;
   onTargetChange: (target: string) => void;
+  children: ReactNode;
 }
 
 // Shared by the add-goal form and each goal row's inline edit form — both collect the
 // same icon/name/points/target fields, just with different placeholders and surrounding
-// submit controls. Points/target are normalized on blur so what will be saved is visible
-// before submit, rather than a blank/invalid value silently becoming a default.
+// submit controls (passed as children, rendered alongside the numeric fields). Points/target
+// are normalized on blur so what will be saved is visible before submit, rather than a
+// blank/invalid value silently becoming a default.
 function GoalFormFields({
   icon, legacyEmoji, onIconChange, name, namePlaceholder, onNameChange,
-  pts, ptsPlaceholder, onPtsChange, isDaily, target, onTargetChange,
+  pts, ptsPlaceholder, onPtsChange, isDaily, target, onTargetChange, children,
 }: GoalFormFieldsProps) {
   return (
     <>
-      <IconPicker value={icon} legacyEmoji={legacyEmoji} onChange={onIconChange} ariaLabel="Choose a goal icon" />
-      <input
-        type="text"
-        aria-label="Goal name"
-        placeholder={namePlaceholder}
-        value={name}
-        onChange={(e) => onNameChange(e.target.value)}
-      />
-      <input
-        type="number"
-        className="pts-input"
-        aria-label={isDaily ? 'Points' : 'Points (± for bonus/deduction)'}
-        placeholder={ptsPlaceholder}
-        min={isDaily ? 1 : -999}
-        max={999}
-        value={pts}
-        onChange={(e) => onPtsChange(e.target.value)}
-        onBlur={(e) => onPtsChange(clampPts(e.target.value, isDaily))}
-      />
-      {isDaily && (
+      <div className="input-row-fields">
+        <IconPicker value={icon} legacyEmoji={legacyEmoji} onChange={onIconChange} ariaLabel="Choose a goal icon" />
         <input
-          type="number"
-          className="pts-input"
-          aria-label="Times to complete per day"
-          placeholder="×"
-          title="Times to complete"
-          min={1}
-          max={99}
-          value={target}
-          onChange={(e) => onTargetChange(e.target.value)}
-          onBlur={(e) => onTargetChange(clampTarget(e.target.value))}
+          type="text"
+          aria-label="Goal name"
+          placeholder={namePlaceholder}
+          value={name}
+          onChange={(e) => onNameChange(e.target.value)}
         />
-      )}
+      </div>
+      <div className="input-row-controls">
+        <label className="input-field-group">
+          <span className="input-field-label">{isDaily ? 'Points' : '± Points'}</span>
+          <input
+            type="number"
+            className="pts-input"
+            aria-label={isDaily ? 'Points' : 'Points (± for bonus/deduction)'}
+            placeholder={ptsPlaceholder}
+            min={isDaily ? 1 : -999}
+            max={999}
+            value={pts}
+            onChange={(e) => onPtsChange(e.target.value)}
+            onBlur={(e) => onPtsChange(clampPts(e.target.value, isDaily))}
+          />
+        </label>
+        {isDaily && (
+          <label className="input-field-group">
+            <span className="input-field-label">× / day</span>
+            <input
+              type="number"
+              className="pts-input"
+              aria-label="Times to complete per day"
+              title="Times to complete"
+              min={1}
+              max={99}
+              value={target}
+              onChange={(e) => onTargetChange(e.target.value)}
+              onBlur={(e) => onTargetChange(clampTarget(e.target.value))}
+            />
+          </label>
+        )}
+        {children}
+      </div>
     </>
   );
 }
@@ -156,13 +168,14 @@ export function GoalsPanel({ filter }: GoalsPanelProps) {
             isDaily={isDaily}
             target={editGoal.target}
             onTargetChange={(value) => setEditGoal({ ...editGoal, target: value })}
-          />
-          <button type="submit" className="btn btn-sm btn-purple" title="Save" aria-label="Save">
-            <FontAwesomeIcon icon={faCheck} />
-          </button>
-          <button type="button" className="btn btn-sm btn-pink" title="Cancel" aria-label="Cancel" onClick={() => setEditingId(null)}>
-            <FontAwesomeIcon icon={faXmark} />
-          </button>
+          >
+            <button type="submit" className="btn btn-sm btn-purple" title="Save" aria-label="Save">
+              <FontAwesomeIcon icon={faCheck} />
+            </button>
+            <button type="button" className="btn btn-sm btn-pink" title="Cancel" aria-label="Cancel" onClick={() => setEditingId(null)}>
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+          </GoalFormFields>
         </form>
       );
     }
@@ -210,10 +223,11 @@ export function GoalsPanel({ filter }: GoalsPanelProps) {
           isDaily={isDaily}
           target={target}
           onTargetChange={setTarget}
-        />
-        <button type="submit" className="btn btn-sm btn-purple">
-          Add
-        </button>
+        >
+          <button type="submit" className="btn btn-sm btn-purple">
+            Add
+          </button>
+        </GoalFormFields>
       </form>
       <div className="muted-note" style={{ fontSize: '0.68rem', marginTop: -8, marginBottom: 'var(--space-md)' }}>
         {isDaily
