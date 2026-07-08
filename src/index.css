@@ -583,18 +583,18 @@ button.gtile.checked:disabled:active { transform: none; }
 .tray-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 .tray-grid .gtile {
-  height: 104px;
-  padding: 24px 8px 10px;
+  height: 83px;
+  padding: 19px 6px 8px;
   align-items: center;
   justify-content: center;
   gap: 6px;
 }
-.tray-grid .gtile-icon { font-size: 2rem; }
+.tray-grid .gtile-icon { font-size: 1.6rem; }
 .tray-grid .gtile-name {
-  font-size: var(--text-xs);
+  font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
@@ -602,6 +602,12 @@ button.gtile.checked:disabled:active { transform: none; }
   text-overflow: ellipsis;
   max-width: 100%;
 }
+.tray-grid .tile-pts,
+.tray-grid .tile-check {
+  height: 15px;
+}
+.tray-grid .tile-pts { min-width: 15px; font-size: 0.52rem; }
+.tray-grid .tile-check { width: 15px; font-size: 0.44rem; }
 .tray-progress-bonus {
   display: inline-flex;
   align-items: center;
@@ -2466,14 +2472,14 @@ button.gtile.checked:disabled:active { transform: none; }
     padding: var(--space-lg);
   }
   .tray-grid {
-    gap: 16px;
+    gap: 13px;
   }
   .tray-grid .gtile {
-    height: 128px;
-    max-width: 170px;
+    height: 102px;
+    max-width: 136px;
     margin: 0 auto;
   }
-  .tray-grid .gtile-icon { font-size: 2.25rem; }
+  .tray-grid .gtile-icon { font-size: 1.8rem; }
   .store-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
