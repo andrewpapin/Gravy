@@ -5,6 +5,7 @@ import { useGravy } from '../../state/GravyContext';
 import { AppIcon } from '../AppIcon';
 import { IconPicker } from '../IconPicker';
 import { ConfirmDialog } from '../ConfirmDialog';
+import { SwipeToDeleteRow } from '../SwipeToDeleteRow';
 import type { Goal } from '../../state/types';
 
 const DEFAULT_GOAL_ICON = 'circleCheck';
@@ -117,6 +118,7 @@ export function GoalsPanel({ filter }: GoalsPanelProps) {
   const [ptsInputs, setPtsInputs] = useState<Record<number, string>>({});
   const [savedField, setSavedField] = useState<number | null>(null);
   const savedTimerRef = useRef<number | null>(null);
+  const [openRowId, setOpenRowId] = useState<number | null>(null);
 
   const flashSaved = (id: number) => {
     if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
@@ -208,7 +210,13 @@ export function GoalsPanel({ filter }: GoalsPanelProps) {
         : 'Bonus points';
 
     return (
-      <div className="settings-row" key={g.id}>
+      <SwipeToDeleteRow
+        key={g.id}
+        isOpen={openRowId === g.id}
+        onOpenChange={(open) => setOpenRowId(open ? g.id : null)}
+        onDelete={() => setConfirmRemoveId(g.id)}
+        removeLabel={`Remove ${g.name}`}
+      >
         <button
           type="button"
           className="settings-row-edit-trigger"
@@ -235,16 +243,7 @@ export function GoalsPanel({ filter }: GoalsPanelProps) {
           onChange={(e) => setPtsInputs((prev) => ({ ...prev, [g.id]: e.target.value }))}
           onBlur={(e) => savePts(g, e.target.value)}
         />
-        <button
-          type="button"
-          className="settings-row-remove-btn"
-          aria-label={`Remove ${g.name}`}
-          title="Remove"
-          onClick={() => setConfirmRemoveId(g.id)}
-        >
-          <FontAwesomeIcon icon={faTrashCan} />
-        </button>
-      </div>
+      </SwipeToDeleteRow>
     );
   };
 
