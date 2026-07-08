@@ -31,7 +31,7 @@ export function StatsCard({ onOpenRank, onOpenStore }: StatsCardProps) {
 
   return (
     <div className="stats-card">
-      <button className="stats-rank" onClick={onOpenRank} type="button" aria-label="View rank ladder and stats">
+      <button className="stats-rank" onClick={onOpenRank} type="button" aria-label="View stats">
         <div className="stats-rank-header">
           <div className="stats-rank-icon-circle">
             <AppIcon iconKey={rank.icon} emojiFallback={rank.emoji} className="stats-rank-emoji" />
