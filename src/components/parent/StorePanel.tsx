@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faPen, faCheck, faXmark, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faXmark, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../../state/GravyContext';
 import { AppIcon } from '../AppIcon';
 import { IconPicker } from '../IconPicker';
@@ -9,19 +9,32 @@ import type { Reward } from '../../state/types';
 
 const DEFAULT_REWARD_ICON = 'gift';
 
+function clampCost(raw: string): string {
+  return String(Math.max(1, Math.min(9999, parseInt(raw, 10) || 1)));
+}
+
 export function StorePanel() {
   const { state, addReward, removeReward, updateReward } = useGravy();
   const [icon, setIcon] = useState(DEFAULT_REWARD_ICON);
   const [name, setName] = useState('');
   const [cost, setCost] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editReward, setEditReward] = useState({ icon: '', emoji: '', name: '', cost: '' });
+  const [editReward, setEditReward] = useState({ icon: '', emoji: '', name: '' });
   const [confirmRemoveId, setConfirmRemoveId] = useState<number | null>(null);
+  const [costInputs, setCostInputs] = useState<Record<number, string>>({});
+  const [savedField, setSavedField] = useState<number | null>(null);
+  const savedTimerRef = useRef<number | null>(null);
+
+  const flashSaved = (id: number) => {
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    setSavedField(id);
+    savedTimerRef.current = window.setTimeout(() => setSavedField(null), 1400);
+  };
 
   const startEdit = (r: Reward) => {
     setConfirmRemoveId(null);
     setEditingId(r.id);
-    setEditReward({ icon: r.icon || '', emoji: r.emoji, name: r.name, cost: String(r.cost) });
+    setEditReward({ icon: r.icon || '', emoji: r.emoji, name: r.name });
   };
 
   const saveEdit = (id: number) => {
@@ -30,9 +43,15 @@ export function StorePanel() {
     updateReward(id, {
       icon: editReward.icon || DEFAULT_REWARD_ICON,
       name: trimmedName,
-      cost: parseInt(editReward.cost) || 50,
     });
     setEditingId(null);
+  };
+
+  const saveCost = (r: Reward, raw: string) => {
+    const clamped = clampCost(raw);
+    setCostInputs((prev) => ({ ...prev, [r.id]: clamped }));
+    updateReward(r.id, { cost: parseInt(clamped, 10) });
+    flashSaved(r.id);
   };
 
   const handleAdd = () => {
@@ -105,18 +124,6 @@ export function StorePanel() {
                 />
               </div>
               <div className="input-row-controls">
-                <label className="input-field-group">
-                  <span className="input-field-label">Cost</span>
-                  <input
-                    type="number"
-                    className="pts-input"
-                    aria-label="Cost"
-                    min={1}
-                    max={9999}
-                    value={editReward.cost}
-                    onChange={(e) => setEditReward({ ...editReward, cost: e.target.value })}
-                  />
-                </label>
                 <button type="submit" className="btn btn-sm btn-purple" title="Save" aria-label="Save">
                   <FontAwesomeIcon icon={faCheck} />
                 </button>
@@ -126,17 +133,40 @@ export function StorePanel() {
               </div>
             </form>
           ) : (
-            <div className="parent-item" key={r.id}>
-              <AppIcon iconKey={r.icon} emojiFallback={r.emoji} className="parent-item-emoji" />
-              <div className="parent-item-info">
-                <div className="parent-item-name">{r.name}</div>
-                <div className="parent-item-pts"><FontAwesomeIcon icon={faStar} /> {r.cost} pts</div>
-              </div>
-              <button className="btn btn-sm btn-purple" title="Edit" aria-label={`Edit ${r.name}`} onClick={() => startEdit(r)}>
-                <FontAwesomeIcon icon={faPen} />
+            <div className="settings-row" key={r.id}>
+              <button
+                type="button"
+                className="settings-row-edit-trigger"
+                aria-label={`Edit ${r.name}`}
+                onClick={() => startEdit(r)}
+              >
+                <span style={{ marginRight: 6 }}>
+                  <AppIcon iconKey={r.icon} emojiFallback={r.emoji} className="parent-item-emoji" />
+                </span>
+                <span style={{ minWidth: 0 }}>
+                  <div className="settings-label">
+                    {r.name}
+                    {savedField === r.id && <FontAwesomeIcon icon={faCheck} className="saved-flash" />}
+                  </div>
+                </span>
               </button>
-              <button className="btn btn-sm btn-pink" aria-label={`Remove ${r.name}`} onClick={() => setConfirmRemoveId(r.id)}>
-                Remove
+              <input
+                className="settings-input-compact"
+                type="number"
+                min={1}
+                max={9999}
+                value={costInputs[r.id] ?? String(r.cost)}
+                onChange={(e) => setCostInputs((prev) => ({ ...prev, [r.id]: e.target.value }))}
+                onBlur={(e) => saveCost(r, e.target.value)}
+              />
+              <button
+                type="button"
+                className="settings-row-remove-btn"
+                aria-label={`Remove ${r.name}`}
+                title="Remove"
+                onClick={() => setConfirmRemoveId(r.id)}
+              >
+                <FontAwesomeIcon icon={faTrashCan} />
               </button>
             </div>
           )
