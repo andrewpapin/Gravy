@@ -139,13 +139,23 @@ list, not tabs); picking a card drills into one panel with a back button:
 
 - `GoalsPanel` — goal CRUD, now taking a required `filter: 'daily' | 'bonus'` prop rather than
   showing both types on one screen; `'daily-goals'` and `'bonus-points'` each mount
-  `GoalsPanel` with a different `filter`, so the add-form and list only ever deal with one goal
-  type at a time (no in-panel Daily/Bonus switch — converting a goal's type is remove-and-re-add
-  on the other screen).
+  `GoalsPanel` with a different `filter`, so the add/edit drawer and list only ever deal with
+  one goal type at a time (no in-panel Daily/Bonus switch — converting a goal's type is
+  remove-and-re-add on the other screen). Add/edit both go through a single stacked `Modal`
+  drawer (`overlayClassName="item-edit-drawer-overlay"`, layered above the Game Settings modal
+  the same way `ReleaseNotesDrawer` layers above the base modal): a "+ Add a Goal"/"+ Add a
+  Bonus Item" button opens it empty, a pencil (`faPenToSquare`) button on each row opens it
+  pre-filled; Cancel/Save sit in one row, with a full-width Delete button below them (edit mode
+  only) that swaps in an inline "This can't be undone" confirm — mirroring the delete-confirm
+  block `ProfilesManager` already uses for deleting a kid profile — rather than a separate
+  `ConfirmDialog` popup.
 - `PointsPanel` — food-tray point values (one points input per `FOODS` item,
   `Settings.foodPtsByItem`, set via `saveFoodPts`, plus the full-tray `bonusPts`); its own
-  top-level `'food-tray'` destination rather than nested inside `GoalsPanel`.
-- `StorePanel` — reward CRUD, its own top-level `'store'` destination.
+  top-level `'food-tray'` destination rather than nested inside `GoalsPanel`. Unlike
+  `GoalsPanel`/`StorePanel` there's nothing to add or delete here, so it keeps the older
+  inline-input-with-autosave editing style.
+- `StorePanel` — reward CRUD, its own top-level `'store'` destination; same pencil-triggered
+  add/edit drawer pattern as `GoalsPanel` (icon, name, cost instead of pts/target).
 - `ArcadePanel` — points per game win (`gamePts`), labeled "Arcade" to match the kid-facing hub
   name, its own top-level `'arcade'` destination, unrelated to goals/food/reward configuration.
 

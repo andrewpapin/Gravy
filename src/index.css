@@ -1018,6 +1018,11 @@ button.gtile.checked:disabled:active { transform: none; }
   z-index: 1200;
 }
 
+/* Stacks the goal/reward add-edit drawer above the Game Settings modal it's opened from. */
+.item-edit-drawer-overlay {
+  z-index: 1200;
+}
+
 .calendar-header {
   display: flex;
   align-items: center;
@@ -2355,33 +2360,7 @@ button.gtile.checked:disabled:active { transform: none; }
   width: 70px;
   text-align: center;
 }
-.settings-row-edit-trigger {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  flex: 1;
-  min-width: 0;
-  text-align: left;
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  font: inherit;
-  color: inherit;
-}
-.settings-row-edit-trigger:focus-visible {
-  outline: var(--border-width-md) solid var(--coral);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-.settings-row-edit-trigger .settings-label,
-.settings-row-edit-trigger .settings-sub {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.settings-row-remove-btn {
+.settings-row-edit-btn {
   width: 34px;
   height: 34px;
   flex-shrink: 0;
@@ -2397,13 +2376,12 @@ button.gtile.checked:disabled:active { transform: none; }
   cursor: pointer;
   transition: transform 0.08s, box-shadow 0.08s;
 }
-.settings-row-remove-btn:hover,
-.settings-row-remove-btn:focus-visible {
-  background: var(--danger);
+.settings-row-edit-btn:hover,
+.settings-row-edit-btn:focus-visible {
+  background: var(--dark);
   color: white;
-  border-color: var(--danger);
 }
-.settings-row-remove-btn:active {
+.settings-row-edit-btn:active {
   transform: translate(2px, 2px);
   box-shadow: 0 0 0 var(--dark);
 }
