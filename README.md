@@ -18,7 +18,10 @@ account — there's no PIN.
 - **Arcade** — Hangman, Math Facts, Word Scramble, and Memory Match;
   winning earns points up to a daily cap so kids can't farm easy rounds
 - **Rank ladder** — a 24-tier progression (Noob → Sonic Snail) with a
-  kid-facing screen showing locked/current/achieved tiers and progress
+  kid-facing screen showing locked/current/achieved tiers and progress, plus a
+  "Stats" view with charts covering points history, an activity heatmap,
+  personal bests, goals trend, favorite foods, games breakdown, and rewards
+  history
 - **Store** — spend points on parent-defined rewards (pending approval)
 - **Pending points** — on a device that's never signed in with a parent
   account (joined via family code only), a kid's chores/food/bonus
@@ -44,6 +47,12 @@ account — there's no PIN.
   an existing family by just entering that code, but only a signed-in
   member account can reach the parent menu — sync happens in real time via
   Supabase
+- **Onboarding + guided tour** — a three-way first-run fork (New Family /
+  Existing Parent / Existing Kid), with real email confirmation for new
+  accounts; new families are then prompted for their first kid's name and
+  walked through a one-time spotlight tour of the home screen
+- **Release notes** — a drawer summarizing what's new each version, reachable
+  from the account menu
 
 ## Getting started
 
@@ -62,9 +71,11 @@ Open the printed local URL in your browser.
 - `npm run lint` — run ESLint
 - `npm test` — run the Vitest unit suite
 
-`npm test` runs the Vitest unit suite, which covers the pure
-point/streak logic (`src/state/points.ts`, `src/state/defaultState.ts`,
-`src/state/auth.ts`) via colocated `*.test.ts` files.
+`npm test` runs the Vitest unit suite, which covers pure state logic — points/
+streaks (`src/state/points.ts`, `src/state/defaultState.ts`), auth
+(`src/state/auth.ts`), cloud-sync merge (`src/state/merge.ts`), and other
+`src/state/*.ts` modules (storage, sync, pending points, action/audit log,
+release notes, stats snapshot) — via colocated `*.test.ts` files.
 There's no component/UI test setup. `verify_gravy.mjs` at the repo root is an
 ad-hoc Playwright smoke-test script you can run manually against a
 `npm run dev` server (`node verify_gravy.mjs`); otherwise UI testing is
@@ -74,14 +85,24 @@ manual via the browser.
 
 ```
 src/
-  data/             static data: ranks, foods, games, icons
-  state/            Gravy state, localStorage persistence, Supabase sync, React context
-  components/       kid-facing screens and widgets (Home, Store, Arcade, Rank ladder, etc.)
-  components/games/ individual mini-game components
-  components/parent/ account-gated parent panels (approvals, goals, calendar, store, settings)
+  data/               static data: ranks, foods, games, icons, tour steps, release notes
+  state/              Gravy state, localStorage persistence, Supabase sync, React context
+  components/         kid-facing screens and widgets (Home, Store, Arcade, Rank ladder, etc.)
+  components/games/   individual mini-game components
+  components/parent/  account-gated parent panels (approvals, goals, calendar, store, settings)
+  components/stats/   chart sections shown in the Rank screen's Stats view
+  components/charts/  shared chart primitives (bar chart, sparkline, heatmap grid, stat tile)
+  components/tour/    first-run spotlight tour and first-kid-name prompt
 ```
 
 ## Deployment
 
 GitHub Actions (`.github/workflows/deploy.yml`) builds and deploys to
 GitHub Pages on every push to `main`.
+
+## Native wrap (experimental)
+
+A Capacitor-based native shell (`npm run build:native`, `npm run cap:sync`,
+`npm run cap:open:ios`/`cap:open:android`) wraps the same build for iOS/
+Android app store distribution, alongside the PWA. See `docs/capacitor.md`
+for status and details.
