@@ -6,7 +6,6 @@ import { useGravy } from '../state/GravyContext';
 import { getDayLog } from '../state/dayLog';
 import { todayStr } from '../state/defaultState';
 import { triggerHaptic } from '../lib/haptics';
-import { useClickGuard } from '../lib/clickGuard';
 
 interface DailyGoalsProps {
   dateStr?: string;
@@ -14,7 +13,6 @@ interface DailyGoalsProps {
 
 export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
   const { state, incrementGoal, decrementGoal, toggleGoalForDay } = useGravy();
-  const guardClick = useClickGuard();
   const today = todayStr(state.settings.timezone);
   const day = dateStr ?? today;
   const isToday = day === today;
@@ -55,13 +53,11 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
 
             const toggleCheck = () => {
               triggerHaptic();
-              guardClick(g.id, () => {
-                if (isToday) {
-                  if (count > 0) decrementGoal(g.id); else incrementGoal(g.id);
-                } else {
-                  toggleGoalForDay(day, g.id);
-                }
-              });
+              if (isToday) {
+                if (count > 0) decrementGoal(g.id); else incrementGoal(g.id);
+              } else {
+                toggleGoalForDay(day, g.id);
+              }
             };
             const logStep = () => { triggerHaptic(); incrementGoal(g.id); };
 
