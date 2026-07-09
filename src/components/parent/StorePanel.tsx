@@ -5,7 +5,6 @@ import { useGravy } from '../../state/GravyContext';
 import { AppIcon } from '../AppIcon';
 import { IconPicker } from '../IconPicker';
 import { ConfirmDialog } from '../ConfirmDialog';
-import { SwipeToDeleteRow } from '../SwipeToDeleteRow';
 import type { Reward } from '../../state/types';
 
 const DEFAULT_REWARD_ICON = 'gift';
@@ -25,7 +24,6 @@ export function StorePanel() {
   const [costInputs, setCostInputs] = useState<Record<number, string>>({});
   const [savedField, setSavedField] = useState<number | null>(null);
   const savedTimerRef = useRef<number | null>(null);
-  const [openRowId, setOpenRowId] = useState<number | null>(null);
 
   const flashSaved = (id: number) => {
     if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
@@ -135,13 +133,7 @@ export function StorePanel() {
               </div>
             </form>
           ) : (
-            <SwipeToDeleteRow
-              key={r.id}
-              isOpen={openRowId === r.id}
-              onOpenChange={(open) => setOpenRowId(open ? r.id : null)}
-              onDelete={() => setConfirmRemoveId(r.id)}
-              removeLabel={`Remove ${r.name}`}
-            >
+            <div className="settings-row" key={r.id}>
               <button
                 type="button"
                 className="settings-row-edit-trigger"
@@ -167,7 +159,16 @@ export function StorePanel() {
                 onChange={(e) => setCostInputs((prev) => ({ ...prev, [r.id]: e.target.value }))}
                 onBlur={(e) => saveCost(r, e.target.value)}
               />
-            </SwipeToDeleteRow>
+              <button
+                type="button"
+                className="settings-row-remove-btn"
+                aria-label={`Remove ${r.name}`}
+                title="Remove"
+                onClick={() => setConfirmRemoveId(r.id)}
+              >
+                <FontAwesomeIcon icon={faTrashCan} />
+              </button>
+            </div>
           )
         )
       )}

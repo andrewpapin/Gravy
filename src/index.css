@@ -2375,61 +2375,29 @@ button.gtile.checked:disabled:active { transform: none; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.settings-row.settings-row--swipe {
-  position: relative;
-  overflow: hidden;
-  padding: 0;
-}
-.swipe-row-content {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  padding: var(--space-md);
-  background: var(--card);
-  border-radius: inherit;
-  touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.swipe-row-content--settled {
-  transition: transform 0.2s ease;
-}
-.swipe-row-reveal {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--danger);
-}
-.swipe-row-delete-btn {
-  width: 44px;
-  height: 44px;
+.settings-row-remove-btn {
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
   border-radius: 10px;
   background: var(--card);
-  color: var(--danger);
+  color: var(--dark);
   border: var(--border-width-lg) solid var(--dark);
   box-shadow: 2px 2px 0 var(--dark);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: transform 0.08s, box-shadow 0.08s;
 }
-.swipe-row-delete-btn:hover,
-.swipe-row-delete-btn:focus-visible {
+.settings-row-remove-btn:hover,
+.settings-row-remove-btn:focus-visible {
   background: var(--danger);
   color: white;
+  border-color: var(--danger);
 }
-.swipe-row-delete-btn:active {
+.settings-row-remove-btn:active {
   transform: translate(2px, 2px);
   box-shadow: 0 0 0 var(--dark);
 }
