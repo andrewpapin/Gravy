@@ -1,6 +1,6 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faXmark, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faPen, faCheck, faXmark, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../../state/GravyContext';
 import { AppIcon } from '../AppIcon';
 import { IconPicker } from '../IconPicker';
@@ -32,7 +32,6 @@ interface GoalFormFieldsProps {
   pts: string;
   ptsPlaceholder?: string;
   onPtsChange: (pts: string) => void;
-  showPtsField?: boolean;
   isDaily: boolean;
   target: string;
   onTargetChange: (target: string) => void;
@@ -40,14 +39,13 @@ interface GoalFormFieldsProps {
 }
 
 // Shared by the add-goal form and each goal row's inline edit form — both collect the
-// same icon/name/(points)/target fields, just with different placeholders and surrounding
+// same icon/name/points/target fields, just with different placeholders and surrounding
 // submit controls (passed as children, rendered alongside the numeric fields). Points/target
 // are normalized on blur so what will be saved is visible before submit, rather than a
-// blank/invalid value silently becoming a default. Row-edit forms pass showPtsField={false}
-// since points are edited directly in the row's own input, not in this expanded form.
+// blank/invalid value silently becoming a default.
 function GoalFormFields({
   icon, legacyEmoji, onIconChange, name, namePlaceholder, onNameChange,
-  pts, ptsPlaceholder, onPtsChange, showPtsField = true, isDaily, target, onTargetChange, children,
+  pts, ptsPlaceholder, onPtsChange, isDaily, target, onTargetChange, children,
 }: GoalFormFieldsProps) {
   return (
     <>
@@ -62,22 +60,20 @@ function GoalFormFields({
         />
       </div>
       <div className="input-row-controls">
-        {showPtsField && (
-          <label className="input-field-group">
-            <span className="input-field-label">{isDaily ? 'Points' : '± Points'}</span>
-            <input
-              type="number"
-              className="pts-input"
-              aria-label={isDaily ? 'Points' : 'Points (± for bonus/deduction)'}
-              placeholder={ptsPlaceholder}
-              min={isDaily ? 1 : -999}
-              max={999}
-              value={pts}
-              onChange={(e) => onPtsChange(e.target.value)}
-              onBlur={(e) => onPtsChange(clampPts(e.target.value, isDaily))}
-            />
-          </label>
-        )}
+        <label className="input-field-group">
+          <span className="input-field-label">{isDaily ? 'Points' : '± Points'}</span>
+          <input
+            type="number"
+            className="pts-input"
+            aria-label={isDaily ? 'Points' : 'Points (± for bonus/deduction)'}
+            placeholder={ptsPlaceholder}
+            min={isDaily ? 1 : -999}
+            max={999}
+            value={pts}
+            onChange={(e) => onPtsChange(e.target.value)}
+            onBlur={(e) => onPtsChange(clampPts(e.target.value, isDaily))}
+          />
+        </label>
         {isDaily && (
           <label className="input-field-group">
             <span className="input-field-label">× / day</span>
@@ -112,17 +108,8 @@ export function GoalsPanel({ filter }: GoalsPanelProps) {
   const [pts, setPts] = useState('');
   const [target, setTarget] = useState('1');
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editGoal, setEditGoal] = useState({ icon: '', emoji: '', name: '', target: '1' });
+  const [editGoal, setEditGoal] = useState({ icon: '', emoji: '', name: '', pts: '', target: '1' });
   const [confirmRemoveId, setConfirmRemoveId] = useState<number | null>(null);
-  const [ptsInputs, setPtsInputs] = useState<Record<number, string>>({});
-  const [savedField, setSavedField] = useState<number | null>(null);
-  const savedTimerRef = useRef<number | null>(null);
-
-  const flashSaved = (id: number) => {
-    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-    setSavedField(id);
-    savedTimerRef.current = window.setTimeout(() => setSavedField(null), 1400);
-  };
 
   const startEdit = (g: Goal) => {
     setConfirmRemoveId(null);
@@ -131,6 +118,7 @@ export function GoalsPanel({ filter }: GoalsPanelProps) {
       icon: g.icon || '',
       emoji: g.emoji,
       name: g.name,
+      pts: String(g.pts),
       target: String(g.target || 1),
     });
   };
@@ -141,17 +129,11 @@ export function GoalsPanel({ filter }: GoalsPanelProps) {
     updateGoal(id, {
       icon: editGoal.icon || DEFAULT_GOAL_ICON,
       name: trimmedName,
+      pts: parseInt(editGoal.pts) || 10,
       isDaily,
       target: isDaily ? Math.max(1, parseInt(editGoal.target) || 1) : undefined,
     });
     setEditingId(null);
-  };
-
-  const savePts = (g: Goal, raw: string) => {
-    const clamped = clampPts(raw, isDaily);
-    setPtsInputs((prev) => ({ ...prev, [g.id]: clamped }));
-    updateGoal(g.id, { pts: parseInt(clamped, 10) });
-    flashSaved(g.id);
   };
 
   const handleAdd = () => {
@@ -181,9 +163,8 @@ export function GoalsPanel({ filter }: GoalsPanelProps) {
             onIconChange={(key) => setEditGoal({ ...editGoal, icon: key })}
             name={editGoal.name}
             onNameChange={(value) => setEditGoal({ ...editGoal, name: value })}
-            pts=""
-            onPtsChange={() => {}}
-            showPtsField={false}
+            pts={editGoal.pts}
+            onPtsChange={(value) => setEditGoal({ ...editGoal, pts: value })}
             isDaily={isDaily}
             target={editGoal.target}
             onTargetChange={(value) => setEditGoal({ ...editGoal, target: value })}
@@ -199,50 +180,25 @@ export function GoalsPanel({ filter }: GoalsPanelProps) {
       );
     }
 
-    const subtitle = isDaily
-      ? (g.target || 1) > 1
-        ? `Complete ×${g.target}/day`
-        : 'Once per day'
-      : g.pts < 0
-        ? 'Deducts points'
-        : 'Bonus points';
-
     return (
-      <div className="settings-row" key={g.id}>
-        <button
-          type="button"
-          className="settings-row-edit-trigger"
-          aria-label={`Edit ${g.name}`}
-          onClick={() => startEdit(g)}
-        >
-          <span style={{ marginRight: 6 }}>
-            <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="parent-item-emoji" />
-          </span>
-          <span style={{ minWidth: 0 }}>
-            <div className="settings-label">
-              {g.name}
-              {savedField === g.id && <FontAwesomeIcon icon={faCheck} className="saved-flash" />}
-            </div>
-            <div className="settings-sub">{subtitle}</div>
-          </span>
+      <div className="parent-item" key={g.id}>
+        <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="parent-item-emoji" />
+        <div className="parent-item-info">
+          <div className="parent-item-name">{g.name}</div>
+          <div className="parent-item-pts">
+            {g.pts < 0 ? '−' : '+'}{Math.abs(g.pts)} pts
+            {isDaily && (g.target || 1) > 1 ? ` · ×${g.target}` : ''}
+          </div>
+        </div>
+        <button className="btn btn-sm btn-purple" title="Edit" aria-label={`Edit ${g.name}`} onClick={() => startEdit(g)}>
+          <FontAwesomeIcon icon={faPen} />
         </button>
-        <input
-          className="settings-input-compact"
-          type="number"
-          min={isDaily ? 1 : -999}
-          max={999}
-          value={ptsInputs[g.id] ?? String(g.pts)}
-          onChange={(e) => setPtsInputs((prev) => ({ ...prev, [g.id]: e.target.value }))}
-          onBlur={(e) => savePts(g, e.target.value)}
-        />
         <button
-          type="button"
-          className="settings-row-remove-btn"
+          className="btn btn-sm btn-pink"
           aria-label={`Remove ${g.name}`}
-          title="Remove"
           onClick={() => setConfirmRemoveId(g.id)}
         >
-          <FontAwesomeIcon icon={faTrashCan} />
+          Remove
         </button>
       </div>
     );
