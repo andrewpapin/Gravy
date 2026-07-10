@@ -1989,16 +1989,20 @@ button.gtile.checked:disabled:active { transform: none; }
 .input-row {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
   margin-bottom: var(--space-md);
 }
 .input-row-fields {
   display: flex;
   gap: var(--space-xs);
+  align-items: center;
+}
+.input-row-fields input {
+  height: 44px;
 }
 .input-row-controls {
   display: flex;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
   align-items: flex-end;
   flex-wrap: wrap;
 }
@@ -2020,8 +2024,8 @@ button.gtile.checked:disabled:active { transform: none; }
 .input-row input {
   flex: 1;
   min-width: 0;
-  border: var(--border-width-lg) solid var(--dark);
-  border-radius: 12px;
+  border: var(--border-width-xl) solid var(--dark);
+  border-radius: var(--radius-sm);
   padding: 10px 14px;
   font-family: var(--font-display);
   font-size: var(--text-base); /* 16px — prevents iOS viewport zoom on focus */
@@ -2031,7 +2035,26 @@ button.gtile.checked:disabled:active { transform: none; }
   color: var(--text);
 }
 .input-row input:focus { border-color: var(--coral); }
-.input-row input.pts-input { width: 70px; flex: none; }
+.input-row input.pts-input {
+  width: 84px;
+  flex: none;
+  height: 44px;
+  padding: 8px 12px;
+}
+.item-edit-drawer-overlay .goal-form-hint {
+  margin-top: var(--space-sm);
+  margin-bottom: var(--space-md);
+  font-size: 0.68rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+.item-edit-drawer-overlay .confirm-dialog-btns {
+  gap: 14px;
+  margin-top: var(--space-sm);
+}
+.goal-form-delete-gap {
+  margin-top: var(--space-md);
+}
 
 /* ===== ICON PICKER (parent dashboard) ===== */
 .icon-picker { position: relative; flex: none; }

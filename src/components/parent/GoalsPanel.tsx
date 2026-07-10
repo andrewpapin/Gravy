@@ -48,7 +48,7 @@ function GoalFormFields({
   pts, ptsPlaceholder, onPtsChange, showPtsField = true, isDaily, target, onTargetChange, children,
 }: GoalFormFieldsProps) {
   return (
-    <>
+    <div className="input-row">
       <div className="input-row-fields">
         <IconPicker value={icon} legacyEmoji={legacyEmoji} onChange={onIconChange} ariaLabel="Choose a goal icon" />
         <input
@@ -62,7 +62,7 @@ function GoalFormFields({
       <div className="input-row-controls">
         {showPtsField && (
           <label className="input-field-group">
-            <span className="input-field-label">{isDaily ? 'Points' : '± Points'}</span>
+            <span className="input-field-label">{isDaily ? 'Points per day' : '± Points'}</span>
             <input
               type="number"
               className="pts-input"
@@ -78,7 +78,7 @@ function GoalFormFields({
         )}
         {isDaily && (
           <label className="input-field-group">
-            <span className="input-field-label">× / day</span>
+            <span className="input-field-label">Times per day</span>
             <input
               type="number"
               className="pts-input"
@@ -94,7 +94,7 @@ function GoalFormFields({
         )}
         {children}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -227,7 +227,7 @@ export function GoalsPanel({ filter }: GoalsPanelProps) {
             target={form.target}
             onTargetChange={(target) => setForm((f) => ({ ...f, target }))}
           />
-          <div className="muted-note" style={{ fontSize: '0.68rem', marginTop: 4 }}>
+          <div className="muted-note goal-form-hint">
             {isDaily
               ? 'The × field sets how many times a goal must be done per day (e.g. "Drink water" ×3)'
               : 'Use a negative number to subtract points (e.g. "Was rude" −15)'}
@@ -235,7 +235,7 @@ export function GoalsPanel({ filter }: GoalsPanelProps) {
 
           {!confirmingDelete ? (
             <>
-              <div className="confirm-dialog-btns mt-8">
+              <div className="confirm-dialog-btns">
                 <button type="button" className="btn btn-sm btn-ghost" onClick={closeDrawer}>
                   Cancel
                 </button>
@@ -246,7 +246,7 @@ export function GoalsPanel({ filter }: GoalsPanelProps) {
               {!isNew && (
                 <button
                   type="button"
-                  className="btn btn-primary btn-pink mt-8"
+                  className="btn btn-primary btn-pink goal-form-delete-gap"
                   onClick={() => setConfirmingDelete(true)}
                 >
                   <FontAwesomeIcon icon={faTrashCan} /> Delete Goal
