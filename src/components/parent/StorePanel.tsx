@@ -107,40 +107,42 @@ export function StorePanel() {
         title={isNew ? 'Add a Reward' : 'Edit Reward'}
       >
         <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-          <div className="input-row-fields">
-            <IconPicker
-              value={form.icon}
-              legacyEmoji={form.emoji}
-              onChange={(key) => setForm((f) => ({ ...f, icon: key }))}
-              ariaLabel="Choose a reward icon"
-            />
-            <input
-              type="text"
-              aria-label="Reward name"
-              placeholder="Reward name..."
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            />
-          </div>
-          <div className="input-row-controls">
-            <label className="input-field-group">
-              <span className="input-field-label">Cost</span>
-              <input
-                type="number"
-                className="pts-input"
-                aria-label="Cost"
-                min={1}
-                max={9999}
-                value={form.cost}
-                onChange={(e) => setForm((f) => ({ ...f, cost: e.target.value }))}
-                onBlur={(e) => setForm((f) => ({ ...f, cost: clampCost(e.target.value) }))}
+          <div className="input-row">
+            <div className="input-row-fields">
+              <IconPicker
+                value={form.icon}
+                legacyEmoji={form.emoji}
+                onChange={(key) => setForm((f) => ({ ...f, icon: key }))}
+                ariaLabel="Choose a reward icon"
               />
-            </label>
+              <input
+                type="text"
+                aria-label="Reward name"
+                placeholder="Reward name..."
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </div>
+            <div className="input-row-controls">
+              <label className="input-field-group">
+                <span className="input-field-label">Cost</span>
+                <input
+                  type="number"
+                  className="pts-input"
+                  aria-label="Cost"
+                  min={1}
+                  max={9999}
+                  value={form.cost}
+                  onChange={(e) => setForm((f) => ({ ...f, cost: e.target.value }))}
+                  onBlur={(e) => setForm((f) => ({ ...f, cost: clampCost(e.target.value) }))}
+                />
+              </label>
+            </div>
           </div>
 
           {!confirmingDelete ? (
             <>
-              <div className="confirm-dialog-btns mt-8">
+              <div className="confirm-dialog-btns">
                 <button type="button" className="btn btn-sm btn-ghost" onClick={closeDrawer}>
                   Cancel
                 </button>
@@ -151,7 +153,7 @@ export function StorePanel() {
               {!isNew && (
                 <button
                   type="button"
-                  className="btn btn-primary btn-pink mt-8"
+                  className="btn btn-primary btn-pink goal-form-delete-gap"
                   onClick={() => setConfirmingDelete(true)}
                 >
                   <FontAwesomeIcon icon={faTrashCan} /> Delete Reward
