@@ -153,7 +153,7 @@ export function StorePanel() {
               {!isNew && (
                 <button
                   type="button"
-                  className="btn btn-primary btn-pink goal-form-delete-gap"
+                  className="goal-form-delete-link"
                   onClick={() => setConfirmingDelete(true)}
                 >
                   <FontAwesomeIcon icon={faTrashCan} /> Delete Reward
