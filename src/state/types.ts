@@ -153,12 +153,13 @@ export interface GravyState {
   // added so an undo reverses exactly that — never handing back points that were forgiven.
   todayBonusApplied: Record<number, number>;
   todayGameWins: number;
-  // Roll to the Goal has its own independent 3-rounds/day structure — NOT gated by, or counted
-  // toward, todayGameWins/DAILY_GAME_WIN_CAP (that cap is for every other arcade game's payouts).
-  rollGoalRoundsToday: number;
-  // Sum of today's completed Roll to the Goal rounds' 0-500(+reroll-bonus) display scores (the
-  // "Final Daily Score" shown to the kid) — separate from the real Gravy points awarded per round.
-  rollGoalDailyScore: number;
+  // Roll to the Goal has its own independent up-to-3-attempts/day structure — NOT gated by, or
+  // counted toward, todayGameWins/DAILY_GAME_WIN_CAP (that cap is for every other arcade game's
+  // payouts). Any non-bust attempt wins and ends the day; only busts consume an attempt.
+  rollGoalAttemptsToday: number;
+  // The winning attempt's 0-500(+reroll-bonus) display score for today (bragging-rights only,
+  // separate from the real Gravy points awarded) — 0 until/unless the kid wins today.
+  rollGoalTodayScore: number;
   dayLogs: Record<string, DayLog>;
   pendingRewards: PendingReward[];
   // Points earned on a kid-only device (no signed-in account) awaiting parent approval — see

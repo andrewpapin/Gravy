@@ -21,19 +21,19 @@ export function GamesScreen({ open, onClose }: GamesScreenProps) {
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const winsMaxed = state.todayGameWins >= DAILY_GAME_WIN_CAP;
 
-  // Whether the active game reports a round in progress (dice rolled, not yet submitted) —
+  // Whether the active game reports an attempt in progress (dice rolled, not yet submitted) —
   // only Roll to the Goal uses this today, since it's the only game whose progress the kid
-  // could lose by backing out mid-round via the chevron/close buttons below (every other game
+  // could lose by backing out mid-attempt via the chevron/close buttons below (every other game
   // only exposes its own "Back to Arcade" from inside a completed-round result panel).
-  const [gameRoundActive, setGameRoundActive] = useState(false);
+  const [gameAttemptActive, setGameAttemptActive] = useState(false);
   const [exitConfirmPending, setExitConfirmPending] = useState<null | 'back' | 'close'>(null);
 
-  // Every place that changes which game is showing goes through this, so gameRoundActive/
+  // Every place that changes which game is showing goes through this, so gameAttemptActive/
   // exitConfirmPending never carry over between games (replaces a reset-on-change effect, which
   // would call setState synchronously inside useEffect).
   const goToGame = (id: string | null) => {
     setActiveGame(id);
-    setGameRoundActive(false);
+    setGameAttemptActive(false);
     setExitConfirmPending(null);
   };
 
@@ -43,7 +43,7 @@ export function GamesScreen({ open, onClose }: GamesScreenProps) {
   };
 
   const requestExit = (kind: 'back' | 'close') => {
-    if (gameRoundActive) {
+    if (gameAttemptActive) {
       setExitConfirmPending(kind);
       return;
     }
@@ -96,7 +96,7 @@ export function GamesScreen({ open, onClose }: GamesScreenProps) {
           ) : activeGame === 'memory' ? (
             <MemoryMatchGame onExit={() => goToGame(null)} />
           ) : activeGame === 'rollgoal' ? (
-            <RollToTheGoalGame onExit={() => goToGame(null)} onRoundActiveChange={setGameRoundActive} />
+            <RollToTheGoalGame onExit={() => goToGame(null)} onAttemptActiveChange={setGameAttemptActive} />
           ) : (
             <>
               <div className={`games-cap-banner ${winsMaxed ? 'maxed' : ''}`}>
@@ -126,7 +126,7 @@ export function GamesScreen({ open, onClose }: GamesScreenProps) {
           <div className="game-exit-confirm-overlay">
             <div className="game-result lose">
               <div className="game-result-title">Leave the game?</div>
-              <div className="game-result-sub">Your progress this round will be lost.</div>
+              <div className="game-result-sub">Your progress this attempt will be lost.</div>
               <div className="game-result-actions">
                 <button className="game-result-btn primary" onClick={confirmExit} type="button">
                   Exit Game

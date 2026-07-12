@@ -1,13 +1,17 @@
 // Pure logic for the "Roll to the Goal" daily dice game. Kept free of any `state/` import (same
 // layering as data/games.ts) — callers pass in whatever date/timezone-derived string they need.
+//
+// Rules: up to 3 attempts per day at the same daily target. Any non-bust attempt is a win and
+// ends the day immediately (win once, you're done) — only a bust burns an attempt and lets the
+// kid try again, until all 3 are used up (also ending the day, with no score).
 
 export const ROLL_TO_GOAL_GAME_ID = 'rollgoal';
 // Full 5d6 range is 5-30, but the extremes are trivially easy/impossible — keep the daily target
 // inside a band that's always reachable but rarely guaranteed on the initial roll.
 export const ROLL_TO_GOAL_MIN_TARGET = 16;
 export const ROLL_TO_GOAL_MAX_TARGET = 27;
-export const ROLL_TO_GOAL_ROUNDS_PER_DAY = 3;
-export const ROLL_TO_GOAL_REROLLS_PER_ROUND = 3;
+export const ROLL_TO_GOAL_MAX_ATTEMPTS = 3;
+export const ROLL_TO_GOAL_REROLLS_PER_ATTEMPT = 3;
 export const ROLL_TO_GOAL_DICE_COUNT = 5;
 const REROLL_BONUS_PER_UNUSED = 50;
 
@@ -81,14 +85,14 @@ export const TIER_LABELS: Record<ScoreTier, string> = {
   bust: 'Bust!',
 };
 
-export interface RoundOutcome {
+export interface AttemptOutcome {
   tier: ScoreTier;
   bust: boolean;
   distance: number; // target - total; meaningless when bust
   displayScore: number; // 0-500 base + reroll bonus (0 if bust) — bragging-rights score only
 }
 
-export function computeRoundOutcome(total: number, target: number, rerollsRemaining: number): RoundOutcome {
+export function computeAttemptOutcome(total: number, target: number, rerollsRemaining: number): AttemptOutcome {
   if (total > target) {
     return { tier: 'bust', bust: true, distance: total - target, displayScore: 0 };
   }

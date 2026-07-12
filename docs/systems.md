@@ -24,16 +24,19 @@ wins per day via `todayGameWins`, so a kid can't farm points by replaying an eas
 the cap still count toward `gamesWon` but pay no points. `todayGameWins` resets at day rollover.
 
 `Roll to the Goal` (`rollgoal`, `src/components/games/RollToTheGoalGame.tsx`) is the one exception
-to the flow above: it has its own independent 3-rounds/day structure (`rollGoalRoundsToday`,
-`ROLL_TO_GOAL_ROUNDS_PER_DAY` in `src/data/rollToGoal.ts`) that never gates on, or counts toward,
-`todayGameWins`/`DAILY_GAME_WIN_CAP` — every round is always eligible to pay out. Its daily target
+to the flow above: it has its own independent win-once-or-3-attempts/day structure
+(`rollGoalAttemptsToday`, `rollGoalTodayScore`, `ROLL_TO_GOAL_MAX_ATTEMPTS` in
+`src/data/rollToGoal.ts`) that never gates on, or counts toward, `todayGameWins`/
+`DAILY_GAME_WIN_CAP`. Any non-bust attempt is a win and ends the day immediately (`rollGoalTodayScore`
+is set and stays > 0 for the rest of the day); only a bust burns one of the 3 attempts without
+ending the day, until all 3 are used up (also ending the day, with no score). Its daily target
 number is `getDailyTarget(todayStr(timezone))`, a deterministic (mulberry32-seeded) pure function
 of the day string rather than a persisted/synced field, so every household device agrees on the
-same target with no Supabase merge logic involved. Payout per round scales `settings.gamePts` by
-accuracy tier (`getRollToGoalPayout` in `src/data/rollToGoal.ts`) instead of the flat amount every
-other game pays; the 0-500(+reroll-bonus) number shown to the kid mid-game is a separate
-bragging-rights score (`rollGoalDailyScore`, the "Final Daily Score"), not the real point award.
-Dispatches via `completeRollToGoalRound`/`declineRollToGoalRound` (sibling actions to
+same target with no Supabase merge logic involved. Payout scales `settings.gamePts` by accuracy
+tier (`getRollToGoalPayout` in `src/data/rollToGoal.ts`) instead of the flat amount every other
+game pays; the 0-500(+reroll-bonus) number shown to the kid mid-game is a separate bragging-rights
+score (`rollGoalTodayScore`), not the real point award. Dispatches via
+`completeRollToGoalAttempt`/`declineRollToGoalAttempt` (sibling actions to
 `completeGameRound`/`declineGameWin` in `useKidProgressActions.ts`), and a `'rollgoal'`
 `PendingPointsKind` (distinct from `'game'`) since its decline path must never touch
 `todayGameWins`.

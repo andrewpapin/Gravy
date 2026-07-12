@@ -6,7 +6,7 @@ import { appendActionLog, markMostRecentUndone, type LogActor } from '../actionL
 import { FOODS } from '../../data/foods';
 import { GAMES } from '../../data/games';
 import {
-  ROLL_TO_GOAL_GAME_ID, ROLL_TO_GOAL_ROUNDS_PER_DAY, TIER_LABELS,
+  ROLL_TO_GOAL_GAME_ID, ROLL_TO_GOAL_MAX_ATTEMPTS, TIER_LABELS,
   getRollToGoalPayout, type ScoreTier,
 } from '../../data/rollToGoal';
 import { applyBonusItem, getFoodPts, reverseBonusItem } from '../points';
@@ -14,7 +14,7 @@ import { queuePendingPoints, takeMostRecentPending } from '../pendingPoints';
 import { DAILY_GAME_WIN_CAP, clone } from './shared';
 import type { AwardPoints, MaybeCelebrateRankUp, ShowCelebration } from './types';
 
-export interface RollToGoalRoundResult {
+export interface RollToGoalAttemptResult {
   tier: ScoreTier;
   displayScore: number;
 }
@@ -234,20 +234,24 @@ export function useKidProgressActions(deps: KidProgressDeps) {
     });
   }, [setState]);
 
-  // Roll to the Goal's own daily-rounds action — kept separate from completeGameRound because
-  // its payout is variable-per-tier (not a flat settings.gamePts) and its 3-rounds/day cap is
-  // independent of DAILY_GAME_WIN_CAP (see rollGoalRoundsToday on GravyState).
-  const completeRollToGoalRound = useCallback((result: RollToGoalRoundResult) => {
+  // Roll to the Goal's own daily-attempts action — kept separate from completeGameRound because
+  // its payout is variable-per-tier (not a flat settings.gamePts) and its up-to-3-attempts/day
+  // cap is independent of DAILY_GAME_WIN_CAP (see rollGoalAttemptsToday on GravyState). Any
+  // non-bust attempt wins and ends the day (rollGoalTodayScore records that win); only a bust
+  // consumes an attempt without ending the day, until all 3 are used up.
+  const completeRollToGoalAttempt = useCallback((result: RollToGoalAttemptResult) => {
     setState((prev) => {
-      // Defensive: never process a 4th round even on a stale double-dispatch.
-      if (prev.rollGoalRoundsToday >= ROLL_TO_GOAL_ROUNDS_PER_DAY) return prev;
+      // Defensive: never process another attempt once the day is already resolved (a win, or a
+      // stale double-dispatch after all 3 attempts are used).
+      const alreadyWon = prev.rollGoalTodayScore > 0;
+      if (alreadyWon || prev.rollGoalAttemptsToday >= ROLL_TO_GOAL_MAX_ATTEMPTS) return prev;
       const next = clone(prev);
       next.counters.gamesPlayed++;
-      next.rollGoalRoundsToday++;
-      next.rollGoalDailyScore += result.displayScore;
+      next.rollGoalAttemptsToday++;
       const won = result.tier !== 'bust';
       if (won) {
         next.counters.gamesWon++;
+        next.rollGoalTodayScore = result.displayScore;
         const pts = getRollToGoalPayout(result.tier, next.settings.gamePts);
         if (pts > 0) {
           const label = `🎲 Roll to the Goal: ${TIER_LABELS[result.tier]} (${result.displayScore} pts)`;
@@ -271,10 +275,10 @@ export function useKidProgressActions(deps: KidProgressDeps) {
   }, [setState, awardPoints, maybeCelebrateRankUp, actorRef, requiresApproval]);
 
   // Reverses a still-pending Roll to the Goal award when a parent declines it from Approvals.
-  // Mirrors declineGameWin's shape, but never touches rollGoalRoundsToday/rollGoalDailyScore (the
-  // round was genuinely played today regardless of the payout decision) or todayGameWins (this
+  // Mirrors declineGameWin's shape, but never touches rollGoalAttemptsToday/rollGoalTodayScore
+  // (the win genuinely happened today regardless of the payout decision) or todayGameWins (this
   // game doesn't participate in DAILY_GAME_WIN_CAP at all).
-  const declineRollToGoalRound = useCallback(() => {
+  const declineRollToGoalAttempt = useCallback(() => {
     setState((prev) => {
       const hasPending = prev.pendingPointsAwards.some((p) => p.kind === 'rollgoal');
       if (!hasPending) return prev;
@@ -353,7 +357,7 @@ export function useKidProgressActions(deps: KidProgressDeps) {
 
   return {
     logFood, removeFood, incrementGoal, decrementGoal, completeGameRound, declineGameWin,
-    completeRollToGoalRound, declineRollToGoalRound,
+    completeRollToGoalAttempt, declineRollToGoalAttempt,
     logBonusItem, undoBonusItem,
   };
 }

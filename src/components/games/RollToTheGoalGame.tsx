@@ -3,20 +3,20 @@ import { AppIcon } from '../AppIcon';
 import { useGravy } from '../../state/GravyContext';
 import { todayStr } from '../../state/defaultState';
 import {
-  ROLL_TO_GOAL_ROUNDS_PER_DAY, ROLL_TO_GOAL_REROLLS_PER_ROUND,
-  getDailyTarget, rollDice, rerollDice, sumDice, computeRoundOutcome, getRollToGoalPayout,
-  TIER_LABELS, type RoundOutcome,
+  ROLL_TO_GOAL_MAX_ATTEMPTS, ROLL_TO_GOAL_REROLLS_PER_ATTEMPT,
+  getDailyTarget, rollDice, rerollDice, sumDice, computeAttemptOutcome, getRollToGoalPayout,
+  TIER_LABELS, type AttemptOutcome,
 } from '../../data/rollToGoal';
 
 interface RollToTheGoalGameProps {
   onExit: () => void;
-  // Reports whether a round is currently "in progress" (dice rolled, not yet submitted) —
+  // Reports whether an attempt is currently "in progress" (dice rolled, not yet submitted) —
   // GamesScreen uses this to gate its own chevron-back/close buttons behind a confirm, since
   // those bypass this component's onExit entirely.
-  onRoundActiveChange?: (active: boolean) => void;
+  onAttemptActiveChange?: (active: boolean) => void;
 }
 
-type Result = RoundOutcome & { total: number };
+type Result = AttemptOutcome & { total: number };
 
 // Standard die-face pip layout on a 3x3 grid (indices 0-8, row-major).
 const PIP_POSITIONS: Record<number, number[]> = {
@@ -39,60 +39,75 @@ function DieFace({ value }: { value: number }) {
   );
 }
 
-export function RollToTheGoalGame({ onExit, onRoundActiveChange }: RollToTheGoalGameProps) {
-  const { state, completeRollToGoalRound } = useGravy();
+function TargetBadge({ target }: { target: number }) {
+  return (
+    <div className="rollgoal-target-badge">
+      <AppIcon iconKey="bullseye" emojiFallback="🎯" className="rollgoal-target-icon" />
+      <div className="rollgoal-target-text">
+        <span className="rollgoal-target-label">Today's Target</span>
+        <span className="rollgoal-target-value">{target}</span>
+      </div>
+    </div>
+  );
+}
+
+export function RollToTheGoalGame({ onExit, onAttemptActiveChange }: RollToTheGoalGameProps) {
+  const { state, completeRollToGoalAttempt } = useGravy();
   const [dice, setDice] = useState<number[] | null>(null);
   const [held, setHeld] = useState<Set<number>>(new Set());
-  const [rerollsLeft, setRerollsLeft] = useState(ROLL_TO_GOAL_REROLLS_PER_ROUND);
+  const [rerollsLeft, setRerollsLeft] = useState(ROLL_TO_GOAL_REROLLS_PER_ATTEMPT);
   const [peekedTotal, setPeekedTotal] = useState<number | null>(null);
-  const [roundResult, setRoundResult] = useState<Result | null>(null);
-  // Captured at roll time from the then-current state.rollGoalRoundsToday, so the header/result
-  // panel keep showing "Round 3 of 3" (not "4 of 3") after completeRollToGoalRound increments the
-  // live counter out from under an in-progress or just-finished round.
-  const [roundNumber, setRoundNumber] = useState<number | null>(null);
-  const roundCompleteRef = useRef(false);
+  const [attemptResult, setAttemptResult] = useState<Result | null>(null);
+  // Captured at roll time from the then-current state.rollGoalAttemptsToday, so the header/result
+  // panel keep showing "Attempt 3 of 3" (not "4 of 3") after completeRollToGoalAttempt increments
+  // the live counter out from under an in-progress or just-finished attempt.
+  const [attemptNumber, setAttemptNumber] = useState<number | null>(null);
+  const attemptCompleteRef = useRef(false);
 
   const dailyTarget = getDailyTarget(todayStr(state.settings.timezone));
-  const roundsCompleted = state.rollGoalRoundsToday;
-  const dayComplete = roundsCompleted >= ROLL_TO_GOAL_ROUNDS_PER_DAY;
-  const roundActive = dice !== null && roundResult === null;
-  // Only show the day-complete screen once the kid has moved past viewing their last round's
-  // result — otherwise the live counter incrementing (via the effect below) would yank the
-  // round-3 result panel away before they ever see it.
-  const showDayComplete = dayComplete && dice === null;
+  const attemptsUsed = state.rollGoalAttemptsToday;
+  // Any non-bust attempt wins and ends the day for good — busting out of all 3 attempts also
+  // ends the day (with no score) until tomorrow's new target.
+  const wonToday = state.rollGoalTodayScore > 0;
+  const dayOver = wonToday || attemptsUsed >= ROLL_TO_GOAL_MAX_ATTEMPTS;
+  const attemptActive = dice !== null && attemptResult === null;
+  // Only show the day-over screen once the kid has moved past viewing their last attempt's
+  // result — otherwise the live counter/win flipping (via the effect below) would yank that
+  // result panel away before they ever see it.
+  const showDayOver = dayOver && dice === null;
 
   useEffect(() => {
-    onRoundActiveChange?.(roundActive);
-  }, [roundActive, onRoundActiveChange]);
-  useEffect(() => () => onRoundActiveChange?.(false), [onRoundActiveChange]);
+    onAttemptActiveChange?.(attemptActive);
+  }, [attemptActive, onAttemptActiveChange]);
+  useEffect(() => () => onAttemptActiveChange?.(false), [onAttemptActiveChange]);
 
   useEffect(() => {
-    if (roundResult && !roundCompleteRef.current) {
-      roundCompleteRef.current = true;
-      completeRollToGoalRound({ tier: roundResult.tier, displayScore: roundResult.displayScore });
+    if (attemptResult && !attemptCompleteRef.current) {
+      attemptCompleteRef.current = true;
+      completeRollToGoalAttempt({ tier: attemptResult.tier, displayScore: attemptResult.displayScore });
     }
-  }, [roundResult, completeRollToGoalRound]);
+  }, [attemptResult, completeRollToGoalAttempt]);
 
-  const resetRound = () => {
+  const resetAttempt = () => {
     setDice(null);
     setHeld(new Set());
-    setRerollsLeft(ROLL_TO_GOAL_REROLLS_PER_ROUND);
+    setRerollsLeft(ROLL_TO_GOAL_REROLLS_PER_ATTEMPT);
     setPeekedTotal(null);
-    setRoundResult(null);
-    setRoundNumber(null);
-    roundCompleteRef.current = false;
+    setAttemptResult(null);
+    setAttemptNumber(null);
+    attemptCompleteRef.current = false;
   };
 
   const handleRollInitial = () => {
-    if (dayComplete) return;
-    const nextRoundNumber = state.rollGoalRoundsToday + 1;
-    resetRound();
-    setRoundNumber(nextRoundNumber);
+    if (dayOver) return;
+    const nextAttemptNumber = state.rollGoalAttemptsToday + 1;
+    resetAttempt();
+    setAttemptNumber(nextAttemptNumber);
     setDice(rollDice());
   };
 
   const handleToggleHold = (i: number) => {
-    if (!dice || roundResult) return;
+    if (!dice || attemptResult) return;
     setHeld((prev) => {
       const next = new Set(prev);
       if (next.has(i)) next.delete(i);
@@ -102,30 +117,40 @@ export function RollToTheGoalGame({ onExit, onRoundActiveChange }: RollToTheGoal
   };
 
   const handleReroll = () => {
-    if (!dice || roundResult || rerollsLeft <= 0) return;
+    if (!dice || attemptResult || rerollsLeft <= 0) return;
     setDice(rerollDice(dice, held));
     setRerollsLeft((r) => r - 1);
     setPeekedTotal(null);
   };
 
   const handlePeek = () => {
-    if (!dice || roundResult || rerollsLeft <= 0) return;
+    if (!dice || attemptResult || rerollsLeft <= 0) return;
     setPeekedTotal(sumDice(dice));
     setRerollsLeft((r) => r - 1);
   };
 
   const handleSubmit = () => {
-    if (!dice || roundResult) return;
+    if (!dice || attemptResult) return;
     const total = sumDice(dice);
-    setRoundResult({ ...computeRoundOutcome(total, dailyTarget, rerollsLeft), total });
+    setAttemptResult({ ...computeAttemptOutcome(total, dailyTarget, rerollsLeft), total });
   };
 
-  if (showDayComplete) {
+  if (showDayOver) {
     return (
       <div className="rollgoal-game">
-        <div className="game-result win">
-          <div className="game-result-title">🎲 Daily Challenge Complete!</div>
-          <div className="game-result-sub">Final Daily Score: {state.rollGoalDailyScore}</div>
+        <TargetBadge target={dailyTarget} />
+        <div className={`game-result ${wonToday ? 'win' : 'lose'}`}>
+          {wonToday ? (
+            <>
+              <div className="game-result-title">🎉 You Won Today!</div>
+              <div className="game-result-sub">Score: {state.rollGoalTodayScore}</div>
+            </>
+          ) : (
+            <>
+              <div className="game-result-title">Out of Tries!</div>
+              <div className="game-result-sub">Come back tomorrow for a new target.</div>
+            </>
+          )}
           <div className="game-result-actions">
             <button className="game-result-btn primary" onClick={onExit} type="button">
               Back to Arcade
@@ -136,15 +161,18 @@ export function RollToTheGoalGame({ onExit, onRoundActiveChange }: RollToTheGoal
     );
   }
 
-  const rollToGoalPayoutPreview = roundResult
-    ? getRollToGoalPayout(roundResult.tier, state.settings.gamePts)
+  const rollToGoalPayoutPreview = attemptResult
+    ? getRollToGoalPayout(attemptResult.tier, state.settings.gamePts)
     : 0;
+  // A win always ends the day; a bust only ends it once every attempt is used up.
+  const attemptEndsDay = !!attemptResult && (!attemptResult.bust || (attemptNumber ?? attemptsUsed) >= ROLL_TO_GOAL_MAX_ATTEMPTS);
 
   return (
     <div className="rollgoal-game">
+      <TargetBadge target={dailyTarget} />
       <div className="rollgoal-status-row">
-        <div className="game-clue-label">Round {roundNumber ?? roundsCompleted + 1} of {ROLL_TO_GOAL_ROUNDS_PER_DAY} · Target: {dailyTarget}</div>
-        <div className="game-clue-label">Rerolls: {rerollsLeft}/{ROLL_TO_GOAL_REROLLS_PER_ROUND}</div>
+        <div className="game-clue-label">Attempt {attemptNumber ?? attemptsUsed + 1} of {ROLL_TO_GOAL_MAX_ATTEMPTS}</div>
+        <div className="game-clue-label">Rerolls: {rerollsLeft}/{ROLL_TO_GOAL_REROLLS_PER_ATTEMPT}</div>
       </div>
 
       {dice === null ? (
@@ -160,7 +188,7 @@ export function RollToTheGoalGame({ onExit, onRoundActiveChange }: RollToTheGoal
                 type="button"
                 className={`rollgoal-die ${held.has(i) ? 'held' : ''}`}
                 onClick={() => handleToggleHold(i)}
-                disabled={!!roundResult}
+                disabled={!!attemptResult}
                 aria-label={`Die showing ${value}${held.has(i) ? ', held' : ''}`}
               >
                 <DieFace value={value} />
@@ -169,11 +197,11 @@ export function RollToTheGoalGame({ onExit, onRoundActiveChange }: RollToTheGoal
             ))}
           </div>
 
-          {(peekedTotal !== null || roundResult) && (
-            <div className="game-clue-label">Total: {roundResult ? roundResult.total : peekedTotal}</div>
+          {(peekedTotal !== null || attemptResult) && (
+            <div className="game-clue-label">Total: {attemptResult ? attemptResult.total : peekedTotal}</div>
           )}
 
-          {!roundResult ? (
+          {!attemptResult ? (
             <div className="rollgoal-actions-row">
               <button className="game-result-btn" onClick={handleReroll} disabled={rerollsLeft <= 0} type="button">
                 Reroll
@@ -186,15 +214,15 @@ export function RollToTheGoalGame({ onExit, onRoundActiveChange }: RollToTheGoal
               </button>
             </div>
           ) : (
-            <div className={`game-result ${roundResult.bust ? 'lose' : 'win'}`}>
-              <div className="game-result-title">{TIER_LABELS[roundResult.tier]}</div>
-              <div className="game-result-sub">+{roundResult.displayScore} pts</div>
+            <div className={`game-result ${attemptResult.bust ? 'lose' : 'win'}`}>
+              <div className="game-result-title">{TIER_LABELS[attemptResult.tier]}</div>
+              <div className="game-result-sub">+{attemptResult.displayScore} pts</div>
               {rollToGoalPayoutPreview > 0 && (
                 <div className="game-result-sub">+{rollToGoalPayoutPreview} Gravy pts</div>
               )}
               <div className="game-result-actions">
-                <button className="game-result-btn primary" onClick={resetRound} type="button">
-                  {(roundNumber ?? roundsCompleted) >= ROLL_TO_GOAL_ROUNDS_PER_DAY ? 'See Final Score' : 'Next Round'}
+                <button className="game-result-btn primary" onClick={resetAttempt} type="button">
+                  {attemptEndsDay ? 'See Result' : 'Try Again'}
                 </button>
                 <button className="game-result-btn" onClick={onExit} type="button">
                   Back to Arcade

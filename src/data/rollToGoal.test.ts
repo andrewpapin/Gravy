@@ -3,7 +3,7 @@ import {
   ROLL_TO_GOAL_MIN_TARGET,
   ROLL_TO_GOAL_MAX_TARGET,
   getDailyTarget,
-  computeRoundOutcome,
+  computeAttemptOutcome,
   getRollToGoalPayout,
   rollDice,
   rerollDice,
@@ -29,31 +29,31 @@ describe('getDailyTarget', () => {
   });
 });
 
-describe('computeRoundOutcome', () => {
+describe('computeAttemptOutcome', () => {
   it('busts whenever total exceeds target, regardless of rerolls remaining', () => {
-    expect(computeRoundOutcome(25, 20, 3)).toEqual({ tier: 'bust', bust: true, distance: 5, displayScore: 0 });
-    expect(computeRoundOutcome(21, 20, 0)).toEqual({ tier: 'bust', bust: true, distance: 1, displayScore: 0 });
+    expect(computeAttemptOutcome(25, 20, 3)).toEqual({ tier: 'bust', bust: true, distance: 5, displayScore: 0 });
+    expect(computeAttemptOutcome(21, 20, 0)).toEqual({ tier: 'bust', bust: true, distance: 1, displayScore: 0 });
   });
 
   it('scores an exact match at 500 base', () => {
-    const result = computeRoundOutcome(20, 20, 0);
+    const result = computeAttemptOutcome(20, 20, 0);
     expect(result).toEqual({ tier: 'exact', bust: false, distance: 0, displayScore: 500 });
   });
 
   it('scores 1/2/3+ away at 300/150/50 base', () => {
-    expect(computeRoundOutcome(19, 20, 0).displayScore).toBe(300);
-    expect(computeRoundOutcome(18, 20, 0).displayScore).toBe(150);
-    expect(computeRoundOutcome(17, 20, 0).displayScore).toBe(50);
-    expect(computeRoundOutcome(10, 20, 0).displayScore).toBe(50);
-    expect(computeRoundOutcome(19, 20, 0).tier).toBe('near1');
-    expect(computeRoundOutcome(18, 20, 0).tier).toBe('near2');
-    expect(computeRoundOutcome(17, 20, 0).tier).toBe('far');
+    expect(computeAttemptOutcome(19, 20, 0).displayScore).toBe(300);
+    expect(computeAttemptOutcome(18, 20, 0).displayScore).toBe(150);
+    expect(computeAttemptOutcome(17, 20, 0).displayScore).toBe(50);
+    expect(computeAttemptOutcome(10, 20, 0).displayScore).toBe(50);
+    expect(computeAttemptOutcome(19, 20, 0).tier).toBe('near1');
+    expect(computeAttemptOutcome(18, 20, 0).tier).toBe('near2');
+    expect(computeAttemptOutcome(17, 20, 0).tier).toBe('far');
   });
 
   it('adds +50 per unused reroll on top of the base tier score', () => {
-    expect(computeRoundOutcome(20, 20, 1).displayScore).toBe(550);
-    expect(computeRoundOutcome(20, 20, 2).displayScore).toBe(600);
-    expect(computeRoundOutcome(20, 20, 3).displayScore).toBe(650);
+    expect(computeAttemptOutcome(20, 20, 1).displayScore).toBe(550);
+    expect(computeAttemptOutcome(20, 20, 2).displayScore).toBe(600);
+    expect(computeAttemptOutcome(20, 20, 3).displayScore).toBe(650);
   });
 });
 

@@ -19,7 +19,7 @@ export interface PendingPointsDeps {
   removeFood: (id: string) => void;
   undoBonusItem: (id: number) => void;
   declineGameWin: (gameId: string) => void;
-  declineRollToGoalRound: () => void;
+  declineRollToGoalAttempt: () => void;
 }
 
 // Approve/decline flow for points earned on a kid-only device (no signed-in account) — see
@@ -28,7 +28,7 @@ export interface PendingPointsDeps {
 export function usePendingPointsActions(deps: PendingPointsDeps) {
   const {
     setState, stateRef, maybeCelebrateRankUp, actorRef,
-    decrementGoal, removeFood, undoBonusItem, declineGameWin, declineRollToGoalRound,
+    decrementGoal, removeFood, undoBonusItem, declineGameWin, declineRollToGoalAttempt,
   } = deps;
 
   const approvePendingPointsAward = useCallback((id: string) => {
@@ -77,7 +77,7 @@ export function usePendingPointsActions(deps: PendingPointsDeps) {
         declineGameWin(pending.itemId as string);
         break;
       case 'rollgoal':
-        declineRollToGoalRound();
+        declineRollToGoalAttempt();
         break;
     }
     setState((prev) => {
@@ -91,7 +91,7 @@ export function usePendingPointsActions(deps: PendingPointsDeps) {
       });
       return next;
     });
-  }, [stateRef, setState, actorRef, decrementGoal, removeFood, undoBonusItem, declineGameWin, declineRollToGoalRound]);
+  }, [stateRef, setState, actorRef, decrementGoal, removeFood, undoBonusItem, declineGameWin, declineRollToGoalAttempt]);
 
   return { approvePendingPointsAward, declinePendingPointsAward };
 }
