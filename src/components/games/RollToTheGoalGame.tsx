@@ -18,6 +18,27 @@ interface RollToTheGoalGameProps {
 
 type Result = RoundOutcome & { total: number };
 
+// Standard die-face pip layout on a 3x3 grid (indices 0-8, row-major).
+const PIP_POSITIONS: Record<number, number[]> = {
+  1: [4],
+  2: [0, 8],
+  3: [0, 4, 8],
+  4: [0, 2, 6, 8],
+  5: [0, 2, 4, 6, 8],
+  6: [0, 2, 3, 5, 6, 8],
+};
+
+function DieFace({ value }: { value: number }) {
+  const active = new Set(PIP_POSITIONS[value] ?? []);
+  return (
+    <div className="rollgoal-die-face" aria-hidden="true">
+      {Array.from({ length: 9 }, (_, i) => (
+        <span key={i} className={`rollgoal-pip ${active.has(i) ? 'filled' : ''}`} />
+      ))}
+    </div>
+  );
+}
+
 export function RollToTheGoalGame({ onExit, onRoundActiveChange }: RollToTheGoalGameProps) {
   const { state, completeRollToGoalRound } = useGravy();
   const [dice, setDice] = useState<number[] | null>(null);
@@ -142,7 +163,7 @@ export function RollToTheGoalGame({ onExit, onRoundActiveChange }: RollToTheGoal
                 disabled={!!roundResult}
                 aria-label={`Die showing ${value}${held.has(i) ? ', held' : ''}`}
               >
-                {value}
+                <DieFace value={value} />
                 {held.has(i) && <AppIcon iconKey="circleCheck" className="rollgoal-die-held-badge" />}
               </button>
             ))}
