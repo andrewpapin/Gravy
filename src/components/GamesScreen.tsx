@@ -8,6 +8,7 @@ import { HangmanGame } from './games/HangmanGame';
 import { MathFactsGame } from './games/MathFactsGame';
 import { WordScrambleGame } from './games/WordScrambleGame';
 import { MemoryMatchGame } from './games/MemoryMatchGame';
+import { RollToTheGoalGame } from './games/RollToTheGoalGame';
 import { useFocusTrap } from './useFocusTrap';
 
 interface GamesScreenProps {
@@ -20,9 +21,40 @@ export function GamesScreen({ open, onClose }: GamesScreenProps) {
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const winsMaxed = state.todayGameWins >= DAILY_GAME_WIN_CAP;
 
+  // Whether the active game reports a round in progress (dice rolled, not yet submitted) —
+  // only Roll to the Goal uses this today, since it's the only game whose progress the kid
+  // could lose by backing out mid-round via the chevron/close buttons below (every other game
+  // only exposes its own "Back to Arcade" from inside a completed-round result panel).
+  const [gameRoundActive, setGameRoundActive] = useState(false);
+  const [exitConfirmPending, setExitConfirmPending] = useState<null | 'back' | 'close'>(null);
+
+  // Every place that changes which game is showing goes through this, so gameRoundActive/
+  // exitConfirmPending never carry over between games (replaces a reset-on-change effect, which
+  // would call setState synchronously inside useEffect).
+  const goToGame = (id: string | null) => {
+    setActiveGame(id);
+    setGameRoundActive(false);
+    setExitConfirmPending(null);
+  };
+
   const handleClose = () => {
     onClose();
-    setActiveGame(null);
+    goToGame(null);
+  };
+
+  const requestExit = (kind: 'back' | 'close') => {
+    if (gameRoundActive) {
+      setExitConfirmPending(kind);
+      return;
+    }
+    if (kind === 'back') goToGame(null);
+    else handleClose();
+  };
+
+  const confirmExit = () => {
+    const kind = exitConfirmPending;
+    if (kind === 'back') goToGame(null);
+    else if (kind === 'close') handleClose();
   };
 
   const activeGameDef = GAMES.find((g) => g.id === activeGame);
@@ -44,25 +76,27 @@ export function GamesScreen({ open, onClose }: GamesScreenProps) {
         <div className="calendar-modal-header">
           <div className="calendar-modal-header-titles">
             {activeGameDef && (
-              <button className="calendar-modal-back" onClick={() => setActiveGame(null)} aria-label="Back to Arcade" type="button">
+              <button className="calendar-modal-back" onClick={() => requestExit('back')} aria-label="Back to Arcade" type="button">
                 <FontAwesomeIcon icon={faChevronLeft} />
               </button>
             )}
             <span className="calendar-modal-title">{activeGameDef ? activeGameDef.name : 'Arcade'}</span>
           </div>
-          <button className="calendar-modal-close" onClick={handleClose} aria-label="Close arcade" type="button">
+          <button className="calendar-modal-close" onClick={() => requestExit('close')} aria-label="Close arcade" type="button">
             <FontAwesomeIcon icon={faXmark} />
           </button>
         </div>
         <div className="calendar-modal-body">
           {activeGame === 'hangman' ? (
-            <HangmanGame onExit={() => setActiveGame(null)} />
+            <HangmanGame onExit={() => goToGame(null)} />
           ) : activeGame === 'mathfacts' ? (
-            <MathFactsGame onExit={() => setActiveGame(null)} />
+            <MathFactsGame onExit={() => goToGame(null)} />
           ) : activeGame === 'scramble' ? (
-            <WordScrambleGame onExit={() => setActiveGame(null)} />
+            <WordScrambleGame onExit={() => goToGame(null)} />
           ) : activeGame === 'memory' ? (
-            <MemoryMatchGame onExit={() => setActiveGame(null)} />
+            <MemoryMatchGame onExit={() => goToGame(null)} />
+          ) : activeGame === 'rollgoal' ? (
+            <RollToTheGoalGame onExit={() => goToGame(null)} onRoundActiveChange={setGameRoundActive} />
           ) : (
             <>
               <div className={`games-cap-banner ${winsMaxed ? 'maxed' : ''}`}>
@@ -75,17 +109,35 @@ export function GamesScreen({ open, onClose }: GamesScreenProps) {
               </div>
               <div className="games-grid">
                 {GAMES.map((g) => (
-                  <button key={g.id} className="game-tile" onClick={() => setActiveGame(g.id)} type="button">
+                  <button key={g.id} className="game-tile" onClick={() => goToGame(g.id)} type="button">
                     <AppIcon iconKey={g.icon} emojiFallback={g.emoji} className="game-tile-icon" />
                     <div className="game-tile-name">{g.name}</div>
                     <div className="game-tile-desc">{g.description}</div>
-                    <span className="pts-badge game-tile-pts">+{g.pts ?? state.settings.gamePts} pts</span>
+                    <span className="pts-badge game-tile-pts">
+                      {g.variablePayout ? 'Daily Challenge' : `+${g.pts ?? state.settings.gamePts} pts`}
+                    </span>
                   </button>
                 ))}
               </div>
             </>
           )}
         </div>
+        {exitConfirmPending && (
+          <div className="game-exit-confirm-overlay">
+            <div className="game-result lose">
+              <div className="game-result-title">Leave the game?</div>
+              <div className="game-result-sub">Your progress this round will be lost.</div>
+              <div className="game-result-actions">
+                <button className="game-result-btn primary" onClick={confirmExit} type="button">
+                  Exit Game
+                </button>
+                <button className="game-result-btn" onClick={() => setExitConfirmPending(null)} type="button">
+                  Keep Playing
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

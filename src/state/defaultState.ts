@@ -30,6 +30,8 @@ export const defaultState: GravyState = {
   todayGoalCounts: {},
   todayBonusApplied: {},
   todayGameWins: 0,
+  rollGoalRoundsToday: 0,
+  rollGoalDailyScore: 0,
   dayLogs: {},
   pendingRewards: [],
   pendingPointsAwards: [],
@@ -331,7 +333,7 @@ function sanitizePendingRewards(v: unknown): PendingReward[] {
     : [];
 }
 
-const PENDING_POINTS_KINDS: PendingPointsKind[] = ['goal', 'food', 'bonus', 'game'];
+const PENDING_POINTS_KINDS: PendingPointsKind[] = ['goal', 'food', 'bonus', 'game', 'rollgoal'];
 
 function sanitizePendingPointsAwards(v: unknown): PendingPointsAward[] {
   return Array.isArray(v)
@@ -379,6 +381,8 @@ function sanitizeState(state: GravyState): void {
   state.goalStreak = asFiniteNumber(state.goalStreak, 0);
   state.megaStreak = asFiniteNumber(state.megaStreak, 0);
   state.todayPoints = asFiniteNumber(state.todayPoints, 0);
+  state.rollGoalRoundsToday = asFiniteNumber(state.rollGoalRoundsToday, 0);
+  state.rollGoalDailyScore = asFiniteNumber(state.rollGoalDailyScore, 0);
   state.lastActiveDate = typeof state.lastActiveDate === 'string' ? state.lastActiveDate : null;
 
   state.todayFoodCounts = asPlainObject(state.todayFoodCounts) as Record<string, number>;
@@ -614,6 +618,8 @@ export function applyDayRollover(state: GravyState): GravyState {
     // Bonus penalties settle at the end of the day — start the new day with a clean ledger.
     state.todayBonusApplied = {};
     state.todayGameWins = 0;
+    state.rollGoalRoundsToday = 0;
+    state.rollGoalDailyScore = 0;
   }
   state.lastActiveDate = today;
   return state;

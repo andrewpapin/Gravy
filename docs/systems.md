@@ -15,12 +15,28 @@ split above.
 
 `GamesScreen` (opened from `HomeScreen`'s `GamesCard`) is a hub listing the catalog in
 `src/data/games.ts` (`GAMES: GameDef[]` — currently Hangman, Math Facts, Word Scramble, Memory
-Match; add a game by adding an entry there plus a component in `src/components/games/`). Each game
+Match, Roll to the Goal; add a game by adding an entry there plus a component in
+`src/components/games/`, plus a branch in `GamesScreen`'s if/else chain rendering it). Each game
 component calls `completeGameRound(gameId, won)` on finish. That action increments
 `counters.gamesPlayed`/`gamesWon` and, on a win, awards `settings.gamePts` points — but only up to
 `DAILY_GAME_WIN_CAP` (3, defined in `src/state/actions/shared.ts`, re-exported from `GravyContext`)
 wins per day via `todayGameWins`, so a kid can't farm points by replaying an easy round; wins beyond
 the cap still count toward `gamesWon` but pay no points. `todayGameWins` resets at day rollover.
+
+`Roll to the Goal` (`rollgoal`, `src/components/games/RollToTheGoalGame.tsx`) is the one exception
+to the flow above: it has its own independent 3-rounds/day structure (`rollGoalRoundsToday`,
+`ROLL_TO_GOAL_ROUNDS_PER_DAY` in `src/data/rollToGoal.ts`) that never gates on, or counts toward,
+`todayGameWins`/`DAILY_GAME_WIN_CAP` — every round is always eligible to pay out. Its daily target
+number is `getDailyTarget(todayStr(timezone))`, a deterministic (mulberry32-seeded) pure function
+of the day string rather than a persisted/synced field, so every household device agrees on the
+same target with no Supabase merge logic involved. Payout per round scales `settings.gamePts` by
+accuracy tier (`getRollToGoalPayout` in `src/data/rollToGoal.ts`) instead of the flat amount every
+other game pays; the 0-500(+reroll-bonus) number shown to the kid mid-game is a separate
+bragging-rights score (`rollGoalDailyScore`, the "Final Daily Score"), not the real point award.
+Dispatches via `completeRollToGoalRound`/`declineRollToGoalRound` (sibling actions to
+`completeGameRound`/`declineGameWin` in `useKidProgressActions.ts`), and a `'rollgoal'`
+`PendingPointsKind` (distinct from `'game'`) since its decline path must never touch
+`todayGameWins`.
 
 ## Rank Ladder
 
