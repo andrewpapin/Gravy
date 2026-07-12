@@ -5,10 +5,19 @@ import { todayStr } from '../defaultState';
 import { appendActionLog, markMostRecentUndone, type LogActor } from '../actionLog';
 import { FOODS } from '../../data/foods';
 import { GAMES } from '../../data/games';
+import {
+  ROLL_TO_GOAL_GAME_ID, ROLL_TO_GOAL_ROUNDS_PER_DAY, TIER_LABELS,
+  getRollToGoalPayout, type ScoreTier,
+} from '../../data/rollToGoal';
 import { applyBonusItem, getFoodPts, reverseBonusItem } from '../points';
 import { queuePendingPoints, takeMostRecentPending } from '../pendingPoints';
 import { DAILY_GAME_WIN_CAP, clone } from './shared';
 import type { AwardPoints, MaybeCelebrateRankUp, ShowCelebration } from './types';
+
+export interface RollToGoalRoundResult {
+  tier: ScoreTier;
+  displayScore: number;
+}
 
 export interface KidProgressDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
@@ -225,6 +234,58 @@ export function useKidProgressActions(deps: KidProgressDeps) {
     });
   }, [setState]);
 
+  // Roll to the Goal's own daily-rounds action — kept separate from completeGameRound because
+  // its payout is variable-per-tier (not a flat settings.gamePts) and its 3-rounds/day cap is
+  // independent of DAILY_GAME_WIN_CAP (see rollGoalRoundsToday on GravyState).
+  const completeRollToGoalRound = useCallback((result: RollToGoalRoundResult) => {
+    setState((prev) => {
+      // Defensive: never process a 4th round even on a stale double-dispatch.
+      if (prev.rollGoalRoundsToday >= ROLL_TO_GOAL_ROUNDS_PER_DAY) return prev;
+      const next = clone(prev);
+      next.counters.gamesPlayed++;
+      next.rollGoalRoundsToday++;
+      next.rollGoalDailyScore += result.displayScore;
+      const won = result.tier !== 'bust';
+      if (won) {
+        next.counters.gamesWon++;
+        const pts = getRollToGoalPayout(result.tier, next.settings.gamePts);
+        if (pts > 0) {
+          const label = `🎲 Roll to the Goal: ${TIER_LABELS[result.tier]} (${result.displayScore} pts)`;
+          if (requiresApproval) {
+            queuePendingPoints(next, 'rollgoal', ROLL_TO_GOAL_GAME_ID, pts, label);
+          } else {
+            awardPoints(next, pts);
+          }
+          appendActionLog(next, actorRef.current, {
+            type: 'game',
+            label,
+            pts: requiresApproval ? 0 : pts,
+            dateStr: todayStr(next.settings.timezone),
+            itemId: ROLL_TO_GOAL_GAME_ID,
+          });
+        }
+      }
+      maybeCelebrateRankUp(prev.totalPoints, next);
+      return next;
+    });
+  }, [setState, awardPoints, maybeCelebrateRankUp, actorRef, requiresApproval]);
+
+  // Reverses a still-pending Roll to the Goal award when a parent declines it from Approvals.
+  // Mirrors declineGameWin's shape, but never touches rollGoalRoundsToday/rollGoalDailyScore (the
+  // round was genuinely played today regardless of the payout decision) or todayGameWins (this
+  // game doesn't participate in DAILY_GAME_WIN_CAP at all).
+  const declineRollToGoalRound = useCallback(() => {
+    setState((prev) => {
+      const hasPending = prev.pendingPointsAwards.some((p) => p.kind === 'rollgoal');
+      if (!hasPending) return prev;
+      const next = clone(prev);
+      takeMostRecentPending(next, 'rollgoal', ROLL_TO_GOAL_GAME_ID);
+      next.counters.gamesWon = Math.max(0, next.counters.gamesWon - 1);
+      markMostRecentUndone(next.actionLog, 'game', ROLL_TO_GOAL_GAME_ID, todayStr(next.settings.timezone));
+      return next;
+    });
+  }, [setState]);
+
   const logBonusItem = useCallback((id: number) => {
     setState((prev) => {
       const goal = prev.goals.find((g) => g.id === id);
@@ -292,6 +353,7 @@ export function useKidProgressActions(deps: KidProgressDeps) {
 
   return {
     logFood, removeFood, incrementGoal, decrementGoal, completeGameRound, declineGameWin,
+    completeRollToGoalRound, declineRollToGoalRound,
     logBonusItem, undoBonusItem,
   };
 }

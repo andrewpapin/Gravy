@@ -20,7 +20,7 @@ import {
 import { SYNC_SKIPPED_KEY, DAILY_GAME_WIN_CAP, activeStateOf, buildMergedRoot, clone } from './actions/shared';
 import type { ProfilePatch, SettableSettingKey, SyncStatus } from './actions/types';
 import { useHouseholdSync } from './useHouseholdSync';
-import { useKidProgressActions } from './actions/useKidProgressActions';
+import { useKidProgressActions, type RollToGoalRoundResult } from './actions/useKidProgressActions';
 import { useDayEditActions } from './actions/useDayEditActions';
 import { useRewardActions } from './actions/useRewardActions';
 import { usePendingPointsActions } from './actions/usePendingPointsActions';
@@ -79,6 +79,7 @@ interface GravyContextValue {
   logBonusItem: (id: number) => void;
   undoBonusItem: (id: number) => void;
   completeGameRound: (gameId: string, won: boolean) => void;
+  completeRollToGoalRound: (result: RollToGoalRoundResult) => void;
   logFoodForDay: (dateStr: string, foodId: string) => void;
   removeFoodForDay: (dateStr: string, foodId: string) => void;
   toggleGoalForDay: (dateStr: string, goalId: number) => void;
@@ -298,6 +299,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     removeFood: kidProgress.removeFood,
     undoBonusItem: kidProgress.undoBonusItem,
     declineGameWin: kidProgress.declineGameWin,
+    declineRollToGoalRound: kidProgress.declineRollToGoalRound,
   });
   const catalog = useCatalogActions({
     setState, actorRef, pendingTimersRef, setHouseholdCode, lastSyncedRef, setSyncStatus,

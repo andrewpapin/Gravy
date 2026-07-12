@@ -55,17 +55,22 @@ The provider's imperative actions are split into per-domain custom hooks, each c
 `maybeCelebrateRankUp`/`actorRef`) as explicit deps:
 
 - `useKidProgressActions.ts` — live "today" actions: `logFood`, `removeFood`, `incrementGoal`,
-  `decrementGoal`, `logBonusItem`, `undoBonusItem`, `completeGameRound`, `declineGameWin`. Takes a
+  `decrementGoal`, `logBonusItem`, `undoBonusItem`, `completeGameRound`, `declineGameWin`,
+  `completeRollToGoalRound`, `declineRollToGoalRound`. Takes a
   `requiresApproval` boolean dep (`!authUser` — see "Pending points" below): every award-side action
   still completes immediately, but queues the points instead of crediting them when true; every
-  inverse action (`decrementGoal`/`removeFood`/`undoBonusItem`/`declineGameWin`) cancels a
-  still-pending award instead of touching the balance when one exists for that item.
+  inverse action (`decrementGoal`/`removeFood`/`undoBonusItem`/`declineGameWin`/
+  `declineRollToGoalRound`) cancels a still-pending award instead of touching the balance when one
+  exists for that item. `completeRollToGoalRound`/`declineRollToGoalRound` are Roll to the Goal's own
+  sibling pair (see `docs/systems.md`'s Arcade section) — variable per-tier payout and an
+  independent `rollGoalRoundsToday` cap kept them out of `completeGameRound`/`declineGameWin`.
 - `useDayEditActions.ts` — the five `*ForDay` Calendar edits + `undoActionLogEntry` (takes the three
   kid-progress today-inverses as deps to dispatch today-vs-`*ForDay`). Calendar is reached only once
   `grownUpUnlocked`, so these always post immediately — never gated by `requiresApproval`.
 - `useRewardActions.ts` — `requestReward`, `approveReward`, `declineReward`.
 - `usePendingPointsActions.ts` — `approvePendingPointsAward`, `declinePendingPointsAward`. Takes
-  `decrementGoal`/`removeFood`/`undoBonusItem`/`declineGameWin` from `useKidProgressActions` as deps
+  `decrementGoal`/`removeFood`/`undoBonusItem`/`declineGameWin`/`declineRollToGoalRound` from
+  `useKidProgressActions` as deps
   (via `stateRef`, the same dispatch-by-kind pattern `undoActionLogEntry` uses) so decline reuses
   their revert logic rather than duplicating it.
 - `useCatalogActions.ts` — goal/reward CRUD, `saveSetting`, `resetToday`, `resetAll`
@@ -142,11 +147,13 @@ single-profile save by wrapping it as a one-entry root.
   replaying `dayLogs` for saves written before these fields existed.
 - **Day rollover** — `applyDayRollover()` archives yesterday's food counts/completed goals/bonus
   counts into `dayLogs[dateStr]`, updates the four streaks, then clears the live `today*` fields
-  (food, daily-goal completions/counts, bonus-item ledger, `todayGameWins`). Bonus-item completions,
-  like daily goals, reset every day.
+  (food, daily-goal completions/counts, bonus-item ledger, `todayGameWins`, `rollGoalRoundsToday`,
+  `rollGoalDailyScore`). Bonus-item completions, like daily goals, reset every day.
 - **Counters** (`GravyState.counters`) — lifetime aggregates: `foodLogs`
   (per food-group), `fullTrayDays`, `totalGoals`, `allGoalsDays`, `comboDays` (full tray + all daily
-  goals same day), `totalRewards`, `maxDayPoints`, `gamesPlayed`, `gamesWon`.
+  goals same day), `totalRewards`, `maxDayPoints`, `gamesPlayed`, `gamesWon`. Roll to the Goal rounds
+  also feed `gamesPlayed`/`gamesWon` (a round counts as "won" whenever it isn't a bust), same as
+  every other arcade game.
 - **Pending rewards** — kids request via `requestReward` (which reserves points already promised to
   other pending requests so a kid can't queue more than their balance covers); they sit in
   `pendingRewards` until a parent calls `approveReward`/`declineReward` from `ApprovalsPanel`.
@@ -160,8 +167,11 @@ single-profile save by wrapping it as a one-entry root.
   points — via `applyBonusItem` for a Bonus item, so forgiveness is computed against the balance at
   approval time, not log time — then re-runs `maybeCelebrateRankUp` since crediting can
   newly cross a rank threshold) or declines (`declinePendingPointsAward` dispatches to the matching
-  exact-inverse action — `decrementGoal`/`removeFood`/`undoBonusItem`/`declineGameWin` — which fully
-  reverts the completion, exactly as if the kid had undone it themselves) from `ApprovalsPanel`. If
+  exact-inverse action — `decrementGoal`/`removeFood`/`undoBonusItem`/`declineGameWin`/
+  `declineRollToGoalRound` — which fully
+  reverts the completion, exactly as if the kid had undone it themselves) from `ApprovalsPanel`. A
+  `'rollgoal'` `PendingPointsKind` (distinct from `'game'`) exists because `declineRollToGoalRound`
+  must never touch `todayGameWins`/`DAILY_GAME_WIN_CAP` the way `declineGameWin` does. If
   the kid cancels their own still-pending action first (unchecking a goal, tapping a Bonus item back
   down), `takeMostRecentPending` finds and drops the queued award instead of subtracting from a
   balance that was never credited — the same code path decline uses. On a signed-in device

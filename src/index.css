@@ -1571,6 +1571,95 @@ button.gtile.checked:disabled:active { transform: none; }
 .memory-card.matched .memory-card-icon { animation: icon-pop 0.4s ease; color: white; }
 .memory-card-icon { font-size: 1.3rem; }
 
+/* ===== ROLL TO THE GOAL ===== */
+.rollgoal-game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+.rollgoal-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.rollgoal-roll-btn {
+  background: var(--yellow);
+  border: var(--border-width-xl) solid var(--dark);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--dark);
+  padding: 16px 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rollgoal-roll-btn:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--dark); }
+.rollgoal-dice-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.rollgoal-die {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  background: var(--card);
+  border: var(--border-width-md) solid var(--dark);
+  border-radius: var(--radius-sm);
+  box-shadow: 2px 2px 0 var(--dark);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.2rem;
+  color: var(--dark);
+  cursor: pointer;
+}
+.rollgoal-die:disabled { cursor: default; }
+.rollgoal-die.held { background: var(--success); color: #fff; }
+.rollgoal-die-held-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 0.8rem;
+  color: var(--success);
+  background: #fff;
+  border-radius: 50%;
+}
+.rollgoal-actions-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Roll to the Goal's exit-confirm — mid-round leaving via GamesScreen's chevron/close bypasses
+   RollToTheGoalGame's own onExit, so GamesScreen owns this prompt instead. Fixed (not absolute)
+   since .calendar-modal-sheet scrolls internally and has no positioning context of its own. */
+.game-exit-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(47,62,70,0.72);
+}
+.game-exit-confirm-overlay .game-result {
+  background: var(--card);
+  border: var(--border-width-xl) solid var(--dark);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  max-width: 320px;
+}
+
 /* Sync gate */
 .sync-gate-overlay {
   position: fixed;
