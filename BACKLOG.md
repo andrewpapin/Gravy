@@ -268,6 +268,39 @@ of that epic's existing RLS item. Everything else from the audit lands here.)*
   logic under `src/state/`; no `@testing-library/react`/`jsdom`, no render/interaction
   tests, `GravyContext`'s actual wiring is untested. *(P2, M — start with `GravyProvider`
   wiring plus one or two panels rather than full coverage.)*
+- **The entire auth/household-sync UI layer has no test coverage at all** — `Onboarding`,
+  `AccountSetupStep`, `SignInPrompt`, `AccountMenu`'s lock/unlock swap, and
+  `ApprovalsDrawer`'s self-gating (`docs/ui-surfaces.md`) have never been exercised by an
+  automated test; every existing test is a pure-function test (`points`, `merge`, `auth`'s
+  predicates, `sync`'s payload validator) that never renders a component. Confirmed via a
+  manual QA pass (a real signed-in parent account, walking every `AccountMenu` destination
+  plus the locked-kid-device → live-unlock-without-reload path) — no bugs found, but nothing
+  guards against a regression. Real Supabase network calls aren't reachable from headless
+  browser automation in at least one sandboxed CI-like environment (proxy-routed egress that
+  Chromium's own network stack can't use, even explicitly configured to), so a durable test
+  suite should intercept the Supabase endpoints (`auth/v1/token`, the `gravy_*`
+  `rest/v1/rpc/*` calls) with Playwright's `page.route()` rather than depend on live network
+  — a working version of this technique was proven out in that QA session (sign-in
+  success/error, auto-attach vs. manual-join fallback, locked vs. unlocked `AccountMenu`,
+  `ApprovalsDrawer` self-gating, live unlock with no reload — all scriptable and
+  deterministic this way). *(P1, M — the natural successor to/superset of the two items
+  above.)*
+- **Realtime sync wiring has no test coverage beyond the pure merge function.**
+  `mergeRoots`/`mergeStates` (`src/state/merge.ts`) are well unit-tested, but
+  `subscribeToHousehold` (`src/state/sync.ts`) and, especially, the `lastSyncedRef`
+  echo-suppression logic in `useHouseholdSync`/`GravyContext`
+  (`docs/persistence-and-sync.md` documents this as the fix for a real prior bug — a
+  tapped goal/food/reward flashing done then reverting) are exercised by nothing. A
+  regression there would only surface as a hard-to-reproduce UI flicker in production.
+  *(P2, M — needs a mocked `postgres_changes` payload delivered through a fake channel,
+  not just a fake HTTP response.)*
+- **The household RPC wrapper functions have no test coverage.**
+  `createHousehold`/`fetchHousehold`/`pushHouseholdState`/`renameHousehold`/
+  `deleteHousehold` (`src/state/sync.ts`) and `findMyHouseholdCode`/`claimHousehold`/
+  `getHouseholdStatus` (`src/state/auth.ts`) are the actual Supabase call sites; only the
+  pure predicates that consume their *results* (`normalizeHouseholdStatus`,
+  `isGrownUpUnlocked`) are tested today. *(P2, S — covered as a side effect of the mocked
+  `page.route()` component tests above rather than needing its own harness.)*
 - **Single global `ErrorBoundary`.** `src/App.tsx:27-50` wraps the entire app; a bug in one
   drawer/mini-game blanks the whole UI instead of isolating failure. *(P2, S–M.)*
 
@@ -320,6 +353,15 @@ of that epic's existing RLS item. Everything else from the audit lands here.)*
 - **Several inputs identified only by placeholder text, no `<label>`.**
   `StorePanel.tsx`, `PointsPanel.tsx`, `ProfilesManager.tsx:133-140` (`GoalsPanel.tsx`'s
   fields got `aria-label`s in the Goals-panel UX pass below). *(P2, S.)*
+- **Closed drawers stay fully mounted and keyboard/screen-reader reachable.** `Modal`
+  (`src/components/Modal.tsx`) never unmounts its children when `open` is false — it only
+  toggles `opacity`/`pointer-events` via a `.show` class on the overlay (no `display:none`,
+  `visibility:hidden`, `inert`, or `aria-hidden`). A closed drawer's interactive elements
+  (e.g. `ApprovalsDrawer`'s `SignInPrompt` email/password inputs, or the whole `AccountMenu`
+  item list) are invisible but still in the tab order and focusable via keyboard or a screen
+  reader. Found incidentally during a QA browser-automation session, where a closed
+  `ApprovalsDrawer`'s hidden form fields collided with Playwright locators meant for the
+  open onboarding form. *(P2, S — add `inert`/`aria-hidden` to the overlay when `!open`.)*
 
 ### Bugs
 
