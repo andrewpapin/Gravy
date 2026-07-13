@@ -11,7 +11,7 @@ import {
 interface RollToTheGoalGameProps {
   onExit: () => void;
   // Reports whether a round is currently "in progress" (dice rolled, not yet submitted) —
-  // GamesScreen uses this to gate its own chevron-back/close buttons behind a confirm, since
+  // DailyGameDrawer uses this to gate its own back/close buttons behind a confirm, since
   // those bypass this component's onExit entirely.
   onRoundActiveChange?: (active: boolean) => void;
 }

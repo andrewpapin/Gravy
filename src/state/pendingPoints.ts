@@ -4,8 +4,8 @@ import type { GravyState, PendingPointsKind, PendingPointsAward } from './types'
 // used on devices with no signed-in account (see GravyContext's `requiresApproval`), so a parent
 // can approve/decline it later from the Approvals screen. `itemId` identifies the goal/food/
 // bonus/game that earned it; kind+itemId is how the exact-inverse actions (decrementGoal,
-// removeFood, undoBonusItem, declineGameWin) find and cancel a still-pending award instead of
-// touching the balance.
+// removeFood, undoBonusItem, declineRollToGoalRound) find and cancel a still-pending award
+// instead of touching the balance.
 export function queuePendingPoints(
   next: GravyState,
   kind: PendingPointsKind,

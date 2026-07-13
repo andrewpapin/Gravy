@@ -17,7 +17,7 @@ import {
   type SignUpResult,
   isGrownUpUnlocked,
 } from './auth';
-import { SYNC_SKIPPED_KEY, DAILY_GAME_WIN_CAP, activeStateOf, buildMergedRoot, clone } from './actions/shared';
+import { SYNC_SKIPPED_KEY, activeStateOf, buildMergedRoot, clone } from './actions/shared';
 import type { ProfilePatch, SettableSettingKey, SyncStatus } from './actions/types';
 import { useHouseholdSync } from './useHouseholdSync';
 import { useKidProgressActions, type RollToGoalRoundResult } from './actions/useKidProgressActions';
@@ -28,9 +28,9 @@ import { useCatalogActions } from './actions/useCatalogActions';
 import { useProfileActions } from './actions/useProfileActions';
 import { useHouseholdActions } from './actions/useHouseholdActions';
 
-// Re-exported here so existing consumers (Onboarding, SyncGateModal, GamesScreen) keep their
-// import path; the source of truth now lives in ./actions/shared.
-export { SYNC_SKIPPED_KEY, DAILY_GAME_WIN_CAP };
+// Re-exported here so existing consumers (Onboarding, SyncGateModal) keep their import path;
+// the source of truth now lives in ./actions/shared.
+export { SYNC_SKIPPED_KEY };
 export type { SyncStatus };
 
 const THEME_COLORS: Record<Theme, string> = {
@@ -78,7 +78,6 @@ interface GravyContextValue {
   decrementGoal: (id: number) => void;
   logBonusItem: (id: number) => void;
   undoBonusItem: (id: number) => void;
-  completeGameRound: (gameId: string, won: boolean) => void;
   completeRollToGoalRound: (result: RollToGoalRoundResult) => void;
   logFoodForDay: (dateStr: string, foodId: string) => void;
   removeFoodForDay: (dateStr: string, foodId: string) => void;
@@ -298,7 +297,6 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     decrementGoal: kidProgress.decrementGoal,
     removeFood: kidProgress.removeFood,
     undoBonusItem: kidProgress.undoBonusItem,
-    declineGameWin: kidProgress.declineGameWin,
     declineRollToGoalRound: kidProgress.declineRollToGoalRound,
   });
   const catalog = useCatalogActions({

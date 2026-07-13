@@ -151,21 +151,19 @@ describe('applyDayRollover', () => {
     expect(result.dayLogs['2024-01-10'].bonusCounts).toEqual({ [BONUS_GOAL.id]: 3 });
   });
 
-  it('resets per-day ledgers (todayGoalCounts, todayBonusApplied, todayGameWins, rollGoalRoundsToday, rollGoalDailyScore) for the new day', () => {
+  it('resets per-day ledgers (todayGoalCounts, todayBonusApplied, rollGoalRoundsToday, rollGoalDailyScore) for the new day', () => {
     setToday('2024-01-11T08:00:00Z');
     const state = freshState({
       lastActiveDate: '2024-01-10',
       todayPoints: 10,
       todayGoalCounts: { [BONUS_GOAL.id]: 2 },
       todayBonusApplied: { [BONUS_GOAL.id]: 30 },
-      todayGameWins: 3,
       rollGoalRoundsToday: 3,
       rollGoalDailyScore: 950,
     });
     const result = applyDayRollover(state);
     expect(result.todayGoalCounts).toEqual({});
     expect(result.todayBonusApplied).toEqual({});
-    expect(result.todayGameWins).toBe(0);
     expect(result.rollGoalRoundsToday).toBe(0);
     expect(result.rollGoalDailyScore).toBe(0);
   });

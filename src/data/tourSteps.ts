@@ -52,8 +52,8 @@ export const TOUR_STEPS: TourStep[] = [
   {
     targetId: 'games',
     icon: faGamepad,
-    title: 'Daily Games',
-    desc: () => 'A few quick games for a small bonus each day.',
+    title: 'Daily Game',
+    desc: () => 'Roll the dice each day for a bonus — the closer to the target, the bigger the payout.',
   },
   {
     targetId: 'account-menu',

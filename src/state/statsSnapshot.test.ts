@@ -13,6 +13,7 @@ import {
   getPersonalBests,
   getPointsHistory,
   getRewardsHistory,
+  getRollToGoalHistory,
 } from './statsSnapshot';
 
 const FULL_TRAY = { fruit: 1, veggie: 1, protein: 1, dairy: 1, grain: 1, sweets: 1 };
@@ -209,8 +210,8 @@ describe('getGamesBreakdown', () => {
 
   it('excludes undone entries and ignores game ids no longer in the catalog', () => {
     const actionLog: ActionLogEntry[] = [
-      { id: '1', type: 'game', label: 'win', pts: 15, dateStr: '2024-03-09', at: 1, itemId: 'hangman' },
-      { id: '2', type: 'game', label: 'win', pts: 15, dateStr: '2024-03-09', at: 2, itemId: 'hangman', undone: true },
+      { id: '1', type: 'game', label: 'win', pts: 15, dateStr: '2024-03-09', at: 1, itemId: 'rollgoal' },
+      { id: '2', type: 'game', label: 'win', pts: 15, dateStr: '2024-03-09', at: 2, itemId: 'rollgoal', undone: true },
       { id: '3', type: 'game', label: 'win', pts: 15, dateStr: '2024-03-09', at: 3, itemId: 'retiredGame' },
     ];
     const state = freshState({
@@ -219,7 +220,7 @@ describe('getGamesBreakdown', () => {
     });
     const breakdown = getGamesBreakdown(state);
     expect(breakdown.winRate).toBeCloseTo(3 / 5);
-    expect(breakdown.recentByGame).toEqual([{ id: 'hangman', name: 'Hangman', icon: 'font', recentWins: 1 }]);
+    expect(breakdown.recentByGame).toEqual([{ id: 'rollgoal', name: 'Roll to the Goal', icon: 'dice', recentWins: 1 }]);
   });
 
   it('flags the recent-window caveat only once actionLog is at its cap', () => {
@@ -319,5 +320,32 @@ describe('getRewardsHistory', () => {
   it('is empty when nothing has been redeemed', () => {
     const state = freshState();
     expect(getRewardsHistory(state)).toEqual([]);
+  });
+});
+
+describe('getRollToGoalHistory', () => {
+  it('includes only non-undone rollgoal game entries, excluding other action types', () => {
+    const actionLog: ActionLogEntry[] = [
+      { id: '1', type: 'game', label: 'Exact match!', pts: 15, dateStr: '2024-03-09', at: 1, itemId: 'rollgoal' },
+      { id: '2', type: 'game', label: 'Undone round', pts: 9, dateStr: '2024-03-09', at: 2, itemId: 'rollgoal', undone: true },
+      { id: '3', type: 'rewardApproved', label: 'Treat approved!', pts: -75, dateStr: '2024-03-09', at: 3 },
+    ];
+    const state = freshState({ actionLog });
+    const history = getRollToGoalHistory(state);
+    expect(history).toEqual([{ id: '1', label: 'Exact match!', pts: 15, dateStr: '2024-03-09', at: 1 }]);
+  });
+
+  it('sorts most-recent first and truncates to the limit', () => {
+    const actionLog: ActionLogEntry[] = Array.from({ length: 5 }, (_, i): ActionLogEntry => ({
+      id: String(i), type: 'game', label: `Round ${i}`, pts: 5, dateStr: '2024-03-09', at: i, itemId: 'rollgoal',
+    }));
+    const state = freshState({ actionLog });
+    const history = getRollToGoalHistory(state, 2);
+    expect(history.map((h) => h.id)).toEqual(['4', '3']);
+  });
+
+  it('is empty when nothing has been played', () => {
+    const state = freshState();
+    expect(getRollToGoalHistory(state)).toEqual([]);
   });
 });

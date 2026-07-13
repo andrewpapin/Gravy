@@ -63,9 +63,9 @@ const TIER_DISPLAY_SCORE: Record<Exclude<ScoreTier, 'bust'>, number> = {
   far: 50,
 };
 
-// Real-Gravy-points payout scaling vs. settings.gamePts — keeps this game's point economy in
-// line with the flat-award other arcade games pay, while still rewarding accuracy. The reroll
-// bonus deliberately affects only the displayed score below, not the real payout.
+// Real-Gravy-points payout scaling vs. settings.gamePts — scales the base award down for a
+// farther-off roll, while still rewarding accuracy. The reroll bonus deliberately affects only
+// the displayed score below, not the real payout.
 export const ROLL_TO_GOAL_PAYOUT_PCT: Record<Exclude<ScoreTier, 'bust'>, number> = {
   exact: 1,
   near1: 0.6,

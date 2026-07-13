@@ -3,40 +3,41 @@
 Deep reference for games, ranks, icons, theming, time zone, deployment, versioning, and the
 PWA update mechanism. CLAUDE.md links here; read the relevant section when touching those areas.
 
-## Arcade (Games Hub)
+## Daily Game
 
-User-facing label is "Arcade" (`GamesScreen`'s header/aria-labels) — kept distinct from the parent
-dashboard's "Game Settings" label so the two aren't confused; the underlying component/file/prop
-names (`GamesCard`, `GamesScreen`, `onOpenGames`, `gamesOpen`, `src/data/games.ts`,
-`completeGameRound`) are unchanged. `GamesCard`'s own home-screen pill label reads "Daily" (it
-sits in `HomeScreen`'s `QuickLinksRow` alongside `StatsPill`/`PrizesPill`, see `docs/ui-surfaces.md`)
-— the pill's text differs from the screen it opens on purpose, same as the parent-dashboard label
-split above.
+The app has exactly one game — Roll to the Goal (`rollgoal`, dice icon 🎲) — reached by tapping
+`GamesCard`'s home-screen "Daily" pill (sits in `HomeScreen`'s `QuickLinksRow` alongside
+`StatsPill`/`PrizesPill`, see `docs/ui-surfaces.md`), which opens `DailyGameDrawer`
+(`src/components/DailyGameDrawer.tsx`). `src/data/games.ts`'s `GAMES: GameDef[]` catalog still
+exists as a single-entry array mainly so `getGamesBreakdown`/`GamesBreakdownSection`
+(`docs/ui-surfaces.md`'s `RankScreen` stats charts) have a name/icon to key off.
 
-`GamesScreen` (opened from `HomeScreen`'s `GamesCard`) is a hub listing the catalog in
-`src/data/games.ts` (`GAMES: GameDef[]` — currently Hangman, Math Facts, Word Scramble, Memory
-Match, Roll to the Goal; add a game by adding an entry there plus a component in
-`src/components/games/`, plus a branch in `GamesScreen`'s if/else chain rendering it). Each game
-component calls `completeGameRound(gameId, won)` on finish. That action increments
-`counters.gamesPlayed`/`gamesWon` and, on a win, awards `settings.gamePts` points — but only up to
-`DAILY_GAME_WIN_CAP` (3, defined in `src/state/actions/shared.ts`, re-exported from `GravyContext`)
-wins per day via `todayGameWins`, so a kid can't farm points by replaying an easy round; wins beyond
-the cap still count toward `gamesWon` but pay no points. `todayGameWins` resets at day rollover.
+`DailyGameDrawer` is built on the shared `Modal` component and has two local views (`'info' |
+'play'`, default `'info'`) rather than a multi-game tile grid:
 
-`Roll to the Goal` (`rollgoal`, `src/components/games/RollToTheGoalGame.tsx`) is the one exception
-to the flow above: it has its own independent 3-rounds/day structure (`rollGoalRoundsToday`,
-`ROLL_TO_GOAL_ROUNDS_PER_DAY` in `src/data/rollToGoal.ts`) that never gates on, or counts toward,
-`todayGameWins`/`DAILY_GAME_WIN_CAP` — every round is always eligible to pay out. Its daily target
-number is `getDailyTarget(todayStr(timezone))`, a deterministic (mulberry32-seeded) pure function
-of the day string rather than a persisted/synced field, so every household device agrees on the
-same target with no Supabase merge logic involved. Payout per round scales `settings.gamePts` by
-accuracy tier (`getRollToGoalPayout` in `src/data/rollToGoal.ts`) instead of the flat amount every
-other game pays; the 0-500(+reroll-bonus) number shown to the kid mid-game is a separate
+- **Info view** — the game blurb + today's target (`getDailyTarget(todayStr(timezone))`) + rounds
+  remaining, a Play button, a "Today" stats block (rounds played/`ROLL_TO_GOAL_ROUNDS_PER_DAY`,
+  `state.rollGoalDailyScore`, points earned today), and a "History" block (`getGamesBreakdown`'s
+  aggregate played/won/win-rate tiles plus `getRollToGoalHistory` — `src/state/statsSnapshot.ts` —
+  a recent-rounds list built from `actionLog`, same pattern as `getRewardsHistory`).
+- **Play view** — renders `RollToTheGoalGame` (`src/components/games/RollToTheGoalGame.tsx`)
+  unchanged.
+
+`RollToTheGoalGame` reports whether a
+round is in progress (dice rolled, not yet submitted) via `onRoundActiveChange`, and backing out
+(`Modal`'s back/close, which now also covers Escape/backdrop-click) while a round is active shows
+a "Leave the game? Your progress this round will be lost." confirm instead of exiting immediately.
+
+Roll to the Goal has its own independent 3-rounds/day structure (`rollGoalRoundsToday`,
+`ROLL_TO_GOAL_ROUNDS_PER_DAY` in `src/data/rollToGoal.ts`) — every round is always eligible to pay
+out, with no separate daily win cap. Its daily target number is `getDailyTarget(todayStr(timezone))`,
+a deterministic (mulberry32-seeded) pure function of the day string rather than a persisted/synced
+field, so every household device agrees on the same target with no Supabase merge logic involved.
+Payout per round scales `settings.gamePts` by accuracy tier (`getRollToGoalPayout` in
+`src/data/rollToGoal.ts`); the 0-500(+reroll-bonus) number shown to the kid mid-game is a separate
 bragging-rights score (`rollGoalDailyScore`, the "Final Daily Score"), not the real point award.
-Dispatches via `completeRollToGoalRound`/`declineRollToGoalRound` (sibling actions to
-`completeGameRound`/`declineGameWin` in `useKidProgressActions.ts`), and a `'rollgoal'`
-`PendingPointsKind` (distinct from `'game'`) since its decline path must never touch
-`todayGameWins`.
+Dispatches via `completeRollToGoalRound`/`declineRollToGoalRound` in `useKidProgressActions.ts`,
+and its own `'rollgoal'` `PendingPointsKind` with its own decline handler.
 
 ## Rank Ladder
 

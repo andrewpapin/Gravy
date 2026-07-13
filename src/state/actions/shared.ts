@@ -6,9 +6,6 @@ import { mirrorSharedFields } from '../defaultState';
 
 export const HOUSEHOLD_CODE_KEY = 'gravy_household_code';
 export const SYNC_SKIPPED_KEY = 'gravy_sync_skipped';
-// Caps how many game wins count toward points per day, so a kid can't farm an easy
-// round on repeat — beyond this, wins still feel celebratory but stop paying out.
-export const DAILY_GAME_WIN_CAP = 3;
 
 export function clone(state: GravyState): GravyState {
   return JSON.parse(JSON.stringify(state));

@@ -1,6 +1,7 @@
 import type { GravyState } from './types';
 import { FOODS } from '../data/foods';
 import { GAMES } from '../data/games';
+import { ROLL_TO_GOAL_GAME_ID } from '../data/rollToGoal';
 import { getRank } from '../data/ranks';
 import { getDayLog, hasAnyLog } from './dayLog';
 import { todayStr, addDaysToDateStr } from './defaultState';
@@ -127,9 +128,9 @@ export interface GamesBreakdown {
   gamesPlayed: number;
   gamesWon: number;
   winRate: number;
-  // Per-game split can only be derived from actionLog (game entries are logged only for
-  // point-earning wins, capped at DAILY_GAME_WIN_CAP/day), which is itself FIFO-capped at
-  // ACTION_LOG_MAX_ENTRIES — so this is a "recent" breakdown, not a lifetime one.
+  // Per-game split can only be derived from actionLog (Roll to the Goal only logs a round when
+  // it pays real points, i.e. non-bust), which is itself FIFO-capped at ACTION_LOG_MAX_ENTRIES —
+  // so this is a "recent" breakdown, not a lifetime one.
   recentByGame: GameBreakdownEntry[];
   isRecentWindowTruncated: boolean;
 }
@@ -161,6 +162,26 @@ export function getGamesBreakdown(state: GravyState): GamesBreakdown {
     recentByGame,
     isRecentWindowTruncated: state.actionLog.length >= ACTION_LOG_MAX_ENTRIES,
   };
+}
+
+export interface RollToGoalHistoryEntry {
+  id: string;
+  label: string;
+  pts: number;
+  dateStr: string;
+  at: number;
+}
+
+// Recent Roll to the Goal rounds that paid real points — a bust round never calls
+// appendActionLog at all (see completeRollToGoalRound), so this is a "scoring rounds" history,
+// not literally every round played. Same shape/pattern as getRewardsHistory.
+export function getRollToGoalHistory(state: GravyState, limit = 10): RollToGoalHistoryEntry[] {
+  return state.actionLog
+    .filter((e) => e.type === 'game' && e.itemId === ROLL_TO_GOAL_GAME_ID && !e.undone)
+    .slice()
+    .sort((a, b) => b.at - a.at)
+    .slice(0, limit)
+    .map((e) => ({ id: e.id, label: e.label, pts: e.pts, dateStr: e.dateStr, at: e.at }));
 }
 
 export interface RewardHistoryEntry {

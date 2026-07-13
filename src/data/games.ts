@@ -14,36 +14,10 @@ export interface GameDef {
   variablePayout?: boolean;
 }
 
-// The Games hub catalog — add new entries here to add a new game to the hub grid.
+// The games catalog — currently just the one Daily Game (Roll to the Goal). Kept as an array
+// (rather than a single constant) since getGamesBreakdown/GamesBreakdownSection still key off it
+// for the game's name/icon.
 export const GAMES: GameDef[] = [
-  {
-    id: 'hangman',
-    emoji: '🔤',
-    icon: 'font',
-    name: 'Hangman',
-    description: 'Guess the word before you run out of tries!',
-  },
-  {
-    id: 'mathfacts',
-    emoji: '🧮',
-    icon: 'calculator',
-    name: 'Math Facts',
-    description: 'Answer fast and get 7 right before 3 strikes!',
-  },
-  {
-    id: 'scramble',
-    emoji: '🔀',
-    icon: 'shuffle',
-    name: 'Word Scramble',
-    description: 'Unscramble the letters to spell the word!',
-  },
-  {
-    id: 'memory',
-    emoji: '🧩',
-    icon: 'clone',
-    name: 'Memory Match',
-    description: 'Flip cards and find all the matching pairs!',
-  },
   {
     id: 'rollgoal',
     emoji: '🎲',

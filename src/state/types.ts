@@ -25,15 +25,15 @@ export interface PendingReward {
   rewardId: number;
 }
 
-export type PendingPointsKind = 'goal' | 'food' | 'bonus' | 'game' | 'rollgoal';
+export type PendingPointsKind = 'goal' | 'food' | 'bonus' | 'rollgoal';
 
 // A point-earning action taken on a device with no signed-in account (a "kid-only" device
 // joined via family code only — see GravyContext's `requiresApproval`). The completion itself
 // (todayGoals/todayFoodCounts/counters/streaks) applies immediately; only the points sit
 // here, out of the live balance, until a parent approves or declines them from the Approvals
 // screen. `kind`+`itemId` is how the exact-inverse actions (decrementGoal, removeFood,
-// undoBonusItem, declineGameWin) find and cancel a still-pending award instead of touching the
-// balance — see src/state/pendingPoints.ts.
+// undoBonusItem, declineRollToGoalRound) find and cancel a still-pending award instead of
+// touching the balance — see src/state/pendingPoints.ts.
 export interface PendingPointsAward {
   id: string;
   kind: PendingPointsKind;
@@ -154,9 +154,7 @@ export interface GravyState {
   // kid is broke (capped at the current balance), so this records what was really deducted/
   // added so an undo reverses exactly that — never handing back points that were forgiven.
   todayBonusApplied: Record<number, number>;
-  todayGameWins: number;
-  // Roll to the Goal has its own independent 3-rounds/day structure — NOT gated by, or counted
-  // toward, todayGameWins/DAILY_GAME_WIN_CAP (that cap is for every other arcade game's payouts).
+  // Roll to the Goal's own independent daily-rounds structure — see ROLL_TO_GOAL_ROUNDS_PER_DAY.
   rollGoalRoundsToday: number;
   // Sum of today's completed Roll to the Goal rounds' 0-500(+reroll-bonus) display scores (the
   // "Final Daily Score" shown to the kid) — separate from the real Gravy points awarded per round.

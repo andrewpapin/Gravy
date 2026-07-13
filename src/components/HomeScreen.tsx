@@ -11,11 +11,11 @@ interface HomeScreenProps {
   onOpenAccountMenu: () => void;
   onOpenApprovals: () => void;
   onOpenStore: () => void;
-  onOpenGames: () => void;
+  onOpenDailyGame: () => void;
   onOpenRank: () => void;
 }
 
-export function HomeScreen({ onOpenAccountMenu, onOpenApprovals, onOpenStore, onOpenGames, onOpenRank }: HomeScreenProps) {
+export function HomeScreen({ onOpenAccountMenu, onOpenApprovals, onOpenStore, onOpenDailyGame, onOpenRank }: HomeScreenProps) {
   const { state } = useGravy();
   const today = todayStr(state.settings.timezone);
 
@@ -23,7 +23,7 @@ export function HomeScreen({ onOpenAccountMenu, onOpenApprovals, onOpenStore, on
     <div className="screen active">
       <TopBar dateStr={today} onOpenAccountMenu={onOpenAccountMenu} onOpenApprovals={onOpenApprovals} />
       <div className="scroll-area">
-        <QuickLinksRow onOpenGames={onOpenGames} onOpenRank={onOpenRank} onOpenStore={onOpenStore} />
+        <QuickLinksRow onOpenDailyGame={onOpenDailyGame} onOpenRank={onOpenRank} onOpenStore={onOpenStore} />
         <StatsCard onOpenRank={onOpenRank} onOpenStore={onOpenStore} />
         <FoodTray dateStr={today} />
         <DailyGoals dateStr={today} />
