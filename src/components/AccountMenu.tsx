@@ -14,6 +14,7 @@ interface AccountMenuProps {
   onOpenProfiles: () => void;
   onOpenSettings: () => void;
   onOpenCalendar: () => void;
+  onOpenReleaseNotes: () => void;
 }
 
 export function AccountMenu({
@@ -24,6 +25,7 @@ export function AccountMenu({
   onOpenProfiles,
   onOpenSettings,
   onOpenCalendar,
+  onOpenReleaseNotes,
 }: AccountMenuProps) {
   const { profiles, grownUpUnlocked, signOutAccount } = useGravy();
   // Re-prompt sign-in on every fresh open, adjusted during render (not an effect) — this
@@ -106,7 +108,12 @@ export function AccountMenu({
               <span className="account-menu-option-sub">Time zone, family code, and reset</span>
             </span>
           </button>
-          <div className="account-menu-version">v{APP_VERSION}</div>
+          <div className="account-menu-version">
+            v{APP_VERSION} ·{' '}
+            <button type="button" className="account-menu-release-notes-link" onClick={onOpenReleaseNotes}>
+              Release Notes
+            </button>
+          </div>
         </div>
       )}
     </Modal>

@@ -151,26 +151,36 @@ run preview`); `npm run dev` doesn't register it since `devOptions.enabled` isn'
 
 ## Release Notes Drawer
 
-`src/data/releaseNotes.ts` holds `RELEASE_NOTES`, a hand-maintained list of `{ version, note }`
-entries — one plain-language bullet per user-facing change worth announcing. `version` is a
-manually-bumped integer local to this feature (append a new entry with `version` one higher than
-the current last entry whenever a PR ships something worth telling users about); it's intentionally
-unrelated to the auto-derived `__APP_VERSION__` build string above, since a contributor can't know
-their PR's future merge number while writing the note. The pure comparison logic
-(`getUnseenReleaseNotes`/`getLatestReleaseNoteVersion`, tested in `src/state/releaseNotes.test.ts`)
-lives in `src/state/releaseNotes.ts`.
+`src/data/releaseNotes.ts` holds `RELEASE_NOTES`, a hand-maintained list of `{ version, note,
+prNumber }` entries — one plain-language bullet (plus the GitHub PR number that shipped it) per
+user-facing change worth announcing. `version` is a manually-bumped integer local to this feature
+(append a new entry with `version` one higher than the current last entry, and `prNumber` set to
+the PR's number, whenever a PR ships something worth telling users about — see the "Git & PR
+workflow" step in `CLAUDE.md`); `version` is intentionally unrelated to the auto-derived
+`__APP_VERSION__` build string above. The pure logic (`getUnseenReleaseNotes`/
+`getLatestReleaseNoteVersion`/`getAllReleaseNotesSorted`, tested in
+`src/state/releaseNotes.test.ts`) lives in `src/state/releaseNotes.ts`.
 
-`ReleaseNotesDrawer.tsx` reads the last-seen version from `localStorage`
-(`gravy_release_notes_seen`) on mount, shows a drawer listing any notes newer than it (newest
-first), and immediately records the latest version as seen — so a shown drawer won't reappear next
-load. A `null` last-seen value (brand-new install, or an existing install from before this feature
-shipped) is treated as nothing-to-announce, so it bootstraps silently instead of dumping the whole
-history. Since `UpdatePrompt` auto-reloads on every deploy (see above) and each merge to `main`
-changes `__APP_VERSION__`, in practice this drawer surfaces once per meaningful release: the reload
-after a deploy is what makes "loads with a new version" and "a PR merged to main" the same event
-from the client's point of view. Mounted last in `AppShell` (`App.tsx`) and given
-`overlayClassName="release-notes-overlay"` (z-index 1200) so it always stacks above the cloud-sync
-gate (`SyncGateModal`, z-index 1100) rather than getting silently buried behind it.
+Two components consume this data, for two different purposes:
+
+- **`ReleaseNotesDrawer.tsx`** — the auto-popup "What's New". Reads the last-seen version from
+  `localStorage` (`gravy_release_notes_seen`) on mount, shows a drawer listing any notes newer than
+  it (newest first) via `getUnseenReleaseNotes`, and immediately records the latest version as seen
+  — so a shown drawer won't reappear next load. A `null` last-seen value (brand-new install, or an
+  existing install from before this feature shipped) is treated as nothing-to-announce, so it
+  bootstraps silently instead of dumping the whole history. Since `UpdatePrompt` auto-reloads on
+  every deploy (see above) and each merge to `main` changes `__APP_VERSION__`, in practice this
+  drawer surfaces once per meaningful release: the reload after a deploy is what makes "loads with a
+  new version" and "a PR merged to main" the same event from the client's point of view. Mounted
+  last in `AppShell` (`App.tsx`) and given `overlayClassName="release-notes-overlay"` (z-index 1200)
+  so it always stacks above the cloud-sync gate (`SyncGateModal`, z-index 1100) rather than getting
+  silently buried behind it.
+- **`ReleaseNotesHistoryDrawer.tsx`** — an on-demand full history, reached via the "Release Notes"
+  link next to the version number in the Grown-Up Menu (`AccountMenu.tsx`). Lists every entry in
+  `RELEASE_NOTES` (via `getAllReleaseNotesSorted`, newest first, scrollable), each linking to
+  `github.com/andrewpapin/gravy/pull/{prNumber}`. Unlike `ReleaseNotesDrawer`, it has no "seen"
+  side effect — it's a plain browsing view, wired into `AppShell` the same way as
+  `CalendarDrawer`/`AdvancedSettingsDrawer` (`open`/`onClose`/`onBack` props, lazy-loaded).
 
 ## First-Run Guided Tour
 

@@ -11,3 +11,9 @@ export function getUnseenReleaseNotes(notes: ReleaseNote[], lastSeenVersion: num
   if (lastSeenVersion === null) return [];
   return notes.filter((n) => n.version > lastSeenVersion).sort((a, b) => b.version - a.version);
 }
+
+// Full history for the on-demand Release Notes drawer, newest first — unlike
+// getUnseenReleaseNotes, not filtered by what's already been seen.
+export function getAllReleaseNotesSorted(notes: ReleaseNote[]): ReleaseNote[] {
+  return [...notes].sort((a, b) => b.version - a.version);
+}
