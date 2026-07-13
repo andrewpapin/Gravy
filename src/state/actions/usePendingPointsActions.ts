@@ -18,7 +18,6 @@ export interface PendingPointsDeps {
   decrementGoal: (id: number) => void;
   removeFood: (id: string) => void;
   undoBonusItem: (id: number) => void;
-  declineGameWin: (gameId: string) => void;
   declineRollToGoalRound: () => void;
 }
 
@@ -28,7 +27,7 @@ export interface PendingPointsDeps {
 export function usePendingPointsActions(deps: PendingPointsDeps) {
   const {
     setState, stateRef, maybeCelebrateRankUp, actorRef,
-    decrementGoal, removeFood, undoBonusItem, declineGameWin, declineRollToGoalRound,
+    decrementGoal, removeFood, undoBonusItem, declineRollToGoalRound,
   } = deps;
 
   const approvePendingPointsAward = useCallback((id: string) => {
@@ -73,9 +72,6 @@ export function usePendingPointsActions(deps: PendingPointsDeps) {
       case 'bonus':
         undoBonusItem(pending.itemId as number);
         break;
-      case 'game':
-        declineGameWin(pending.itemId as string);
-        break;
       case 'rollgoal':
         declineRollToGoalRound();
         break;
@@ -91,7 +87,7 @@ export function usePendingPointsActions(deps: PendingPointsDeps) {
       });
       return next;
     });
-  }, [stateRef, setState, actorRef, decrementGoal, removeFood, undoBonusItem, declineGameWin, declineRollToGoalRound]);
+  }, [stateRef, setState, actorRef, decrementGoal, removeFood, undoBonusItem, declineRollToGoalRound]);
 
   return { approvePendingPointsAward, declinePendingPointsAward };
 }

@@ -29,7 +29,6 @@ export const defaultState: GravyState = {
   todayGoals: [],
   todayGoalCounts: {},
   todayBonusApplied: {},
-  todayGameWins: 0,
   rollGoalRoundsToday: 0,
   rollGoalDailyScore: 0,
   dayLogs: {},
@@ -344,7 +343,7 @@ function sanitizePendingRewards(v: unknown): PendingReward[] {
     : [];
 }
 
-const PENDING_POINTS_KINDS: PendingPointsKind[] = ['goal', 'food', 'bonus', 'game', 'rollgoal'];
+const PENDING_POINTS_KINDS: PendingPointsKind[] = ['goal', 'food', 'bonus', 'rollgoal'];
 
 function sanitizePendingPointsAwards(v: unknown): PendingPointsAward[] {
   return Array.isArray(v)
@@ -628,7 +627,6 @@ export function applyDayRollover(state: GravyState): GravyState {
     state.todayGoalCounts = {};
     // Bonus penalties settle at the end of the day — start the new day with a clean ledger.
     state.todayBonusApplied = {};
-    state.todayGameWins = 0;
     state.rollGoalRoundsToday = 0;
     state.rollGoalDailyScore = 0;
   }

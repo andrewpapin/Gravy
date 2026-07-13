@@ -4,14 +4,13 @@ import type { GravyState } from '../types';
 import { todayStr } from '../defaultState';
 import { appendActionLog, markMostRecentUndone, type LogActor } from '../actionLog';
 import { FOODS } from '../../data/foods';
-import { GAMES } from '../../data/games';
 import {
   ROLL_TO_GOAL_GAME_ID, ROLL_TO_GOAL_ROUNDS_PER_DAY, TIER_LABELS,
   getRollToGoalPayout, type ScoreTier,
 } from '../../data/rollToGoal';
 import { applyBonusItem, getFoodPts, reverseBonusItem } from '../points';
 import { queuePendingPoints, takeMostRecentPending } from '../pendingPoints';
-import { DAILY_GAME_WIN_CAP, clone } from './shared';
+import { clone } from './shared';
 import type { AwardPoints, MaybeCelebrateRankUp, ShowCelebration } from './types';
 
 export interface RollToGoalRoundResult {
@@ -189,54 +188,8 @@ export function useKidProgressActions(deps: KidProgressDeps) {
     });
   }, [setState]);
 
-  const completeGameRound = useCallback((gameId: string, won: boolean) => {
-    setState((prev) => {
-      const next = clone(prev);
-      next.counters.gamesPlayed++;
-      if (won) {
-        next.counters.gamesWon++;
-        const game = GAMES.find((g) => g.id === gameId);
-        if (next.todayGameWins < DAILY_GAME_WIN_CAP) {
-          next.todayGameWins++;
-          const label = `🎉 ${game?.name ?? 'Game'} win!`;
-          if (requiresApproval) {
-            queuePendingPoints(next, 'game', gameId, next.settings.gamePts, label);
-          } else {
-            awardPoints(next, next.settings.gamePts);
-          }
-          appendActionLog(next, actorRef.current, {
-            type: 'game',
-            label,
-            pts: requiresApproval ? 0 : next.settings.gamePts,
-            dateStr: todayStr(next.settings.timezone),
-            itemId: gameId,
-          });
-        }
-        maybeCelebrateRankUp(prev.totalPoints, next);
-      }
-      return next;
-    });
-  }, [setState, awardPoints, maybeCelebrateRankUp, actorRef, requiresApproval]);
-
-  // Reverses a still-pending game-win award (counters.gamesWon/todayGameWins) when a parent
-  // declines it from Approvals — there's no kid-facing "undo" for a game round, so this is only
-  // ever dispatched by declinePendingPointsAward.
-  const declineGameWin = useCallback((gameId: string) => {
-    setState((prev) => {
-      const hasPending = prev.pendingPointsAwards.some((p) => p.kind === 'game' && p.itemId === gameId);
-      if (!hasPending) return prev;
-      const next = clone(prev);
-      takeMostRecentPending(next, 'game', gameId);
-      next.counters.gamesWon = Math.max(0, next.counters.gamesWon - 1);
-      next.todayGameWins = Math.max(0, next.todayGameWins - 1);
-      markMostRecentUndone(next.actionLog, 'game', gameId, todayStr(next.settings.timezone));
-      return next;
-    });
-  }, [setState]);
-
-  // Roll to the Goal's own daily-rounds action — kept separate from completeGameRound because
-  // its payout is variable-per-tier (not a flat settings.gamePts) and its 3-rounds/day cap is
-  // independent of DAILY_GAME_WIN_CAP (see rollGoalRoundsToday on GravyState).
+  // Roll to the Goal's own daily-rounds action — its payout is variable-per-tier (not a flat
+  // award) and its 3-rounds/day cap (ROLL_TO_GOAL_ROUNDS_PER_DAY) is independent of anything else.
   const completeRollToGoalRound = useCallback((result: RollToGoalRoundResult) => {
     setState((prev) => {
       // Defensive: never process a 4th round even on a stale double-dispatch.
@@ -270,10 +223,10 @@ export function useKidProgressActions(deps: KidProgressDeps) {
     });
   }, [setState, awardPoints, maybeCelebrateRankUp, actorRef, requiresApproval]);
 
-  // Reverses a still-pending Roll to the Goal award when a parent declines it from Approvals.
-  // Mirrors declineGameWin's shape, but never touches rollGoalRoundsToday/rollGoalDailyScore (the
-  // round was genuinely played today regardless of the payout decision) or todayGameWins (this
-  // game doesn't participate in DAILY_GAME_WIN_CAP at all).
+  // Reverses a still-pending Roll to the Goal award when a parent declines it from Approvals —
+  // never touches rollGoalRoundsToday/rollGoalDailyScore (the round was genuinely played today
+  // regardless of the payout decision). There's no kid-facing "undo" for a round — only ever
+  // dispatched by declinePendingPointsAward.
   const declineRollToGoalRound = useCallback(() => {
     setState((prev) => {
       const hasPending = prev.pendingPointsAwards.some((p) => p.kind === 'rollgoal');
@@ -352,7 +305,7 @@ export function useKidProgressActions(deps: KidProgressDeps) {
   }, [setState]);
 
   return {
-    logFood, removeFood, incrementGoal, decrementGoal, completeGameRound, declineGameWin,
+    logFood, removeFood, incrementGoal, decrementGoal,
     completeRollToGoalRound, declineRollToGoalRound,
     logBonusItem, undoBonusItem,
   };

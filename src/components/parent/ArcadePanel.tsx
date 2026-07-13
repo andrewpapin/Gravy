@@ -24,7 +24,7 @@ export function ArcadePanel() {
             Points per game win
             {savedField === 'gamePts' && <FontAwesomeIcon icon={faCheck} className="saved-flash" />}
           </div>
-          <div className="settings-sub">Awarded when {state.settings.childName} wins a game (up to 3 wins/day)</div>
+          <div className="settings-sub">Base payout for the daily dice game — scaled down for a farther-off roll, up to 3 rounds/day</div>
         </div>
         <input
           className="settings-input-compact"

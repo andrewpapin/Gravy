@@ -10,7 +10,7 @@ there is no router, just boolean open/close state per drawer.
 ## Kid view (`src/components/`)
 
 `HomeScreen` (avatar/greeting top bar, quick-links pill row, rank/streak stats card, food tray,
-daily goals, bonus items) plus drawers for the reward store, the Arcade (games), and the rank
+daily goals, bonus items) plus drawers for the reward store, the Daily Game, and the rank
 ladder. `FoodTray` and `BonusPoints` share a 3-column tile grid (`.tray-grid`/`.goal-grid`,
 `.gtile`); `DailyGoals` instead renders as a vertical list of full-width horizontal rows
 (`.goal-rows`/`.goal-row`) — icon + name/points on the left, a Complete/Undo button (or the
@@ -22,13 +22,13 @@ collapsedSections` (`toggleSectionCollapsed` in `GravyContext`) — see `docs/st
 shared-vs-per-kid fields note. `TopBar` holds the avatar, greeting, a bell icon, and the grown-up
 menu (hamburger) icon, same as before. Directly below it, `QuickLinksRow` — the first thing inside
 the scrollable content — renders three equal-width pills (`.pill-row`/`.home-pill`): `GamesCard`
-("Daily", sage, gamepad icon → `onOpenGames`), `StatsPill` ("Stats", coral, trophy icon →
+("Daily", sage, gamepad icon → `onOpenDailyGame`), `StatsPill` ("Stats", coral, trophy icon →
 `onOpenRank`), and `PrizesPill` ("Prizes", yellow, gift icon → `onOpenStore`) — quick shortcuts to
-screens also reachable from `StatsCard` below (rank ladder, reward store). The user-facing label
-for the games hub itself is still "Arcade" (`GamesScreen`'s header/title) even though its home-screen
-entry point pill now reads "Daily" — kept distinct from the parent dashboard's "Game Settings" label
-(see below) so the two aren't confused; the underlying component/file names (`GamesCard`,
-`GamesScreen`, `onOpenGames`, `gamesOpen`, `src/data/games.ts`) are unchanged. The coin balance and
+screens also reachable from `StatsCard` below (rank ladder, reward store). The pill opens
+`DailyGameDrawer` (`src/components/DailyGameDrawer.tsx`, `dailyGameOpen` state in `AppShell`) —
+see `docs/systems.md`'s "Daily Game" section for its play/stats/history layout. The parent
+dashboard's own "Arcade" label (see below) refers only to its `gamePts` settings panel, not this
+drawer. The coin balance and
 a second Reward Store entry point live in `StatsCard`'s coins row. There is no kid-facing
 calendar/history icon or screen; the only calendar surface is the PIN-gated parent `CalendarPanel`
 (see below), reached via `AccountMenu` → "Calendar".
@@ -160,8 +160,9 @@ list, not tabs); picking a card drills into one panel with a back button:
   it shows a computed "≈ N days to earn" estimate using `getAverageDailyPoints`
   (`state/statsSnapshot.ts`, a trailing-14-day average including zero-point days), so a parent can
   gauge a reward's cost against the kid's real pace.
-- `ArcadePanel` — points per game win (`gamePts`), labeled "Arcade" to match the kid-facing hub
-  name, its own top-level `'arcade'` destination, unrelated to goals/food/reward configuration.
+- `ArcadePanel` — base payout for the Daily Game (`gamePts`), labeled "Arcade" (its own top-level
+  `'arcade'` destination, unrelated to goals/food/reward configuration) — a legacy label kept
+  distinct from the kid-facing "Daily Game" drawer so the two settings surfaces aren't confused.
 
 `ApprovalsPanel` (approve/decline pending points and pending reward requests) is no longer nested
 here — it's reached directly from the `TopBar` bell icon via the standalone, self-gating

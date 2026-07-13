@@ -15,7 +15,7 @@ import { safeGetItem } from './state/storage';
 // by default, or — for Onboarding/SyncGateModal — only one of the two ever mounts depending
 // on first-run state). Loading them on demand keeps their weight out of the main bundle.
 const StoreScreen = lazy(() => import('./components/StoreScreen').then((m) => ({ default: m.StoreScreen })));
-const GamesScreen = lazy(() => import('./components/GamesScreen').then((m) => ({ default: m.GamesScreen })));
+const DailyGameDrawer = lazy(() => import('./components/DailyGameDrawer').then((m) => ({ default: m.DailyGameDrawer })));
 const RankScreen = lazy(() => import('./components/RankScreen').then((m) => ({ default: m.RankScreen })));
 const ProfileSwitcher = lazy(() => import('./components/ProfileSwitcher').then((m) => ({ default: m.ProfileSwitcher })));
 const ProfilesManager = lazy(() => import('./components/ProfilesManager').then((m) => ({ default: m.ProfilesManager })));
@@ -57,7 +57,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 function AppShell() {
   const { passwordRecovery } = useGravy();
   const [storeOpen, setStoreOpen] = useState(false);
-  const [gamesOpen, setGamesOpen] = useState(false);
+  const [dailyGameOpen, setDailyGameOpen] = useState(false);
   const [rankOpen, setRankOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [grownUpsOpen, setGrownUpsOpen] = useState(false);
@@ -85,14 +85,14 @@ function AppShell() {
           onOpenAccountMenu={() => setAccountMenuOpen(true)}
           onOpenApprovals={() => setApprovalsOpen(true)}
           onOpenStore={() => setStoreOpen(true)}
-          onOpenGames={() => setGamesOpen(true)}
+          onOpenDailyGame={() => setDailyGameOpen(true)}
           onOpenRank={() => setRankOpen(true)}
         />
         <Suspense fallback={null}>
           <StoreScreen open={storeOpen} onClose={() => setStoreOpen(false)} />
         </Suspense>
         <Suspense fallback={null}>
-          <GamesScreen open={gamesOpen} onClose={() => setGamesOpen(false)} />
+          <DailyGameDrawer open={dailyGameOpen} onClose={() => setDailyGameOpen(false)} />
         </Suspense>
         <Suspense fallback={null}>
           <RankScreen open={rankOpen} onClose={() => setRankOpen(false)} />
