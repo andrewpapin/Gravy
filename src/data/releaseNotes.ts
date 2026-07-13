@@ -12,4 +12,5 @@ export interface ReleaseNote {
 // worth telling users about. Keep it to a single plain-language bullet.
 export const RELEASE_NOTES: ReleaseNote[] = [
   { version: 1, note: 'Food Tray tiles now show how many points each food is worth.', prNumber: 156 },
+  { version: 2, note: 'You can now browse the full release notes history from the Grown-Up Menu.', prNumber: 209 },
 ];
