@@ -21,6 +21,7 @@ const ProfileSwitcher = lazy(() => import('./components/ProfileSwitcher').then((
 const ProfilesManager = lazy(() => import('./components/ProfilesManager').then((m) => ({ default: m.ProfilesManager })));
 const AdvancedSettingsDrawer = lazy(() => import('./components/parent/AdvancedSettingsDrawer').then((m) => ({ default: m.AdvancedSettingsDrawer })));
 const CalendarDrawer = lazy(() => import('./components/parent/CalendarDrawer').then((m) => ({ default: m.CalendarDrawer })));
+const ReleaseNotesHistoryDrawer = lazy(() => import('./components/ReleaseNotesHistoryDrawer').then((m) => ({ default: m.ReleaseNotesHistoryDrawer })));
 const ApprovalsDrawer = lazy(() => import('./components/parent/ApprovalsDrawer').then((m) => ({ default: m.ApprovalsDrawer })));
 const SyncGateModal = lazy(() => import('./components/SyncGateModal').then((m) => ({ default: m.SyncGateModal })));
 const Onboarding = lazy(() => import('./components/Onboarding').then((m) => ({ default: m.Onboarding })));
@@ -64,6 +65,7 @@ function AppShell() {
   const [profilesOpen, setProfilesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [releaseNotesHistoryOpen, setReleaseNotesHistoryOpen] = useState(false);
   const [approvalsOpen, setApprovalsOpen] = useState(false);
   // Returning users who already had saved progress before this feature shipped
   // shouldn't suddenly see onboarding or the first-run tour — only brand-new installs get either.
@@ -103,6 +105,7 @@ function AppShell() {
           onOpenProfiles={() => { setAccountMenuOpen(false); setProfilesOpen(true); }}
           onOpenSettings={() => { setAccountMenuOpen(false); setSettingsOpen(true); }}
           onOpenCalendar={() => { setAccountMenuOpen(false); setCalendarOpen(true); }}
+          onOpenReleaseNotes={() => { setAccountMenuOpen(false); setReleaseNotesHistoryOpen(true); }}
         />
         <GrownUpsDrawer
           open={grownUpsOpen}
@@ -135,6 +138,13 @@ function AppShell() {
             open={calendarOpen}
             onClose={() => setCalendarOpen(false)}
             onBack={() => { setCalendarOpen(false); setAccountMenuOpen(true); }}
+          />
+        </Suspense>
+        <Suspense fallback={null}>
+          <ReleaseNotesHistoryDrawer
+            open={releaseNotesHistoryOpen}
+            onClose={() => setReleaseNotesHistoryOpen(false)}
+            onBack={() => { setReleaseNotesHistoryOpen(false); setAccountMenuOpen(true); }}
           />
         </Suspense>
         <Suspense fallback={null}>

@@ -54,6 +54,11 @@ committed, pushed to the session's branch, and verified — `lint`/`test`/`build
 manual browser check for UI changes — open the pull request proactively; don't wait to be asked.
 Merging is a separate step and still needs explicit confirmation before it happens.
 
+If the PR ships a user-facing change, add a `RELEASE_NOTES` entry (`src/data/releaseNotes.ts`) —
+bump `version` one higher than the current last entry, write a single plain-language bullet, and
+set `prNumber` to this PR's number. GitHub assigns the PR number as soon as the PR is opened, so
+this is a follow-up commit pushed to the same branch after opening the PR, before it merges.
+
 ## Architecture
 
 Gravy is a gamified chores + nutrition + rewards PWA for kids: React 19 + TypeScript + Vite,
@@ -106,9 +111,11 @@ Deep detail lives in `docs/`. Read the linked file when working in that area.
   `DAILY_GAME_WIN_CAP`); Rank ladder (`src/data/ranks.ts`, `getRank`, `useTodaySnapshot`); Icon system (`src/data/icons.ts`,
   `AppIcon`); Theming (`Settings.theme`, `src/index.css`); Time zone (`Settings.timezone`,
   `todayStr`, `src/data/timezones.ts`); Deployment (`deploy.yml`); Version display
-  (`__APP_VERSION__`); PWA update (`UpdatePrompt.tsx`, `vite-plugin-pwa`); Release notes drawer
-  (`src/data/releaseNotes.ts`, `src/state/releaseNotes.ts`, `ReleaseNotesDrawer.tsx`); First-run
-  guided tour (`src/components/tour/`, `src/data/tourSteps.ts`, `HOME_TOUR_DONE_KEY`).
+  (`__APP_VERSION__`); PWA update (`UpdatePrompt.tsx`, `vite-plugin-pwa`); Release notes
+  (`src/data/releaseNotes.ts`, `src/state/releaseNotes.ts`) — the auto-popup `ReleaseNotesDrawer.tsx`
+  ("what's new since last seen") plus the on-demand `ReleaseNotesHistoryDrawer.tsx` (full history,
+  reached from the Grown-Up Menu next to the version number); First-run guided tour
+  (`src/components/tour/`, `src/data/tourSteps.ts`, `HOME_TOUR_DONE_KEY`).
 - **Native wrap** (`docs/capacitor.md`) — Capacitor packaging spike (Epic 10): `capacitor.config.ts`,
   the `--mode capacitor` root-relative build (`npm run build:native`/`cap:sync`), and why
   `ios/`/`android/` are gitignored. Read before touching the native build path.

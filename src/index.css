@@ -1017,6 +1017,19 @@ button.gtile.checked:disabled:active { transform: none; }
 .release-notes-overlay {
   z-index: 1200;
 }
+/* On-demand full history (Grown-Up Menu) — can grow long, so it scrolls in place rather than
+   growing the modal indefinitely. */
+.release-notes-history-list {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.release-notes-history-link {
+  display: inline-block;
+  margin-top: 4px;
+  font-weight: 700;
+  font-size: var(--text-xs);
+  color: var(--teal);
+}
 
 /* Stacks the goal/reward add-edit drawer above the Game Settings modal it's opened from. */
 .item-edit-drawer-overlay {
@@ -1960,6 +1973,16 @@ button.gtile.checked:disabled:active { transform: none; }
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--muted);
+}
+.account-menu-release-notes-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--teal);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* ===== PARENT MODE ===== */
