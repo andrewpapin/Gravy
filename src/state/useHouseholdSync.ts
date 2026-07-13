@@ -86,7 +86,7 @@ export function useHouseholdSync({ root, state, setRoot, setState }: HouseholdSy
     const unsub = onAuthChange((user) => {
       setAuthUser(user);
       setAuthReady(true);
-      actorRef.current = user ? { userId: user.id, label: user.email ?? undefined } : undefined;
+      actorRef.current = user ? { userId: user.id } : undefined;
     });
     return unsub;
   }, []);

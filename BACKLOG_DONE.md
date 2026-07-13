@@ -142,6 +142,14 @@ work lives in `BACKLOG.md`.
   additions; devices converge to union-of-collections + last-writer's scalars.
   Residual (offline-queue/RLS items): server-side push races inside the 800ms
   debounce, and pendingRewards add/remove tombstones.
+- **Parent email no longer embedded in the synced audit/action logs** (the July 2026
+  audit's highest-severity finding, P0) — `LogActor` carries only the opaque `userId`;
+  `appendActionLog`/`appendAuditLog` stamp just `actorUserId` (the `actorLabel` field is
+  gone from `types.ts`), `useHouseholdSync` no longer sources `user.email`, and `LogPanel`
+  resolves the display name client-side from the signed-in session (other members show as
+  "another grown-up"). `migrateLegacyState` scrubs `actorLabel` from pre-fix saves — both
+  local loads and incoming Supabase rows pass through it via `hydrateState`.
+  `DATA_HANDLING.md` updated with the only-opaque-id rule.
 
 ## Epic 10 — Mobile App & Native Capacities
 
@@ -225,6 +233,30 @@ work lives in `BACKLOG.md`.
   `20260627132616_auth_household_ownership.sql`,
   `20260701234953_require_account_for_household.sql`) so the repo's migration ledger matches
   production exactly.
+- **`CODE_REVIEW.md` labeled as historical** — prominent banner added at the top stating it
+  predates the PIN/badge removals and pointing to `AUDIT_REPORT.md` as the living audit; the
+  document itself kept intact for the record.
+- **`@capacitor/core` moved to `devDependencies`** — never imported in `src/` (only
+  `capacitor.config.ts` type-imports from `@capacitor/cli`); now sits alongside its
+  `@capacitor/{cli,ios,android}` siblings.
+- **`ProfilesManager` double-write on name edit fixed** — the edit input now buffers the name
+  in local state and commits via `updateProfile` once on blur, instead of firing a state
+  update (and a cloud sync) per keystroke plus again on blur.
+- **Placeholder-only inputs labeled** — `aria-label`s added to `PointsPanel`'s per-food and
+  full-tray-bonus number inputs and `ProfilesManager`'s edit/add name inputs
+  (`StorePanel`'s fields had already been labeled in the Goals-panel UX pass).
+- **`LogPanel` merged-log sort memoized** — the actionLog+auditLog merge/sort now runs in a
+  `useMemo` keyed on the two arrays instead of on every render.
+- **`UpdatePrompt` force-reload — already fixed, closed** — the audit finding described an
+  unconditional `updateServiceWorker(true)` on `needRefresh`; the current component (commit
+  `a200047`) already gates the reload behind a real "Update" button with a dismiss option,
+  matching `registerType: 'prompt'`. No change needed.
+- **Inconsistent `useCallback` deps in `useKidProgressActions` — verified correct, closed
+  (decision)** — the "trimmed" arrays (`removeFood`/`decrementGoal`/`undoBonusItem`/
+  `declineGameWin`/`declineRollToGoalRound`) close over nothing but `setState` and
+  module-level imports, so every array is exhaustive-deps-accurate as written; the
+  `react-hooks` recommended lint config guards against future drift if an import becomes a
+  prop. Left as-is.
 
 ## Epic 14 — Onboarding Revamp & First-Run Guided Tour
 

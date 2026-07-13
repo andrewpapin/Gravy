@@ -112,8 +112,9 @@ export interface ActionLogEntry {
   undone?: boolean;
   // Which parent account performed this action (Epic 8 item 5). Absent on entries logged with
   // no signed-in account (legacy / anonymous-parent), which the Log renders without an actor.
+  // Deliberately just the opaque auth user id — no email/label, since the log is part of the
+  // synced household payload (Epic 9); the Log resolves a display name client-side.
   actorUserId?: string;
-  actorLabel?: string;
 }
 
 // Dashboard-level / destructive actions that the kid-progress actionLog deliberately excludes —
@@ -133,8 +134,8 @@ export interface AuditLogEntry {
   type: AuditLogType;
   label: string;
   at: number;
+  // Opaque auth user id only — see ActionLogEntry.actorUserId for why there's no email/label.
   actorUserId?: string;
-  actorLabel?: string;
 }
 
 export interface GravyState {

@@ -227,6 +227,17 @@ export function migrateLegacyState(state: Record<string, unknown>): void {
     settings.foodPtsByItem = Object.fromEntries(FOODS.map((f) => [f.id, settings.foodPts]));
   }
   if (settings) delete settings.foodPts;
+
+  // Log entries used to carry an `actorLabel` stamped with the signed-in parent's email — a
+  // data leak, since both logs ride the synced household payload readable by anyone with the
+  // household code (Epic 9). Entries now store only the opaque `actorUserId`; scrub the label
+  // from any pre-fix save so stored emails stop being re-synced.
+  for (const logKey of ['actionLog', 'auditLog'] as const) {
+    const log = state[logKey];
+    if (Array.isArray(log)) {
+      for (const e of log as Record<string, unknown>[]) delete e.actorLabel;
+    }
+  }
 }
 
 // Walks backward day-by-day from yesterday through `dayLogs`, replaying the same

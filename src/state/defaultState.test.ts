@@ -327,6 +327,24 @@ describe('timezone hydration/sanitization', () => {
   });
 });
 
+describe('legacy actorLabel scrub', () => {
+  it('strips the pre-fix actorLabel (parent email) from saved action/audit log entries', () => {
+    const raw = cloneDefaultState() as unknown as Record<string, unknown>;
+    raw.actionLog = [
+      { id: 'a1', type: 'food', label: 'Apple logged!', pts: 5, dateStr: '2026-07-01', at: 1, actorUserId: 'u-1', actorLabel: 'mom@example.com' },
+    ];
+    raw.auditLog = [
+      { id: 'b1', type: 'resetAll', label: 'Reset everything', at: 2, actorUserId: 'u-1', actorLabel: 'mom@example.com' },
+    ];
+    const state = hydrateState(raw);
+    expect(Object.keys(state.actionLog[0])).not.toContain('actorLabel');
+    expect(Object.keys(state.auditLog[0])).not.toContain('actorLabel');
+    // The opaque user id survives — only the email/label is scrubbed.
+    expect(state.actionLog[0].actorUserId).toBe('u-1');
+    expect(state.auditLog[0].actorUserId).toBe('u-1');
+  });
+});
+
 describe('saveState/saveRoot', () => {
   afterEach(() => {
     vi.unstubAllGlobals();

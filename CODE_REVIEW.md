@@ -1,5 +1,14 @@
 # Gravy — End-to-End Code Review
 
+> **⚠️ Historical document — do not treat as current.** This review predates several
+> major changes and describes subsystems that no longer exist: the PIN-unlock flow and
+> badge system were both fully removed (Epics 8 and 12 — parent access is now gated by
+> Supabase Auth accounts), and the RLS/security posture has changed since (see
+> `docs/persistence-and-sync.md` and `BACKLOG.md` Epic 9 for the current state). It is
+> kept for the historical record only; findings here should not be re-filed or acted on
+> without re-verifying against today's code. The living audit is `AUDIT_REPORT.md`
+> (July 2026), tracked in `BACKLOG.md` Epic 13.
+
 Scope: full repository as of branch `claude/end-to-end-code-review-dyfzf3` (state/sync layer, UI components, build/tooling, security surface). Every finding below was personally verified against the source (file + line) rather than taken at face value from initial recon — a few recon claims turned out to be inaccurate or overstated and were dropped or corrected (noted inline where relevant).
 
 ## Summary

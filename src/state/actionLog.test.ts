@@ -35,25 +35,22 @@ describe('appendActionLog', () => {
 });
 
 describe('appendActionLog actor attribution', () => {
-  it('stamps the actor onto the entry when one is signed in', () => {
+  it('stamps the actor user id onto the entry when one is signed in', () => {
     const state = freshState();
-    appendActionLog(state, { userId: 'u-1', label: 'mom@example.com' }, entry());
+    appendActionLog(state, { userId: 'u-1' }, entry());
     expect(state.actionLog[0].actorUserId).toBe('u-1');
-    expect(state.actionLog[0].actorLabel).toBe('mom@example.com');
   });
 
-  it('leaves actor fields absent for an anonymous (no-account) action', () => {
+  it('leaves the actor field absent for an anonymous (no-account) action', () => {
     const state = freshState();
     appendActionLog(state, undefined, entry());
     expect(state.actionLog[0].actorUserId).toBeUndefined();
-    expect(state.actionLog[0].actorLabel).toBeUndefined();
   });
 
-  it('omits a missing label even when a userId is present', () => {
+  it('never writes any actor field beyond the opaque user id (no email/label — Epic 9)', () => {
     const state = freshState();
     appendActionLog(state, { userId: 'u-2' }, entry());
-    expect(state.actionLog[0].actorUserId).toBe('u-2');
-    expect(state.actionLog[0].actorLabel).toBeUndefined();
+    expect(Object.keys(state.actionLog[0])).not.toContain('actorLabel');
   });
 });
 

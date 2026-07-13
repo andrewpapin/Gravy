@@ -39,6 +39,9 @@ interface ProfilesManagerProps {
 export function ProfilesManager({ open, onClose, onBack }: ProfilesManagerProps) {
   const { profiles, addProfile, updateProfile, deleteProfile } = useGravy();
   const [editingId, setEditingId] = useState<string | null>(null);
+  // Buffers the name being edited so typing doesn't push a state update (and a cloud sync) per
+  // keystroke — the edit commits once, on blur. Seeded when an edit panel opens.
+  const [editName, setEditName] = useState('');
   const [newName, setNewName] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
@@ -86,7 +89,11 @@ export function ProfilesManager({ open, onClose, onBack }: ProfilesManagerProps)
             <button
               type="button"
               className="btn btn-sm btn-ghost"
-              onClick={() => setEditingId(editingId === p.id ? null : p.id)}
+              onClick={() => {
+                const next = editingId === p.id ? null : p.id;
+                setEditingId(next);
+                if (next) setEditName(p.name);
+              }}
               aria-label={`Edit ${p.name}`}
             >
               <FontAwesomeIcon icon={editingId === p.id ? faCheck : faPenToSquare} />
@@ -130,9 +137,10 @@ export function ProfilesManager({ open, onClose, onBack }: ProfilesManagerProps)
                 type="text"
                 maxLength={20}
                 placeholder="Name"
-                value={p.name}
-                onChange={(e) => updateProfile(p.id, { childName: e.target.value })}
-                onBlur={(e) => updateProfile(p.id, { childName: e.target.value.trim() || 'Kid' })}
+                aria-label={`${p.name}'s name`}
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onBlur={() => updateProfile(p.id, { childName: editName.trim() || 'Kid' })}
               />
               <div className="avatar-settings-row">
                 <IconPicker
@@ -184,6 +192,7 @@ export function ProfilesManager({ open, onClose, onBack }: ProfilesManagerProps)
           type="text"
           maxLength={20}
           placeholder="Name"
+          aria-label="New kid's name"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
         />
