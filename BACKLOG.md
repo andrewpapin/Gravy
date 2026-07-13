@@ -306,6 +306,118 @@ S-sized items are also done now — see `BACKLOG_DONE.md` Epic 13.)*
 - **`@playwright/test` present with no `playwright.config.ts`/script**, only reachable via
   the broken `verify_gravy.mjs` above. *(P2, S — resolve alongside that item.)*
 
+## Epic 15 — Expert Panel Review (July 2026)
+
+*(Grounded in `EXPERT_PANEL_REPORT.md` — a simulated 25-persona expert review spanning child
+psychology, pediatric nutrition, accessibility, security/privacy, game design, teaching, and
+family logistics; every finding verified against shipped code and a live browser walkthrough.
+Finding numbers (F1…) reference that report. Panel findings that re-discovered already-tracked
+gaps stay in their home epics — see the report's §10 corroboration table — so this epic holds
+only net-new items.)*
+
+### Nutrition model
+
+- **Stop requiring Sweets for Full Tray and the food streaks (F1).** `fullTray` is
+  `FOODS.every(...)` (`src/state/defaultState.ts:590-596`, mirrored in
+  `backfillStreaksFromLogs`), so the +25 bonus, `foodStreak`, and `megaStreak` all *require*
+  logging Sweets daily — a kid who skips dessert can never hold a food streak, and Sweets pays
+  the same +10 as Veggie. Decide the intended model (exclude Sweets from gating, or a
+  configurable gating set), then update rollover/backfill/`FoodTray` copy together. The panel's
+  top reputational-risk item. *(P1, S–M.)*
+- **Make the food-group list parent-editable, or at least Sweets-optional (F2).** `FOODS` is a
+  hardcoded const (`src/data/foods.ts:10-17`); `PointsPanel` edits point values only, so parents
+  can't remove/rename a group the way they can any goal or reward. Shape depends on the F1
+  decision. *(P1, M.)*
+- **Review the seeded food-penalty item against responsive-feeding guidance (F3).** "Junk food
+  as a 'meal'" −20 (`src/state/defaultState.ts:68`) coexists with Sweets earning +10, and
+  penalizing a child for food choices contradicts division-of-responsibility feeding practice.
+  *(P2, decision + S.)*
+
+### Behavioral design
+
+- **Add a streak grace mechanism (F4).** All four streaks hard-reset on one missed day
+  (`applyDayRollover`, `src/state/defaultState.ts:585-596`) — a sick day zeroes a 40-day Mega
+  Streak. One forgiveness day per week (or an earnable streak freeze) is the standard fix; the
+  point-forgiveness arithmetic in `src/state/points.ts` shows the house pattern to follow.
+  *(P1, M.)*
+- **Make behavior deductions opt-in rather than seeded defaults (F5).** "Swear jar"/"Sore
+  loser"/"Junk food" ship as kid-visible, kid-tappable home-screen rows
+  (`src/state/defaultState.ts:66-68`); the panel (child-psych + special-ed) recommends
+  deductions be a parent-enabled pattern, possibly parent-side-only. *(P2, decision + S.)*
+- **Decide on Roll to the Goal's gambling-adjacent mechanics, and label the display score
+  (F6).** Hold/reroll dice + near-miss payout tiers (`src/data/rollToGoal.ts:69-74`) are
+  variable-ratio reinforcement mechanics; separately, nothing on screen says the 0–500 "Final
+  Daily Score" isn't real points. *(P2, decision; S for the score label.)*
+- **Rename the bottom rank tiers (F7).** "Noob" negs the beginner and "Granny" as the
+  second-lowest rank is casually ageist (`src/data/ranks.ts:18-19`); "Aura Farmer" is
+  untranslatable trend slang. A one-time copy fix, consistent with Epic 4's don't-churn-content
+  caution. *(P2, S.)*
+
+### Accessibility
+
+- **Hide closed overlays from assistive tech and the tab order (F8).** Every screen is always
+  mounted and hidden only via `opacity: 0; pointer-events: none` (`src/index.css:889-894`) with
+  a permanent `role="dialog" aria-modal="true"` (`src/components/Modal.tsx:28-29`) — verified
+  live: 40 Tab presses from home landed focus inside the closed Reward Store. Add `inert` (or
+  `visibility: hidden` post-transition) to closed overlays. The app's largest structural a11y
+  defect, distinct from Epic 13's lint/label items. *(P1, M.)*
+- **Announce dynamic feedback to screen readers (F9).** Zero `aria-live`/`role="status"`/
+  `role="alert"` in `src/` — point awards, celebrations, game banners, sync/storage errors are
+  all visual-only. *(P1, S.)*
+- **Deduplicate goal-row tab stops (F10).** Each daily-goal row is a `role="button"` div *plus*
+  an inner check `<button>` bound to the same action (`src/components/DailyGoals.tsx:95-98,129`),
+  doubling keyboard traversal of the core loop. *(P2, S.)*
+- **Replace the blanket reduced-motion kill switch with targeted rules, and measure theme
+  contrast (F11).** `* { animation: none; transition: none }` (`src/index.css:2667-2669`) also
+  removes non-vestibular affordances; theme palettes have never been checked against WCAG
+  ratios. *(P2, S–M.)*
+
+### UX & copy
+
+- **Show pending (awaiting-approval) points inline on kid devices (F12).** On approval-gated
+  devices earns queue at 0 pts and the StatsCard still reads "0 Coins" — the only cue is the
+  bell badge (`src/components/TopBar.tsx:15,37`). An inline "waiting for a grown-up" state
+  preserves the do-thing→number-goes-up loop. *(P1, S–M.)*
+- **Reconcile the "Daily" pill with the "Arcade" screen title (F13).** Documented as deliberate
+  in `docs/systems.md`, but three panel personas mis-predicted it independently. *(P2, S.)*
+- **Unify the currency name (F14).** `StatsCard` says "Coins" (`src/components/StatsCard.tsx:64`);
+  everywhere else says "pts"/"points". *(P2, S.)*
+- **Give kids a read-only view of their own past days (F15).** The calendar is parent-gated;
+  kid-facing stats are aggregates only. Note `CLAUDE.md:85` currently claims this view already
+  exists (`viewedDate`/`CalendarGrid`) — it does not (see the docs-accuracy item below).
+  *(P2, M.)*
+- **Add a quick re-lock for shared family devices (F16).** Re-locking requires full sign-out +
+  password re-entry, so shared tablets stay permanently unlocked, giving kids standing access to
+  Approvals/Game Settings. An unlock timeout or per-open confirmation is the web-side answer;
+  pairs with Epic 10's biometric re-entry for native. *(P2, M.)*
+- **Replace the "Zack" default child name with a neutral fallback (F17).**
+  `src/state/defaultState.ts:82` — shows as "Good evening, Zack!" until (or unless)
+  `FirstKidPrompt` sets a name. *(P2, S.)*
+- **Feed the release-notes ticker or drop it (F18).** `RELEASE_NOTES` has one entry ever
+  (`src/data/releaseNotes.ts:10-12`) at app version v1.1.205. *(P2, decision + S.)*
+
+### Games & economy
+
+- **Per-profile difficulty for the Arcade (F19).** Math Facts generates one fixed band
+  (`src/data/mathFacts.ts:15-30`); Hangman/Scramble draw from one 3rd-grade list
+  (`src/data/hangmanWords.ts`). Too hard at 7, trivial at 12 — and per-kid profiles already
+  exist to hang a setting on. *(P1, M.)*
+- **Reprice the seeded reward economy against the daily earn ceiling (F20).** A strong day
+  yields 200+ pts; "$5 allowance" costs 200 (`src/state/defaultState.ts:76`) — as seeded, a
+  diligent kid mints ~$150/month. Reprice the money reward or surface the economy math in the
+  parent dashboard. *(P2, S.)*
+
+### Process & engineering
+
+- **Fix verifiably false claims in the always-read docs (F22).** `CLAUDE.md:85` describes a
+  nonexistent kid history view (`viewedDate` appears nowhere in `src/`); `AUDIT_REPORT.md` §3.6
+  references removed themes. Same class of hazard as the `CODE_REVIEW.md` item in Epic 13.
+  *(P1, S.)*
+- **Fix the heatmap pluralization, and take an explicit stance on i18n (F21, F23).** "1 active
+  days in the last 12 weeks" (`src/components/stats/ActivityHeatmapSection.tsx:23`); more
+  broadly every string is hardcoded hand-pluralized English — staying English-only is fine but
+  should be a recorded decision. *(P2, S for the bug; decision only for i18n.)*
+
 ## Do these next (top 5, in order)
 
 The original top-5 (PIN/recovery hashing, the PR #92 decision, the lint gate,
@@ -358,6 +470,18 @@ each is small enough to slot into any gap in the native work:
   memoization, `Onboarding.tsx` → `useReducer`, component test infra, and the remaining
   P2 items) is real but not urgent — pick up opportunistically once the items above and
   the TestFlight path are moving.
+
+**Panel fast-follows (Epic 15) — second parallel track, also non-blocking for TestFlight.**
+The July 2026 expert panel independently re-derived item 0 above and several Epic 13 items
+(reinforcing their priority — see `EXPERT_PANEL_REPORT.md` §10), and added two product-level
+P1 clusters of its own, worth slotting in before external testers ever see the app:
+
+- **The nutrition-model fix (F1/F2)** — Sweets currently gates Full Tray and both food
+  streaks; the panel's top reputational-risk finding, and cheap to at least decide.
+- **The closed-overlay a11y fix + live-region announcements (F8/F9)** — the app is
+  effectively unusable non-visually until closed dialogs leave the accessibility tree.
+- Then, as retention levers alongside the native push work: **streak grace (F4)**,
+  **visible pending points on kid devices (F12)**, and **per-profile game difficulty (F19)**.
 
 Holding just off the top-5 but still near-term: gated on *external* TestFlight
 rather than internal, the **COPPA signup review** (Epic 9, P0 once real-account
