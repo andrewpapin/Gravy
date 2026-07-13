@@ -40,7 +40,10 @@ export function ReleaseNotesDrawer() {
     >
       <ul className="release-notes-list">
         {notes.map((n) => (
-          <li key={n.version}>{n.note}</li>
+          <li key={n.version}>
+            {n.note}
+            <div className="release-notes-date">{new Date(n.at).toLocaleString()}</div>
+          </li>
         ))}
       </ul>
     </Modal>

@@ -3,9 +3,9 @@ import { getAllReleaseNotesSorted, getLatestReleaseNoteVersion, getUnseenRelease
 import type { ReleaseNote } from '../data/releaseNotes';
 
 const notes: ReleaseNote[] = [
-  { version: 1, note: 'first', prNumber: 101 },
-  { version: 2, note: 'second', prNumber: 102 },
-  { version: 3, note: 'third', prNumber: 103 },
+  { version: 1, note: 'first', prNumber: 101, at: '2026-01-01T00:00:00Z' },
+  { version: 2, note: 'second', prNumber: 102, at: '2026-01-02T00:00:00Z' },
+  { version: 3, note: 'third', prNumber: 103, at: '2026-01-03T00:00:00Z' },
 ];
 
 describe('getLatestReleaseNoteVersion', () => {
@@ -25,8 +25,8 @@ describe('getUnseenReleaseNotes', () => {
 
   it('returns notes newer than lastSeenVersion, newest first', () => {
     expect(getUnseenReleaseNotes(notes, 1)).toEqual([
-      { version: 3, note: 'third', prNumber: 103 },
-      { version: 2, note: 'second', prNumber: 102 },
+      { version: 3, note: 'third', prNumber: 103, at: '2026-01-03T00:00:00Z' },
+      { version: 2, note: 'second', prNumber: 102, at: '2026-01-02T00:00:00Z' },
     ]);
   });
 
@@ -42,9 +42,9 @@ describe('getUnseenReleaseNotes', () => {
 describe('getAllReleaseNotesSorted', () => {
   it('returns all notes sorted newest first', () => {
     expect(getAllReleaseNotesSorted(notes)).toEqual([
-      { version: 3, note: 'third', prNumber: 103 },
-      { version: 2, note: 'second', prNumber: 102 },
-      { version: 1, note: 'first', prNumber: 101 },
+      { version: 3, note: 'third', prNumber: 103, at: '2026-01-03T00:00:00Z' },
+      { version: 2, note: 'second', prNumber: 102, at: '2026-01-02T00:00:00Z' },
+      { version: 1, note: 'first', prNumber: 101, at: '2026-01-01T00:00:00Z' },
     ]);
   });
 
