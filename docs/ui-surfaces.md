@@ -155,7 +155,11 @@ list, not tabs); picking a card drills into one panel with a back button:
   `GoalsPanel`/`StorePanel` there's nothing to add or delete here, so it keeps the older
   inline-input-with-autosave editing style.
 - `StorePanel` — reward CRUD, its own top-level `'store'` destination; same pencil-triggered
-  add/edit drawer pattern as `GoalsPanel` (icon, name, cost instead of pts/target).
+  add/edit drawer pattern as `GoalsPanel` (icon, name, cost instead of pts/target). The add/edit
+  drawer also has an optional dollar `valueUsd` field (`Reward.valueUsd` in `types.ts`); once set,
+  it shows a computed "≈ N days to earn" estimate using `getAverageDailyPoints`
+  (`state/statsSnapshot.ts`, a trailing-14-day average including zero-point days), so a parent can
+  gauge a reward's cost against the kid's real pace.
 - `ArcadePanel` — points per game win (`gamePts`), labeled "Arcade" to match the kid-facing hub
   name, its own top-level `'arcade'` destination, unrelated to goals/food/reward configuration.
 
