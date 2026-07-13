@@ -15,8 +15,12 @@ account — there's no PIN.
 
 - **Home** — rank progress, streak stats, food tray tracker, daily
   goals (including multi-step goals), and repeatable bonus-point items
-- **Arcade** — Hangman, Math Facts, Word Scramble, and Memory Match;
-  winning earns points up to a daily cap so kids can't farm easy rounds
+- **Arcade** — Hangman, Math Facts, Word Scramble, and Memory Match, where
+  winning earns points up to a daily cap so kids can't farm easy rounds;
+  plus **Roll to the Goal**, a daily dice challenge (roll five dice,
+  hold what you like, reroll toward a shared daily target) with an
+  accuracy-scaled payout and its own three-rounds-per-day limit,
+  independent of the other games' win cap
 - **Rank ladder** — a 24-tier progression (Noob → Sonic Snail) with a
   kid-facing screen showing locked/current/achieved tiers and progress, plus a
   "Stats" view with charts covering points history, an activity heatmap,
@@ -77,9 +81,10 @@ streaks (`src/state/points.ts`, `src/state/defaultState.ts`), auth
 `src/state/*.ts` modules (storage, sync, pending points, action/audit log,
 release notes, stats snapshot) — via colocated `*.test.ts` files.
 There's no component/UI test setup. `verify_gravy.mjs` at the repo root is an
-ad-hoc Playwright smoke-test script you can run manually against a
-`npm run dev` server (`node verify_gravy.mjs`); otherwise UI testing is
-manual via the browser.
+ad-hoc Playwright smoke-test script, but it's currently broken — it still
+asserts against the removed PIN-unlock flow and fails immediately (repair or
+deprecation is tracked in `BACKLOG.md` Epic 13) — so UI testing is manual
+via the browser.
 
 ## Project structure
 
@@ -94,6 +99,21 @@ src/
   components/charts/  shared chart primitives (bar chart, sparkline, heatmap grid, stat tile)
   components/tour/    first-run spotlight tour and first-kid-name prompt
 ```
+
+## Learn more
+
+- `docs/` — subsystem deep-dives: state model, persistence & cloud sync,
+  UI surfaces, games/ranks/theming/timezone systems, and the Capacitor
+  native wrap
+- `DATA_HANDLING.md` — what the app collects and stores, where it lives,
+  and how to delete it (COPPA notes)
+- `BACKLOG.md` / `BACKLOG_DONE.md` — the living backlog of open work and
+  the decision record of what shipped and why
+- `AUDIT_REPORT.md` — an independent engineering & security audit
+  (July 2026), the basis for backlog Epic 13
+- `EXPERT_PANEL_REPORT.md` — a simulated 25-persona expert review of the
+  product (nutrition, child psychology, accessibility, security, game
+  design), the basis for backlog Epic 15
 
 ## Deployment
 
