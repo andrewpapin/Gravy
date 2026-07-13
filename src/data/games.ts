@@ -23,7 +23,7 @@ export const GAMES: GameDef[] = [
     emoji: '🎲',
     icon: 'dice',
     name: 'Roll to the Goal',
-    description: "Roll 5 dice, hold what you like, and get as close to today's target as you can!",
+    description: "Roll 10 dice, up to 3 times, and get as close to today's target as you can!",
     variablePayout: true,
   },
 ];

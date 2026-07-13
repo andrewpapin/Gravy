@@ -151,7 +151,7 @@ describe('applyDayRollover', () => {
     expect(result.dayLogs['2024-01-10'].bonusCounts).toEqual({ [BONUS_GOAL.id]: 3 });
   });
 
-  it('resets per-day ledgers (todayGoalCounts, todayBonusApplied, rollGoalRoundsToday, rollGoalDailyScore) for the new day', () => {
+  it('resets per-day ledgers (todayGoalCounts, todayBonusApplied, rollGoalRoundsToday, rollGoalDailyScore, rollGoalRoundsLog) for the new day', () => {
     setToday('2024-01-11T08:00:00Z');
     const state = freshState({
       lastActiveDate: '2024-01-10',
@@ -160,12 +160,16 @@ describe('applyDayRollover', () => {
       todayBonusApplied: { [BONUS_GOAL.id]: 30 },
       rollGoalRoundsToday: 3,
       rollGoalDailyScore: 950,
+      rollGoalRoundsLog: [
+        { round: 1, tier: 'exact', total: 40, displayScore: 500, pts: 20, pending: false, at: 1 },
+      ],
     });
     const result = applyDayRollover(state);
     expect(result.todayGoalCounts).toEqual({});
     expect(result.todayBonusApplied).toEqual({});
     expect(result.rollGoalRoundsToday).toBe(0);
     expect(result.rollGoalDailyScore).toBe(0);
+    expect(result.rollGoalRoundsLog).toEqual([]);
   });
 
   it('drops stale todayGoals ids that no longer correspond to a current daily goal', () => {

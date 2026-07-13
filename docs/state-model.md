@@ -151,7 +151,8 @@ single-profile save by wrapping it as a one-entry root.
 - **Day rollover** — `applyDayRollover()` archives yesterday's food counts/completed goals/bonus
   counts into `dayLogs[dateStr]`, updates the four streaks, then clears the live `today*` fields
   (food, daily-goal completions/counts, bonus-item ledger, `rollGoalRoundsToday`,
-  `rollGoalDailyScore`). Bonus-item completions, like daily goals, reset every day.
+  `rollGoalDailyScore`, `rollGoalRoundsLog`). Bonus-item completions, like daily goals, reset every
+  day.
 - **Counters** (`GravyState.counters`) — lifetime aggregates: `foodLogs`
   (per food-group), `fullTrayDays`, `totalGoals`, `allGoalsDays`, `comboDays` (full tray + all daily
   goals same day), `totalRewards`, `maxDayPoints`, `gamesPlayed`, `gamesWon`. Roll to the Goal rounds

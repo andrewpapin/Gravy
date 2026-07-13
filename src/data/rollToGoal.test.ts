@@ -1,12 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   ROLL_TO_GOAL_MIN_TARGET,
   ROLL_TO_GOAL_MAX_TARGET,
   getDailyTarget,
+  evaluateAttempt,
+  pickBestAttempt,
   computeRoundOutcome,
   getRollToGoalPayout,
   rollDice,
-  rerollDice,
 } from './rollToGoal';
 
 describe('getDailyTarget', () => {
@@ -29,31 +30,62 @@ describe('getDailyTarget', () => {
   });
 });
 
-describe('computeRoundOutcome', () => {
-  it('busts whenever total exceeds target, regardless of rerolls remaining', () => {
-    expect(computeRoundOutcome(25, 20, 3)).toEqual({ tier: 'bust', bust: true, distance: 5, displayScore: 0 });
-    expect(computeRoundOutcome(21, 20, 0)).toEqual({ tier: 'bust', bust: true, distance: 1, displayScore: 0 });
+describe('evaluateAttempt', () => {
+  it('busts whenever the total exceeds the target', () => {
+    expect(evaluateAttempt([10, 15], 20)).toEqual({ dice: [10, 15], total: 25, bust: true, distance: Infinity });
   });
 
+  it('computes distance-to-target when at or under the target', () => {
+    expect(evaluateAttempt([10, 10], 20)).toEqual({ dice: [10, 10], total: 20, bust: false, distance: 0 });
+    expect(evaluateAttempt([9, 10], 20)).toEqual({ dice: [9, 10], total: 19, bust: false, distance: 1 });
+  });
+});
+
+describe('pickBestAttempt', () => {
+  it('picks the smallest-distance non-bust attempt among the three', () => {
+    const attempts = [
+      evaluateAttempt([10, 5], 20), // total 15, distance 5
+      evaluateAttempt([10, 8], 20), // total 18, distance 2
+      evaluateAttempt([10, 6], 20), // total 16, distance 4
+    ];
+    expect(pickBestAttempt(attempts)).toEqual(attempts[1]);
+  });
+
+  it('ignores busted attempts in favor of any non-bust attempt', () => {
+    const attempts = [
+      evaluateAttempt([15, 15], 20), // total 30, bust
+      evaluateAttempt([10, 5], 20), // total 15, distance 5
+      evaluateAttempt([15, 10], 20), // total 25, bust
+    ];
+    expect(pickBestAttempt(attempts)).toEqual(attempts[1]);
+  });
+
+  it('falls back to the first attempt when all three bust', () => {
+    const attempts = [
+      evaluateAttempt([15, 15], 20),
+      evaluateAttempt([16, 16], 20),
+      evaluateAttempt([20, 20], 20),
+    ];
+    expect(pickBestAttempt(attempts)).toEqual(attempts[0]);
+  });
+});
+
+describe('computeRoundOutcome', () => {
   it('scores an exact match at 500 base', () => {
-    const result = computeRoundOutcome(20, 20, 0);
-    expect(result).toEqual({ tier: 'exact', bust: false, distance: 0, displayScore: 500 });
+    const best = evaluateAttempt([10, 10], 20);
+    expect(computeRoundOutcome(best)).toEqual({ tier: 'exact', bust: false, distance: 0, displayScore: 500, total: 20 });
   });
 
   it('scores 1/2/3+ away at 300/150/50 base', () => {
-    expect(computeRoundOutcome(19, 20, 0).displayScore).toBe(300);
-    expect(computeRoundOutcome(18, 20, 0).displayScore).toBe(150);
-    expect(computeRoundOutcome(17, 20, 0).displayScore).toBe(50);
-    expect(computeRoundOutcome(10, 20, 0).displayScore).toBe(50);
-    expect(computeRoundOutcome(19, 20, 0).tier).toBe('near1');
-    expect(computeRoundOutcome(18, 20, 0).tier).toBe('near2');
-    expect(computeRoundOutcome(17, 20, 0).tier).toBe('far');
+    expect(computeRoundOutcome(evaluateAttempt([9, 10], 20))).toMatchObject({ tier: 'near1', displayScore: 300 });
+    expect(computeRoundOutcome(evaluateAttempt([8, 10], 20))).toMatchObject({ tier: 'near2', displayScore: 150 });
+    expect(computeRoundOutcome(evaluateAttempt([7, 10], 20))).toMatchObject({ tier: 'far', displayScore: 50 });
+    expect(computeRoundOutcome(evaluateAttempt([0, 10], 20))).toMatchObject({ tier: 'far', displayScore: 50 });
   });
 
-  it('adds +50 per unused reroll on top of the base tier score', () => {
-    expect(computeRoundOutcome(20, 20, 1).displayScore).toBe(550);
-    expect(computeRoundOutcome(20, 20, 2).displayScore).toBe(600);
-    expect(computeRoundOutcome(20, 20, 3).displayScore).toBe(650);
+  it('reports a bust with 0 displayScore', () => {
+    const best = evaluateAttempt([15, 15], 20);
+    expect(computeRoundOutcome(best)).toEqual({ tier: 'bust', bust: true, distance: Infinity, displayScore: 0, total: 30 });
   });
 });
 
@@ -80,22 +112,11 @@ describe('getRollToGoalPayout', () => {
 
 describe('rollDice', () => {
   it('produces the requested count of values in [1,6]', () => {
-    const dice = rollDice(5);
-    expect(dice).toHaveLength(5);
+    const dice = rollDice(10);
+    expect(dice).toHaveLength(10);
     dice.forEach((v) => {
       expect(v).toBeGreaterThanOrEqual(1);
       expect(v).toBeLessThanOrEqual(6);
     });
-  });
-});
-
-describe('rerollDice', () => {
-  it('leaves held indexes unchanged and rerolls the rest', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0); // always rolls a 1
-    const current = [6, 6, 6, 6, 6];
-    const held = new Set([0, 2]);
-    const result = rerollDice(current, held);
-    expect(result).toEqual([6, 1, 6, 1, 1]);
-    vi.restoreAllMocks();
   });
 });

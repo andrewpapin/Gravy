@@ -17,27 +17,41 @@ exists as a single-entry array mainly so `getGamesBreakdown`/`GamesBreakdownSect
 
 - **Info view** — the game blurb + today's target (`getDailyTarget(todayStr(timezone))`) + rounds
   remaining, a Play button, a "Today" stats block (rounds played/`ROLL_TO_GOAL_ROUNDS_PER_DAY`,
-  `state.rollGoalDailyScore`, points earned today), and a "History" block (`getGamesBreakdown`'s
+  `state.rollGoalDailyScore`, points earned today, and a per-round list from
+  `state.rollGoalRoundsLog` — see below), and a "History" block (`getGamesBreakdown`'s
   aggregate played/won/win-rate tiles plus `getRollToGoalHistory` — `src/state/statsSnapshot.ts` —
   a recent-rounds list built from `actionLog`, same pattern as `getRewardsHistory`).
-- **Play view** — renders `RollToTheGoalGame` (`src/components/games/RollToTheGoalGame.tsx`)
-  unchanged.
+- **Play view** — renders `RollToTheGoalGame` (`src/components/games/RollToTheGoalGame.tsx`).
+  Clicking Play is the only click needed to start playing: the component auto-rolls the round's
+  first attempt on mount (and again immediately on "Next Round"), rather than landing on an idle
+  "Roll" button.
 
-`RollToTheGoalGame` reports whether a
-round is in progress (dice rolled, not yet submitted) via `onRoundActiveChange`, and backing out
-(`Modal`'s back/close, which now also covers Escape/backdrop-click) while a round is active shows
-a "Leave the game? Your progress this round will be lost." confirm instead of exiting immediately.
+Each round is **`ROLL_TO_GOAL_ATTEMPTS_PER_ROUND` (3) independent full re-rolls of all
+`ROLL_TO_GOAL_DICE_COUNT` (10) dice** — no per-die holding. The system automatically keeps
+whichever of the 3 attempts landed closest to the target (`evaluateAttempt`/`pickBestAttempt` in
+`src/data/rollToGoal.ts`) as the round's result; a round only busts if every attempt exceeds the
+target. `RollToTheGoalGame` reports whether a round is in progress (an attempt has been rolled,
+not yet resolved) via `onRoundActiveChange`, and backing out (`Modal`'s back/close, which also
+covers Escape/backdrop-click) while a round is active shows a "Leave the game? Your progress this
+round will be lost." confirm instead of exiting immediately.
 
 Roll to the Goal has its own independent 3-rounds/day structure (`rollGoalRoundsToday`,
 `ROLL_TO_GOAL_ROUNDS_PER_DAY` in `src/data/rollToGoal.ts`) — every round is always eligible to pay
 out, with no separate daily win cap. Its daily target number is `getDailyTarget(todayStr(timezone))`,
 a deterministic (mulberry32-seeded) pure function of the day string rather than a persisted/synced
-field, so every household device agrees on the same target with no Supabase merge logic involved.
+field, in the range `[ROLL_TO_GOAL_MIN_TARGET, ROLL_TO_GOAL_MAX_TARGET]` (33-48, scaled from the
+same z-score band as the original 5-dice game so exact/near1/near2/far stay about as rare), so
+every household device agrees on the same target with no Supabase merge logic involved.
 Payout per round scales `settings.gamePts` by accuracy tier (`getRollToGoalPayout` in
-`src/data/rollToGoal.ts`); the 0-500(+reroll-bonus) number shown to the kid mid-game is a separate
+`src/data/rollToGoal.ts`); the 0-500 number shown to the kid mid-game is a separate
 bragging-rights score (`rollGoalDailyScore`, the "Final Daily Score"), not the real point award.
 Dispatches via `completeRollToGoalRound`/`declineRollToGoalRound` in `useKidProgressActions.ts`,
 and its own `'rollgoal'` `PendingPointsKind` with its own decline handler.
+
+Every completed round (including busts) is also appended to `state.rollGoalRoundsLog` —
+`{ round, tier, total, displayScore, pts, pending, at }` — reset alongside `rollGoalRoundsToday`/
+`rollGoalDailyScore` at day rollover. Unlike `actionLog` (which only logs a round when it pays
+real points), this is a complete per-day record, feeding the Info view's per-round "Today" list.
 
 ## Rank Ladder
 

@@ -1,4 +1,4 @@
-import type { ActionLogEntry, AuditLogEntry, GravyState, GravyRoot, ProfileEntry, Settings, Theme, Goal, Reward, PendingReward, PendingPointsAward, PendingPointsKind, CollapsibleSection } from './types';
+import type { ActionLogEntry, AuditLogEntry, GravyState, GravyRoot, ProfileEntry, Settings, Theme, Goal, Reward, PendingReward, PendingPointsAward, PendingPointsKind, CollapsibleSection, RollToGoalRoundLogEntry } from './types';
 import { FOODS } from '../data/foods';
 import { safeGetItem, safeSetItem } from './storage';
 import { DEFAULT_TIMEZONE, isValidTimezone } from '../data/timezones';
@@ -31,6 +31,7 @@ export const defaultState: GravyState = {
   todayBonusApplied: {},
   rollGoalRoundsToday: 0,
   rollGoalDailyScore: 0,
+  rollGoalRoundsLog: [],
   dayLogs: {},
   pendingRewards: [],
   pendingPointsAwards: [],
@@ -359,6 +360,22 @@ function sanitizePendingPointsAwards(v: unknown): PendingPointsAward[] {
     : [];
 }
 
+const ROLL_TO_GOAL_TIERS = ['exact', 'near1', 'near2', 'far', 'bust'];
+
+function sanitizeRollGoalRoundsLog(v: unknown): RollToGoalRoundLogEntry[] {
+  return Array.isArray(v)
+    ? v.filter(
+        (e): e is RollToGoalRoundLogEntry =>
+          !!e && typeof e === 'object' &&
+          typeof (e as RollToGoalRoundLogEntry).round === 'number' &&
+          ROLL_TO_GOAL_TIERS.includes((e as RollToGoalRoundLogEntry).tier) &&
+          typeof (e as RollToGoalRoundLogEntry).total === 'number' &&
+          typeof (e as RollToGoalRoundLogEntry).displayScore === 'number' &&
+          typeof (e as RollToGoalRoundLogEntry).pts === 'number',
+      )
+    : [];
+}
+
 function sanitizeActionLog(v: unknown): ActionLogEntry[] {
   return Array.isArray(v)
     ? v.filter(
@@ -407,6 +424,7 @@ function sanitizeState(state: GravyState): void {
   state.rewards = sanitizeRewards(state.rewards);
   state.actionLog = sanitizeActionLog(state.actionLog);
   state.auditLog = sanitizeAuditLog(state.auditLog);
+  state.rollGoalRoundsLog = sanitizeRollGoalRoundsLog(state.rollGoalRoundsLog);
 
   const counters = state.counters as unknown as Record<string, unknown>;
   counters.fullTrayDays = asFiniteNumber(counters.fullTrayDays, 0);
@@ -629,6 +647,7 @@ export function applyDayRollover(state: GravyState): GravyState {
     state.todayBonusApplied = {};
     state.rollGoalRoundsToday = 0;
     state.rollGoalDailyScore = 0;
+    state.rollGoalRoundsLog = [];
   }
   state.lastActiveDate = today;
   return state;

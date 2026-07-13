@@ -1586,49 +1586,59 @@ button.gtile.checked:disabled:active { transform: none; }
   flex-wrap: wrap;
   justify-content: center;
 }
-.rollgoal-die {
-  position: relative;
-  width: 68px;
-  height: 68px;
-  background: var(--card);
-  border: var(--border-width-lg) solid var(--dark);
-  border-radius: var(--radius-sm);
-  box-shadow: 3px 3px 0 var(--dark);
-  padding: 10px;
-  cursor: pointer;
-}
-.rollgoal-die:active { transform: translate(1px,1px); box-shadow: 2px 2px 0 var(--dark); }
-.rollgoal-die:disabled { cursor: default; }
-.rollgoal-die.held { background: var(--success); }
+.rollgoal-dice-row.compact { gap: 4px; }
 .rollgoal-die-face {
-  width: 100%;
-  height: 100%;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   place-items: center;
+  background: var(--card);
+  border: var(--border-width-md) solid var(--dark);
+  border-radius: 6px;
+  padding: 4px;
 }
 .rollgoal-pip {
-  width: 9px;
-  height: 9px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
 }
 .rollgoal-pip.filled { background: var(--dark); }
-.rollgoal-die.held .rollgoal-pip.filled { background: #fff; }
-.rollgoal-die-held-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  font-size: 1rem;
-  color: var(--success);
-  background: #fff;
-  border-radius: 50%;
-}
-.rollgoal-actions-row {
+.rollgoal-attempts-list {
   display: flex;
+  flex-direction: column;
   gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
+  width: 100%;
+}
+.rollgoal-attempt-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--card);
+  border: var(--border-width-md) solid var(--dark);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.rollgoal-attempt-row.kept { box-shadow: 0 0 0 3px var(--success) inset; }
+.rollgoal-attempt-row.bust { opacity: 0.6; }
+.rollgoal-attempt-total {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.rollgoal-attempt-kept-badge {
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  color: #fff;
+  background: var(--success);
+  border-radius: 999px;
+  padding: 2px 8px;
 }
 
 /* ===== DAILY GAME DRAWER (info view: blurb + play button + today/history stats) ===== */
