@@ -16,6 +16,7 @@ import type { AwardPoints, MaybeCelebrateRankUp, ShowCelebration } from './types
 export interface RollToGoalRoundResult {
   tier: ScoreTier;
   displayScore: number;
+  total: number;
 }
 
 export interface KidProgressDeps {
@@ -199,9 +200,10 @@ export function useKidProgressActions(deps: KidProgressDeps) {
       next.rollGoalRoundsToday++;
       next.rollGoalDailyScore += result.displayScore;
       const won = result.tier !== 'bust';
+      const pts = won ? getRollToGoalPayout(result.tier, next.settings.gamePts) : 0;
+      const pending = pts > 0 && requiresApproval;
       if (won) {
         next.counters.gamesWon++;
-        const pts = getRollToGoalPayout(result.tier, next.settings.gamePts);
         if (pts > 0) {
           const label = `🎲 Roll to the Goal: ${TIER_LABELS[result.tier]} (${result.displayScore} pts)`;
           if (requiresApproval) {
@@ -218,6 +220,15 @@ export function useKidProgressActions(deps: KidProgressDeps) {
           });
         }
       }
+      next.rollGoalRoundsLog.push({
+        round: next.rollGoalRoundsToday,
+        tier: result.tier,
+        total: result.total,
+        displayScore: result.displayScore,
+        pts: pending ? 0 : pts,
+        pending,
+        at: Date.now(),
+      });
       maybeCelebrateRankUp(prev.totalPoints, next);
       return next;
     });
@@ -225,8 +236,9 @@ export function useKidProgressActions(deps: KidProgressDeps) {
 
   // Reverses a still-pending Roll to the Goal award when a parent declines it from Approvals —
   // never touches rollGoalRoundsToday/rollGoalDailyScore (the round was genuinely played today
-  // regardless of the payout decision). There's no kid-facing "undo" for a round — only ever
-  // dispatched by declinePendingPointsAward.
+  // regardless of the payout decision), but does clear the matching rollGoalRoundsLog entry's
+  // `pending` flag so the Today list doesn't show a stale "Pending" forever. There's no
+  // kid-facing "undo" for a round — only ever dispatched by declinePendingPointsAward.
   const declineRollToGoalRound = useCallback(() => {
     setState((prev) => {
       const hasPending = prev.pendingPointsAwards.some((p) => p.kind === 'rollgoal');
@@ -235,6 +247,12 @@ export function useKidProgressActions(deps: KidProgressDeps) {
       takeMostRecentPending(next, 'rollgoal', ROLL_TO_GOAL_GAME_ID);
       next.counters.gamesWon = Math.max(0, next.counters.gamesWon - 1);
       markMostRecentUndone(next.actionLog, 'game', ROLL_TO_GOAL_GAME_ID, todayStr(next.settings.timezone));
+      for (let i = next.rollGoalRoundsLog.length - 1; i >= 0; i--) {
+        if (next.rollGoalRoundsLog[i].pending) {
+          next.rollGoalRoundsLog[i] = { ...next.rollGoalRoundsLog[i], pending: false };
+          break;
+        }
+      }
       return next;
     });
   }, [setState]);

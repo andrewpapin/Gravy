@@ -2,14 +2,17 @@
 // layering as data/games.ts) — callers pass in whatever date/timezone-derived string they need.
 
 export const ROLL_TO_GOAL_GAME_ID = 'rollgoal';
-// Full 5d6 range is 5-30, but the extremes are trivially easy/impossible — keep the daily target
-// inside a band that's always reachable but rarely guaranteed on the initial roll.
-export const ROLL_TO_GOAL_MIN_TARGET = 16;
-export const ROLL_TO_GOAL_MAX_TARGET = 27;
+// Full 10d6 range is 10-60 (mean 35, stdev ~5.4) — the band below is the old 5d6 band's z-scores
+// (mean-0.39σ to mean+2.49σ) reapplied to 10 dice, so exact/near1/near2/far stay about as rare as
+// before even though there's no more hold-and-incrementally-improve strategy (see
+// ROLL_TO_GOAL_ATTEMPTS_PER_ROUND) — three independent blind rolls per round, closest kept.
+export const ROLL_TO_GOAL_MIN_TARGET = 33;
+export const ROLL_TO_GOAL_MAX_TARGET = 48;
 export const ROLL_TO_GOAL_ROUNDS_PER_DAY = 3;
-export const ROLL_TO_GOAL_REROLLS_PER_ROUND = 3;
-export const ROLL_TO_GOAL_DICE_COUNT = 5;
-const REROLL_BONUS_PER_UNUSED = 50;
+// Each round is 3 independent full rerolls of all dice (no per-die holding) — whichever attempt
+// lands closest to the target is automatically kept as the round's result.
+export const ROLL_TO_GOAL_ATTEMPTS_PER_ROUND = 3;
+export const ROLL_TO_GOAL_DICE_COUNT = 10;
 
 // FNV-1a 32-bit string hash → mulberry32 PRNG. Deterministic per dateStr (not Math.random()), so
 // every device/household member sees the same daily target for the same day.
@@ -45,11 +48,6 @@ export function rollDice(count: number = ROLL_TO_GOAL_DICE_COUNT): number[] {
   return Array.from({ length: count }, () => 1 + Math.floor(Math.random() * 6));
 }
 
-// Rerolls only the indexes NOT in `held`; held dice pass through unchanged.
-export function rerollDice(current: number[], held: ReadonlySet<number>): number[] {
-  return current.map((v, i) => (held.has(i) ? v : 1 + Math.floor(Math.random() * 6)));
-}
-
 export function sumDice(dice: number[]): number {
   return dice.reduce((a, b) => a + b, 0);
 }
@@ -64,8 +62,7 @@ const TIER_DISPLAY_SCORE: Record<Exclude<ScoreTier, 'bust'>, number> = {
 };
 
 // Real-Gravy-points payout scaling vs. settings.gamePts — scales the base award down for a
-// farther-off roll, while still rewarding accuracy. The reroll bonus deliberately affects only
-// the displayed score below, not the real payout.
+// farther-off roll, while still rewarding accuracy.
 export const ROLL_TO_GOAL_PAYOUT_PCT: Record<Exclude<ScoreTier, 'bust'>, number> = {
   exact: 1,
   near1: 0.6,
@@ -81,22 +78,46 @@ export const TIER_LABELS: Record<ScoreTier, string> = {
   bust: 'Bust!',
 };
 
+export interface AttemptOutcome {
+  dice: number[];
+  total: number;
+  bust: boolean; // total > target — can't come from above
+  distance: number; // target - total; +Infinity when bust
+}
+
+// Evaluates one full roll of all dice against the target.
+export function evaluateAttempt(dice: number[], target: number): AttemptOutcome {
+  const total = sumDice(dice);
+  if (total > target) {
+    return { dice, total, bust: true, distance: Number.POSITIVE_INFINITY };
+  }
+  return { dice, total, bust: false, distance: target - total };
+}
+
+// Picks the smallest-distance non-bust attempt among the round's independent rolls; if every
+// attempt busted, there's nothing to prefer between them, so just return the first.
+export function pickBestAttempt(attempts: AttemptOutcome[]): AttemptOutcome {
+  const nonBust = attempts.filter((a) => !a.bust);
+  if (nonBust.length === 0) return attempts[0];
+  return nonBust.reduce((best, a) => (a.distance < best.distance ? a : best));
+}
+
 export interface RoundOutcome {
   tier: ScoreTier;
   bust: boolean;
   distance: number; // target - total; meaningless when bust
-  displayScore: number; // 0-500 base + reroll bonus (0 if bust) — bragging-rights score only
+  displayScore: number; // 0-500 — bragging-rights score only
+  total: number; // the kept attempt's dice total
 }
 
-export function computeRoundOutcome(total: number, target: number, rerollsRemaining: number): RoundOutcome {
-  if (total > target) {
-    return { tier: 'bust', bust: true, distance: total - target, displayScore: 0 };
+export function computeRoundOutcome(best: AttemptOutcome): RoundOutcome {
+  if (best.bust) {
+    return { tier: 'bust', bust: true, distance: best.distance, displayScore: 0, total: best.total };
   }
-  const distance = target - total;
+  const distance = best.distance;
   const tier: Exclude<ScoreTier, 'bust'> =
     distance === 0 ? 'exact' : distance === 1 ? 'near1' : distance === 2 ? 'near2' : 'far';
-  const displayScore = TIER_DISPLAY_SCORE[tier] + rerollsRemaining * REROLL_BONUS_PER_UNUSED;
-  return { tier, bust: false, distance, displayScore };
+  return { tier, bust: false, distance, displayScore: TIER_DISPLAY_SCORE[tier], total: best.total };
 }
 
 // Scales settings.gamePts by tier and rounds to a whole point.

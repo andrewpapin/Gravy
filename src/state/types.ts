@@ -79,6 +79,17 @@ export interface Settings {
   collapsedSections: Partial<Record<CollapsibleSection, boolean>>;
 }
 
+// One row per Roll to the Goal round played today — see GravyState.rollGoalRoundsLog.
+export interface RollToGoalRoundLogEntry {
+  round: number; // 1-based, 1..ROLL_TO_GOAL_ROUNDS_PER_DAY
+  tier: 'exact' | 'near1' | 'near2' | 'far' | 'bust'; // mirrors data/rollToGoal's ScoreTier
+  total: number; // the kept (closest) attempt's dice total
+  displayScore: number;
+  pts: number; // real Gravy points actually credited (0 for bust, or while pending)
+  pending: boolean; // true if the awarded pts are awaiting parent approval
+  at: number;
+}
+
 export interface DayLog {
   foodCounts: Record<string, number>;
   goalIds: number[];
@@ -156,9 +167,13 @@ export interface GravyState {
   todayBonusApplied: Record<number, number>;
   // Roll to the Goal's own independent daily-rounds structure — see ROLL_TO_GOAL_ROUNDS_PER_DAY.
   rollGoalRoundsToday: number;
-  // Sum of today's completed Roll to the Goal rounds' 0-500(+reroll-bonus) display scores (the
-  // "Final Daily Score" shown to the kid) — separate from the real Gravy points awarded per round.
+  // Sum of today's completed Roll to the Goal rounds' 0-500 display scores (the "Final Daily
+  // Score" shown to the kid) — separate from the real Gravy points awarded per round.
   rollGoalDailyScore: number;
+  // One entry per Roll to the Goal round completed today (including busts), for the drawer's
+  // per-round "Today" stats list — reset alongside rollGoalRoundsToday/rollGoalDailyScore at day
+  // rollover, unlike actionLog which only logs a round when it pays real points.
+  rollGoalRoundsLog: RollToGoalRoundLogEntry[];
   dayLogs: Record<string, DayLog>;
   pendingRewards: PendingReward[];
   // Points earned on a kid-only device (no signed-in account) awaiting parent approval — see

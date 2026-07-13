@@ -5,7 +5,7 @@ import { StatTile } from './charts/StatTile';
 import { useGravy } from '../state/GravyContext';
 import { todayStr } from '../state/defaultState';
 import { getGamesBreakdown, getRollToGoalHistory } from '../state/statsSnapshot';
-import { ROLL_TO_GOAL_GAME_ID, ROLL_TO_GOAL_ROUNDS_PER_DAY, getDailyTarget } from '../data/rollToGoal';
+import { ROLL_TO_GOAL_GAME_ID, ROLL_TO_GOAL_ROUNDS_PER_DAY, getDailyTarget, TIER_LABELS } from '../data/rollToGoal';
 import { RollToTheGoalGame } from './games/RollToTheGoalGame';
 import type { GravyState } from '../state/types';
 
@@ -36,7 +36,7 @@ function DailyGameInfo({ onPlay }: { onPlay: () => void }) {
     <div className="daily-game-info">
       <section className="rollgoal-blurb">
         <AppIcon iconKey="dice" emojiFallback="🎲" className="rollgoal-blurb-icon" />
-        <p>Roll 5 dice, hold what you like, and get as close to today's target — <strong>{dailyTarget}</strong> — as you can!</p>
+        <p>Roll 10 dice, up to 3 times, and get as close to today's target — <strong>{dailyTarget}</strong> — as you can. Your closest attempt is kept!</p>
         <p className="game-clue-label">Round {Math.min(roundsPlayed + 1, ROLL_TO_GOAL_ROUNDS_PER_DAY)} of {ROLL_TO_GOAL_ROUNDS_PER_DAY}</p>
         <button className="rollgoal-roll-btn" onClick={onPlay} disabled={dayComplete} type="button">
           {dayComplete ? "Today's Challenge Complete" : (
@@ -54,6 +54,20 @@ function DailyGameInfo({ onPlay }: { onPlay: () => void }) {
           <StatTile icon="bolt" value={state.rollGoalDailyScore} label="Daily Score" />
           <StatTile icon="sackDollar" value={pointsToday} label="Points Earned" />
         </div>
+        {state.rollGoalRoundsLog.length > 0 && (
+          <ul className="rollgoal-history-list">
+            {state.rollGoalRoundsLog.map((r) => (
+              <li key={r.round} className="rollgoal-history-row">
+                <span className="rollgoal-history-row-label">
+                  Round {r.round}: {TIER_LABELS[r.tier]} ({r.total} vs {dailyTarget})
+                </span>
+                <span className="rollgoal-history-row-pts">
+                  {r.pending ? 'Pending' : r.pts > 0 ? `+${r.pts} pts` : `${r.displayScore} pts`}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="stats-section">
