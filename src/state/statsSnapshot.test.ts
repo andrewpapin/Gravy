@@ -5,6 +5,7 @@ import { RANKS } from '../data/ranks';
 import type { ActionLogEntry, Goal, GravyState } from './types';
 import {
   getActivityHeatmap,
+  getAverageDailyPoints,
   getFavoriteFoods,
   getGamesBreakdown,
   getGoalsTrend,
@@ -85,6 +86,40 @@ describe('getPointsHistory', () => {
     expect(history.find((d) => d.dateStr === '2024-03-08')).toMatchObject({ points: 30, cumulativeTotal: 30 });
     expect(history.find((d) => d.dateStr === '2024-03-09')).toMatchObject({ points: 50, cumulativeTotal: 80 });
     expect(history.find((d) => d.dateStr === '2024-03-10')).toMatchObject({ points: 0, cumulativeTotal: 80 });
+  });
+});
+
+describe('getAverageDailyPoints', () => {
+  it('is zero for a brand-new profile with no history', () => {
+    setToday('2024-03-10T12:00:00Z');
+    const state = freshState();
+    expect(getAverageDailyPoints(state, 7)).toBe(0);
+  });
+
+  it('divides the window total by the window length, treating gaps as zero', () => {
+    setToday('2024-03-10T12:00:00Z');
+    const state = freshState({
+      dayLogs: { '2024-03-09': { foodCounts: {}, goalIds: [], points: 70 } },
+    });
+    // Only one of the 7 trailing days has points; the rest count as zero.
+    expect(getAverageDailyPoints(state, 7)).toBeCloseTo(10);
+  });
+
+  it('sums points across multiple logged days in the window', () => {
+    setToday('2024-03-10T12:00:00Z');
+    const state = freshState({
+      dayLogs: {
+        '2024-03-08': { foodCounts: {}, goalIds: [], points: 20 },
+        '2024-03-09': { foodCounts: {}, goalIds: [], points: 40 },
+      },
+    });
+    expect(getAverageDailyPoints(state, 5)).toBeCloseTo((20 + 40) / 5);
+  });
+
+  it("includes today's live in-progress points via the getDayLog today-branch", () => {
+    setToday('2024-03-10T12:00:00Z');
+    const state = freshState({ todayPoints: 30 });
+    expect(getAverageDailyPoints(state, 3)).toBeCloseTo(10);
   });
 });
 

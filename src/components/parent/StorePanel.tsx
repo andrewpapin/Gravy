@@ -5,12 +5,17 @@ import { useGravy } from '../../state/GravyContext';
 import { AppIcon } from '../AppIcon';
 import { IconPicker } from '../IconPicker';
 import { Modal } from '../Modal';
+import { getAverageDailyPoints } from '../../state/statsSnapshot';
 import type { Reward } from '../../state/types';
 
 const DEFAULT_REWARD_ICON = 'gift';
 
 function clampCost(raw: string): string {
   return String(Math.max(1, Math.min(9999, parseInt(raw, 10) || 1)));
+}
+
+function formatUsd(value: number): string {
+  return `$${value.toFixed(2)}`;
 }
 
 type DrawerMode = { id: number } | 'new' | null;
@@ -20,9 +25,10 @@ interface RewardFormState {
   emoji: string;
   name: string;
   cost: string;
+  valueUsd: string;
 }
 
-const EMPTY_FORM: RewardFormState = { icon: DEFAULT_REWARD_ICON, emoji: '', name: '', cost: '' };
+const EMPTY_FORM: RewardFormState = { icon: DEFAULT_REWARD_ICON, emoji: '', name: '', cost: '', valueUsd: '' };
 
 export function StorePanel() {
   const { state, addReward, removeReward, updateReward } = useGravy();
@@ -37,7 +43,13 @@ export function StorePanel() {
   };
 
   const openEdit = (r: Reward) => {
-    setForm({ icon: r.icon || '', emoji: r.emoji, name: r.name, cost: String(r.cost) });
+    setForm({
+      icon: r.icon || '',
+      emoji: r.emoji,
+      name: r.name,
+      cost: String(r.cost),
+      valueUsd: r.valueUsd != null ? String(r.valueUsd) : '',
+    });
     setConfirmingDelete(false);
     setDrawerMode({ id: r.id });
   };
@@ -51,13 +63,21 @@ export function StorePanel() {
     const trimmedName = form.name.trim();
     if (!trimmedName) return;
     const cost = parseInt(form.cost, 10) || 50;
+    const parsedValueUsd = parseFloat(form.valueUsd);
+    const valueUsd = Number.isFinite(parsedValueUsd) && parsedValueUsd > 0 ? parsedValueUsd : undefined;
     if (drawerMode === 'new') {
-      addReward({ emoji: '', icon: form.icon || DEFAULT_REWARD_ICON, name: trimmedName, cost });
+      addReward({ emoji: '', icon: form.icon || DEFAULT_REWARD_ICON, name: trimmedName, cost, valueUsd });
     } else if (drawerMode) {
-      updateReward(drawerMode.id, { icon: form.icon || DEFAULT_REWARD_ICON, name: trimmedName, cost });
+      updateReward(drawerMode.id, { icon: form.icon || DEFAULT_REWARD_ICON, name: trimmedName, cost, valueUsd });
     }
     closeDrawer();
   };
+
+  const avgDailyPoints = getAverageDailyPoints(state);
+  const parsedValueUsd = parseFloat(form.valueUsd);
+  const hasValidValue = Number.isFinite(parsedValueUsd) && parsedValueUsd > 0;
+  const parsedCost = parseInt(form.cost, 10) || 0;
+  const daysToEarn = avgDailyPoints > 0 ? Math.max(1, Math.ceil(parsedCost / avgDailyPoints)) : 0;
 
   const handleDelete = () => {
     if (drawerMode && drawerMode !== 'new') removeReward(drawerMode.id);
@@ -85,7 +105,9 @@ export function StorePanel() {
             </span>
             <span style={{ minWidth: 0, flex: 1 }}>
               <div className="settings-label">{r.name}</div>
-              <div className="settings-sub">{r.cost} pts</div>
+              <div className="settings-sub">
+                {r.cost} pts{r.valueUsd != null ? ` · ${formatUsd(r.valueUsd)}` : ''}
+              </div>
             </span>
             <button
               type="button"
@@ -137,8 +159,31 @@ export function StorePanel() {
                   onBlur={(e) => setForm((f) => ({ ...f, cost: clampCost(e.target.value) }))}
                 />
               </label>
+              <label className="input-field-group">
+                <span className="input-field-label">Value ($)</span>
+                <input
+                  type="number"
+                  className="pts-input"
+                  aria-label="Value in dollars"
+                  min={0}
+                  step="0.01"
+                  placeholder="optional"
+                  value={form.valueUsd}
+                  onChange={(e) => setForm((f) => ({ ...f, valueUsd: e.target.value }))}
+                />
+              </label>
             </div>
           </div>
+
+          {hasValidValue && (
+            <div className="muted-note" style={{ fontSize: '0.8rem', padding: '4px 0 12px' }}>
+              {avgDailyPoints > 0
+                ? `≈ ${daysToEarn} day${daysToEarn === 1 ? '' : 's'} to earn at ${
+                    state.settings.childName || 'Kid'
+                  }'s recent average (${avgDailyPoints.toFixed(0)} pts/day) · ${formatUsd(parsedValueUsd)} value`
+                : 'Not enough recent activity yet to estimate how long this reward takes to earn.'}
+            </div>
+          )}
 
           {!confirmingDelete ? (
             <>

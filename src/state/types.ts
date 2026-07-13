@@ -17,6 +17,7 @@ export interface Reward {
   icon?: string;       // registered icon key (see data/icons.ts)
   name: string;
   cost: number;
+  valueUsd?: number;   // real-world dollar value, parent-entered; optional, drives the points-to-dollars estimate
 }
 
 export interface PendingReward {

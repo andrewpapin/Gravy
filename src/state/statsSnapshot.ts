@@ -40,6 +40,17 @@ export function getPointsHistory(state: GravyState, days = 84): PointsHistoryDay
   });
 }
 
+// Average points earned per calendar day over the trailing window (including today's
+// in-progress total), following the same reconstruction getPointsHistory uses. Zero-point/
+// inactive days count toward the average (not just active days), so this reflects the kid's
+// actual day-to-day pace including off days.
+export function getAverageDailyPoints(state: GravyState, days = 14): number {
+  const today = todayStr(state.settings.timezone);
+  const dateStrs = Array.from({ length: days }, (_, i) => addDaysToDateStr(today, -(days - 1 - i)));
+  const total = dateStrs.reduce((sum, d) => sum + (getDayLog(state, d, today)?.points ?? 0), 0);
+  return total / days;
+}
+
 export interface HeatmapDay {
   dateStr: string;
   points: number;
