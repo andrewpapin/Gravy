@@ -20,14 +20,14 @@ describe('appendAuditLog', () => {
     expect(state.auditLog[0].at).toBeTypeOf('number');
   });
 
-  it('stamps the actor when one is signed in, omits it otherwise', () => {
+  it('stamps the actor user id when one is signed in, omits it otherwise', () => {
     const state = freshState();
-    appendAuditLog(state, { userId: 'u-1', label: 'dad@example.com' }, { type: 'resetAll', label: 'Reset everything' });
+    appendAuditLog(state, { userId: 'u-1' }, { type: 'resetAll', label: 'Reset everything' });
     appendAuditLog(state, undefined, { type: 'resetToday', label: "Reset today's progress" });
     expect(state.auditLog[0].actorUserId).toBe('u-1');
-    expect(state.auditLog[0].actorLabel).toBe('dad@example.com');
     expect(state.auditLog[1].actorUserId).toBeUndefined();
-    expect(state.auditLog[1].actorLabel).toBeUndefined();
+    // Never any email/label field — the log rides the synced household payload (Epic 9).
+    expect(Object.keys(state.auditLog[0])).not.toContain('actorLabel');
   });
 
   it('evicts oldest entries once the cap is exceeded (FIFO)', () => {

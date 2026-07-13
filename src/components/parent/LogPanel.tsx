@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUtensils,
@@ -62,12 +63,21 @@ type MergedEntry =
   | { kind: 'audit'; entry: AuditLogEntry };
 
 export function LogPanel() {
-  const { state, undoActionLogEntry } = useGravy();
+  const { state, authUser, undoActionLogEntry } = useGravy();
 
-  const merged: MergedEntry[] = [
+  // Entries store only the opaque actorUserId (no email — it rides the synced payload, Epic 9);
+  // the display name is resolved here from the locally signed-in session. Another household
+  // member's actions show a generic label since their email is never synced.
+  const actorName = (actorUserId: string | undefined): string | null => {
+    if (!actorUserId) return null;
+    if (authUser && actorUserId === authUser.id) return authUser.email ?? 'you';
+    return 'another grown-up';
+  };
+
+  const merged: MergedEntry[] = useMemo(() => [
     ...state.actionLog.map((entry): MergedEntry => ({ kind: 'action', entry })),
     ...state.auditLog.map((entry): MergedEntry => ({ kind: 'audit', entry })),
-  ].sort((a, b) => b.entry.at - a.entry.at);
+  ].sort((a, b) => b.entry.at - a.entry.at), [state.actionLog, state.auditLog]);
 
   if (merged.length === 0) {
     return (
@@ -91,7 +101,7 @@ export function LogPanel() {
                 <div className="parent-item-name">{entry.label}</div>
                 <div className="action-log-meta">
                   {new Date(entry.at).toLocaleString()}
-                  {entry.actorLabel ? ` · by ${entry.actorLabel}` : ' · by an unsigned-in grown-up'}
+                  {(() => { const name = actorName(entry.actorUserId); return name ? ` · by ${name}` : ' · by an unsigned-in grown-up'; })()}
                 </div>
               </div>
             </div>
@@ -108,7 +118,7 @@ export function LogPanel() {
               <div className="action-log-meta">
                 {new Date(entry.at).toLocaleString()}
                 {entry.pts !== 0 && ` · ${sign}${Math.abs(entry.pts)} pts`}
-                {entry.actorLabel && ` · by ${entry.actorLabel}`}
+                {actorName(entry.actorUserId) && ` · by ${actorName(entry.actorUserId)}`}
               </div>
             </div>
             {canUndo && (

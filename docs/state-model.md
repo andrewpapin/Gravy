@@ -26,8 +26,11 @@ All state flows through a single React Context in `src/state/GravyContext.tsx`, 
   persistent dismissible banner (`StorageErrorBanner`) for the one case with no other visible signal.
 - `actionLog: ActionLogEntry[]` (per-profile) — append-only history of kid-progress/reward actions,
   capped at `ACTION_LOG_MAX_ENTRIES` (500, FIFO). `src/state/actionLog.ts` holds the pure helpers:
-  `appendActionLog(next, actor, entry)` (push + cap, stamps `actorUserId`/`actorLabel` from the
-  signed-in parent account — Epic 8 item 5; absent when no account is signed in),
+  `appendActionLog(next, actor, entry)` (push + cap, stamps the opaque `actorUserId` from the
+  signed-in parent account — Epic 8 item 5; absent when no account is signed in. Deliberately
+  never the email: both logs ride the synced household payload, so `LogPanel` resolves a display
+  name client-side from the signed-in session, and `migrateLegacyState` scrubs the old
+  `actorLabel` field from pre-fix saves),
   `markMostRecentUndone` (called by the reverse actions so the Log reflects taps undone via the live
   UI, not just via the Log's own button), and `isMostRecentNonUndone` (drives whether `LogPanel`
   renders an Undo button — most-recent-only per (type, itemId, dateStr) key).

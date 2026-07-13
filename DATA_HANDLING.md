@@ -41,6 +41,13 @@ instead of "anyone with the 6-character code can read and write it":
   `state` JSONB. Magic-link sign-in stores a short-lived token the same way any
   Supabase Auth project does. The app never sees or stores the plaintext
   password.
+- **Action/audit logs record only an opaque account id.** The grown-ups-only
+  Log attributes each entry to the account that performed it via the Supabase
+  user id (`actorUserId`) — never the email. Both logs ride the synced
+  household payload, so the email deliberately stays out of them; the Log
+  screen resolves a display name from the locally signed-in session instead,
+  and older saves that predate this rule have the embedded label scrubbed on
+  load (`migrateLegacyState`).
 - **Ownership link.** A household is owned by the account that created it from
   the moment it exists (`households.owner_id`, plus a membership row in
   `household_members`) — there's no separate unclaimed state to transition out

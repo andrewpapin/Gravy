@@ -40,6 +40,7 @@ export function PointsPanel() {
             type="number"
             min={1}
             max={100}
+            aria-label={`Points for ${food.label.toLowerCase()}`}
             value={foodPts[food.id] ?? ''}
             onChange={(e) => setFoodPts((prev) => ({ ...prev, [food.id]: e.target.value }))}
             onBlur={(e) => {
@@ -64,6 +65,7 @@ export function PointsPanel() {
           type="number"
           min={0}
           max={500}
+          aria-label="Full tray bonus points"
           value={bonusPts}
           onChange={(e) => setBonusPts(e.target.value)}
           onBlur={(e) => {

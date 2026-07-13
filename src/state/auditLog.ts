@@ -11,12 +11,11 @@ export const AUDIT_LOG_MAX_ENTRIES = 300;
 export function appendAuditLog(
   next: GravyState,
   actor: LogActor | undefined,
-  entry: Omit<AuditLogEntry, 'id' | 'at' | 'actorUserId' | 'actorLabel'>,
+  entry: Omit<AuditLogEntry, 'id' | 'at' | 'actorUserId'>,
 ): void {
   next.auditLog.push({
     ...entry,
     ...(actor?.userId ? { actorUserId: actor.userId } : {}),
-    ...(actor?.label ? { actorLabel: actor.label } : {}),
     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     at: Date.now(),
   });

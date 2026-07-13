@@ -7,20 +7,21 @@ export const ACTION_LOG_MAX_ENTRIES = 500;
 
 // Identifies the parent account that performed an action (Epic 8 item 5). `undefined` means no
 // account was signed in — the entry is logged without an actor (legacy / anonymous parent).
+// Only the opaque user id is recorded: the log rides the synced household payload, so putting
+// the account's email here would leak it to anyone with the household code (Epic 9) — the
+// display label is resolved client-side from the signed-in session instead (see LogPanel).
 export interface LogActor {
   userId?: string;
-  label?: string;
 }
 
 export function appendActionLog(
   next: GravyState,
   actor: LogActor | undefined,
-  entry: Omit<ActionLogEntry, 'id' | 'at' | 'actorUserId' | 'actorLabel'>,
+  entry: Omit<ActionLogEntry, 'id' | 'at' | 'actorUserId'>,
 ): void {
   next.actionLog.push({
     ...entry,
     ...(actor?.userId ? { actorUserId: actor.userId } : {}),
-    ...(actor?.label ? { actorLabel: actor.label } : {}),
     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     at: Date.now(),
   });

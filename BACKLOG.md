@@ -106,15 +106,6 @@ for a device that's offline at edit time.)*
   real RLS predicates, so Realtime is authenticated per-household instead of relying on a
   shared anon key with table-wide read access. Mechanical once accounts/membership exist,
   but every RPC and the `subscribeToHousehold` call site need updating together. *(P1, M.)*
-- **Stop embedding the parent's email in the synced audit log.** A fresh audit
-  (`AUDIT_REPORT.md`, see Epic 13) found `appendAuditLog` (`src/state/auditLog.ts:16-19`)
-  stamps `actorLabel` with the signed-in parent's email (sourced from
-  `useHouseholdSync.ts:77`), which lives in `state.auditLog` — part of the JSONB blob
-  exposed by the open SELECT policy above. This directly contradicts `DATA_HANDLING.md`'s
-  claim that email never leaves `auth.users`. Independent of the larger RLS migration above
-  (which needs a Realtime redesign and stays deliberately deferred): store `actorUserId`
-  only in the synced log and resolve the display label client-side from the locally-known
-  signed-in account. Small, live-risk, and doesn't need to wait on the RLS item. *(P0, S.)*
 - **Account-level data export.** A parent can request a structured export of everything
   tied to their account. Doesn't exist as a concept today (no account to scope it to);
   becomes a real expectation once accounts exist, and is the easy half of COPPA's
@@ -235,8 +226,9 @@ opinionated changes that need a mockup before committing.
 *(Grounded in a fresh, independent codebase audit — `AUDIT_REPORT.md` — covering bugs,
 architecture, code quality, performance, security, accessibility, testing, DX, dependencies,
 and scalability. The single highest-severity finding from that audit — the parent's email
-leaking via the synced audit log — is filed under Epic 9 above since it's a direct extension
-of that epic's existing RLS item. Everything else from the audit lands here.)*
+leaking via the synced audit log — was filed under Epic 9 and is now fixed (see
+`BACKLOG_DONE.md` Epic 9). Everything else from the audit lands here; several of the
+S-sized items are also done now — see `BACKLOG_DONE.md` Epic 13.)*
 
 ### Security
 
@@ -254,8 +246,6 @@ of that epic's existing RLS item. Everything else from the audit lands here.)*
   not a live secret (publishable-key-by-design) but there's no way to point at a
   staging project without a code change. *(P2, S.)*
 - **No CSP meta tag.** `index.html` — defense-in-depth only, no injection sink found. *(P2, S.)*
-- **`@capacitor/core` misplaced in `dependencies`.** Never imported in `src/`; belongs in
-  `devDependencies` alongside its siblings. *(P2, S.)*
 
 ### Testing & Reliability
 
@@ -277,10 +267,6 @@ of that epic's existing RLS item. Everything else from the audit lands here.)*
   `CODE_REVIEW.md` claiming it is — none of the three tsconfig files set `"strict": true`.
   *(P1, S–M — likely a contained lift given the code already appears written in a strict
   style by convention.)*
-- **Stale prior audit doc left unlabeled.** `/CODE_REVIEW.md` describes a PIN-unlock system
-  and badge system both fully removed since it was written (Epics 8, 12); its findings on
-  those subsystems are moot and it could mislead a new contributor. *(P1, S — label as
-  historical/archive, don't delete the history.)*
 
 ### Architecture, Performance & Code Quality
 
@@ -310,31 +296,11 @@ of that epic's existing RLS item. Everything else from the audit lands here.)*
   added. *(P2, S.)*
 - **Icon registry requires touching three places per pickable icon**
   (`src/data/icons.ts`) with nothing enforcing consistency. *(P2, S.)*
-- **`LogPanel` re-sorts the merged action/audit log on every render**, unbounded within the
-  existing 500/300-entry caps. *(P2, S — memoize.)*
 
 ### Accessibility
 
 - **No automated a11y linting.** `eslint-plugin-jsx-a11y` isn't wired into
   `eslint.config.js`; existing good patterns rely on discipline, not tooling. *(P1, S.)*
-- **Several inputs identified only by placeholder text, no `<label>`.**
-  `StorePanel.tsx`, `PointsPanel.tsx`, `ProfilesManager.tsx:133-140` (`GoalsPanel.tsx`'s
-  fields got `aria-label`s in the Goals-panel UX pass below). *(P2, S.)*
-
-### Bugs
-
-- **`ProfilesManager` double-writes on name edit.** `src/components/ProfilesManager.tsx:138-139`
-  — `updateProfile` fires on every keystroke (`onChange`) and again on `onBlur`. *(P2, S —
-  buffer locally, commit on blur only.)*
-- **`UpdatePrompt` force-reloads without an actual prompt**, despite
-  `registerType: 'prompt'`. `src/components/UpdatePrompt.tsx:22-24` — can reload the page out
-  from under an active interaction. *(P2, S — either switch to `registerType: 'autoUpdate'`
-  to match behavior, or gate the reload on real user confirmation.)*
-- **Inconsistent `useCallback` dependency arrays** in
-  `src/state/actions/useKidProgressActions.ts` — not a live bug (omitted deps are stable
-  imports) but a maintenance trap if one of those imports later becomes a prop/state.
-  *(P2, S.)*
-
 ### Dependencies
 
 - **`@playwright/test` present with no `playwright.config.ts`/script**, only reachable via
@@ -350,18 +316,11 @@ in `BACKLOG_DONE.md`. Two more of the prior top-5 are now done as well: the
 (`src/state/merge.ts`, Epic 9) and the **Capacitor wrap spike** (Epic 10;
 `docs/capacitor.md`).
 
-**Reprioritized after the July 2026 audit (Epic 13):** one finding from that audit —
-a live data-exposure bug, cheap to fix — now outranks everything else, including the
-TestFlight path. Do it first, standalone, before resuming the TestFlight critical path:
+**The July 2026 audit's P0 — the parent's email leaking into the synced audit log — is
+now fixed** (see `BACKLOG_DONE.md` Epic 9), along with a first batch of the audit's
+S-sized fast-follows (`BACKLOG_DONE.md` Epic 13).
 
-0. **Stop embedding the parent's email in the synced audit log** (Epic 9, P0/S) — a
-   fresh audit found the signed-in parent's email is being written into `state.auditLog`,
-   which is exposed by the already-known-open `households` SELECT policy
-   (`src/state/auditLog.ts:16-19`). Directly contradicts `DATA_HANDLING.md`. One small,
-   self-contained change (store `actorUserId` only, resolve the label client-side) — do
-   this before anything else below, it doesn't block or depend on the larger RLS migration.
-
-**Then, current focus: get a first build into internal TestFlight.** Push notifications
+**Current focus: get a first build into internal TestFlight.** Push notifications
 were the prior #1, but a TestFlight build needs no push — it's a fast-follow once
 on-device, not a blocker. The first two critical-path items are now done:
 **disabling the PWA service worker under `--mode capacitor`** and **native app
@@ -389,8 +348,8 @@ going on-device:
 **Audit fast-follows (Epic 13) — parallel track, none block the TestFlight path above,**
 each is small enough to slot into any gap in the native work:
 
-- Fix or explicitly deprecate **`verify_gravy.mjs`** (P1/S) and label **`CODE_REVIEW.md`**
-  as historical (P1/S) — both are currently "false confidence" artifacts.
+- Fix or explicitly deprecate **`verify_gravy.mjs`** (P1/S) — a "false confidence"
+  artifact (`CODE_REVIEW.md`, the other one, is now labeled historical — done).
 - Enable **TypeScript strict mode** (P1/S–M) while the codebase is still small enough for
   it to be a contained lift.
 - Wire up **`eslint-plugin-jsx-a11y`** (P1/S) —
