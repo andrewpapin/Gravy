@@ -29,7 +29,7 @@ export function ReleaseNotesHistoryDrawer({ open, onClose, onBack }: ReleaseNote
         {notes.map((n) => (
           <li key={n.version}>
             {n.note}
-            {' '}
+            <div className="release-notes-date">{new Date(n.at).toLocaleString()}</div>
             <a
               className="release-notes-history-link"
               href={`https://github.com/andrewpapin/gravy/pull/${n.prNumber}`}

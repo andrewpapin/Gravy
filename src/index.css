@@ -1012,6 +1012,12 @@ button.gtile.checked:disabled:active { transform: none; }
 .release-notes-list li::before {
   content: '\2728  ';
 }
+.release-notes-date {
+  margin-top: 4px;
+  font-weight: 700;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
 /* Above .sync-gate-overlay (1100) — release notes shouldn't get buried behind the cloud-sync
    gate, since unlike that gate this one is dismissible and won't reappear once seen. */
 .release-notes-overlay {
@@ -2580,17 +2586,6 @@ button.gtile.checked:disabled:active { transform: none; }
   animation: toastIn 0.3s ease;
 }
 .update-prompt span { flex: 1; }
-.update-prompt-dismiss {
-  background: none;
-  border: none;
-  color: var(--dark);
-  font-weight: 900;
-  cursor: pointer;
-  padding: 4px;
-  line-height: 1;
-  opacity: 0.6;
-}
-.update-prompt-dismiss:active { opacity: 1; }
 
 /* Positioned at the top (rather than update-prompt's bottom) so the two never collide if both
    are ever showing at once — this one flags an ongoing risk (unsaved progress), not a one-off. */

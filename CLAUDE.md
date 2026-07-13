@@ -55,9 +55,12 @@ manual browser check for UI changes — open the pull request proactively; don't
 Merging is a separate step and still needs explicit confirmation before it happens.
 
 If the PR ships a user-facing change, add a `RELEASE_NOTES` entry (`src/data/releaseNotes.ts`) —
-bump `version` one higher than the current last entry, write a single plain-language bullet, and
-set `prNumber` to this PR's number. GitHub assigns the PR number as soon as the PR is opened, so
-this is a follow-up commit pushed to the same branch after opening the PR, before it merges.
+bump `version` one higher than the current last entry, write a single plain-language bullet, set
+`prNumber` to this PR's number, and set `at` to an ISO 8601 timestamp (approximate is fine at
+authoring time — the merge time isn't known yet — but true it up to the actual merge commit time,
+e.g. via `git log -1 --format=%cI <merge-commit-sha>`, once merged if it drifted). GitHub assigns
+the PR number as soon as the PR is opened, so this is a follow-up commit pushed to the same branch
+after opening the PR, before it merges.
 
 ## Architecture
 

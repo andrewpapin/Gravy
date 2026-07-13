@@ -152,14 +152,15 @@ run preview`); `npm run dev` doesn't register it since `devOptions.enabled` isn'
 ## Release Notes Drawer
 
 `src/data/releaseNotes.ts` holds `RELEASE_NOTES`, a hand-maintained list of `{ version, note,
-prNumber }` entries — one plain-language bullet (plus the GitHub PR number that shipped it) per
-user-facing change worth announcing. `version` is a manually-bumped integer local to this feature
-(append a new entry with `version` one higher than the current last entry, and `prNumber` set to
-the PR's number, whenever a PR ships something worth telling users about — see the "Git & PR
-workflow" step in `CLAUDE.md`); `version` is intentionally unrelated to the auto-derived
-`__APP_VERSION__` build string above. The pure logic (`getUnseenReleaseNotes`/
-`getLatestReleaseNoteVersion`/`getAllReleaseNotesSorted`, tested in
-`src/state/releaseNotes.test.ts`) lives in `src/state/releaseNotes.ts`.
+prNumber, at }` entries — one plain-language bullet, the GitHub PR number that shipped it, and an
+ISO 8601 merge timestamp, per user-facing change worth announcing. `version` is a manually-bumped
+integer local to this feature (append a new entry with `version` one higher than the current last
+entry, `prNumber` set to the PR's number, and `at` set to the merge time, whenever a PR ships
+something worth telling users about — see the "Git & PR workflow" step in `CLAUDE.md`); `version`
+is intentionally unrelated to the auto-derived `__APP_VERSION__` build string above. The pure logic
+(`getUnseenReleaseNotes`/`getLatestReleaseNoteVersion`/`getAllReleaseNotesSorted`, tested in
+`src/state/releaseNotes.test.ts`) lives in `src/state/releaseNotes.ts`. Both drawer components
+render `at` via `new Date(n.at).toLocaleString()`.
 
 Two components consume this data, for two different purposes:
 
