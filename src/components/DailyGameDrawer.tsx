@@ -135,6 +135,7 @@ export function DailyGameDrawer({ open, onClose }: DailyGameDrawerProps) {
       onBack={view === 'play' ? () => requestExit('back') : undefined}
       closeLabel="Close daily game"
       title={view === 'play' ? 'Roll to the Goal' : 'Daily Game'}
+      overlayClassName="rollgoal-modal-overlay"
     >
       {view === 'info' ? (
         <DailyGameInfo onPlay={() => goTo('play')} />

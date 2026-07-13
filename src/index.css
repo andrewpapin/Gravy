@@ -1551,6 +1551,12 @@ button.gtile.checked:disabled:active { transform: none; }
 .memory-card-icon { font-size: 1.3rem; }
 
 /* ===== ROLL TO THE GOAL ===== */
+/* Scoped override (not a change to the shared .calendar-modal-sheet default) — this drawer's
+   content (10-dice grid, per-round list) reads better as a consistently tall sheet rather than
+   shrinking to fit whichever view/round-state is showing. */
+.rollgoal-modal-overlay .calendar-modal-sheet {
+  min-height: 70dvh;
+}
 .rollgoal-game {
   display: flex;
   flex-direction: column;
@@ -1581,28 +1587,25 @@ button.gtile.checked:disabled:active { transform: none; }
 }
 .rollgoal-roll-btn:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--dark); }
 .rollgoal-dice-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
 }
-.rollgoal-dice-row.compact { gap: 4px; }
 .rollgoal-die-face {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: 1;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   place-items: center;
   background: var(--card);
   border: var(--border-width-md) solid var(--dark);
-  border-radius: 6px;
-  padding: 4px;
+  border-radius: 8px;
+  padding: 6px;
 }
 .rollgoal-pip {
-  width: 5px;
-  height: 5px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
 }
 .rollgoal-pip.filled { background: var(--dark); }

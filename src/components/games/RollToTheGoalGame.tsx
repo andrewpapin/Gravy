@@ -141,7 +141,7 @@ export function RollToTheGoalGame({ onExit, onRoundActiveChange }: RollToTheGoal
       <div className="rollgoal-attempts-list">
         {attempts.map((a, i) => (
           <div key={i} className={`rollgoal-attempt-row ${roundResult && i === bestIndex ? 'kept' : ''} ${a.bust ? 'bust' : ''}`}>
-            <div className="rollgoal-dice-row compact">
+            <div className="rollgoal-dice-row">
               {a.dice.map((value, di) => (
                 <DieFace key={di} value={value} />
               ))}
