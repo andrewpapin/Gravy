@@ -46,6 +46,10 @@ unintentional or unreported. Completed/decided items are condensed to one-liners
 - **Closing/opening a tracked gap** needs the backlog updated: a done/decided item **moves out of
   `BACKLOG.md` into `BACKLOG_DONE.md` as a one-liner** (what + outcome + key file/PR/migration, under
   the same epic heading); a new gap gets an entry in `BACKLOG.md`, following the existing format.
+- **Anything found but not addressed in the current PR** (a bug, gap, or improvement spotted
+  in passing that's out of scope for the change at hand) gets automatically added to
+  `BACKLOG.md` in the same PR, following the existing format — don't just mention it in
+  conversation or a PR comment and let it evaporate.
 
 ## Git & PR workflow
 
