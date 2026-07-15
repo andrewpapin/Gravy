@@ -83,18 +83,21 @@ export function CalendarGrid({ onPickDate }: CalendarGridProps) {
           const dateStr = toDateStr(viewYear, viewMonth, day);
           const isToday = dateStr === today;
           const isFuture = dateStr > today;
+          const isPast = dateStr < today;
           const log = getDayLog(state, dateStr, today);
           const hasLog = hasAnyLog(log);
+          const missed = isPast && !hasLog;
           return (
             <button
               key={i}
               type="button"
-              className={`calendar-day ${isToday ? 'today' : ''}`}
+              className={`calendar-day ${isToday ? 'today' : ''} ${missed ? 'missed' : ''}`}
               onClick={() => { if (!isFuture) onPickDate(dateStr); }}
               disabled={isFuture}
-              aria-label={`${day} ${MONTH_NAMES[viewMonth]}${isToday ? ', today' : isFuture ? ', not available yet' : ''}${hasLog ? ', has activity' : ''}`}
+              aria-label={`${day} ${MONTH_NAMES[viewMonth]}${isToday ? ', today' : isFuture ? ', not available yet' : ''}${hasLog ? ', has activity' : ''}${missed ? ', nothing tracked' : ''}`}
             >
-              {day}
+              {missed && <div className="calendar-day-missed-marker" aria-hidden="true" />}
+              <span className="calendar-day-num">{day}</span>
               {isToday && <div className="calendar-day-today-marker" aria-hidden="true" />}
               {hasLog && <div className="calendar-day-dot" aria-hidden="true" />}
             </button>

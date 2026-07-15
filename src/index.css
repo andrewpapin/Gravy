@@ -1107,6 +1107,15 @@ button.gtile.checked:disabled:active { transform: none; }
 .calendar-day:disabled { opacity: 0.35; cursor: default; }
 .calendar-day.today { border-color: var(--dark); }
 .calendar-day.selected { background: var(--yellow); border-color: var(--dark); box-shadow: 2px 2px 0 var(--dark); }
+.calendar-day-num { position: relative; z-index: 1; }
+.calendar-day-missed-marker {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--danger) 24%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 55%, transparent);
+  z-index: 0;
+}
 .calendar-day-dot {
   position: absolute;
   bottom: 4px;
