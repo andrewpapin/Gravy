@@ -5,6 +5,7 @@ import { useGravy } from '../state/GravyContext';
 import type { Theme } from '../state/types';
 import { AppIcon } from './AppIcon';
 import { Modal } from './Modal';
+import { SignInPrompt } from './SignInPrompt';
 import { IconPicker } from './IconPicker';
 import { ColorPicker, type ColorOption } from './ColorPicker';
 import { AVATAR_ICONS } from '../data/icons';
@@ -37,13 +38,15 @@ interface ProfilesManagerProps {
 }
 
 export function ProfilesManager({ open, onClose, onBack }: ProfilesManagerProps) {
-  const { profiles, addProfile, updateProfile, deleteProfile } = useGravy();
+  const { profiles, addProfile, updateProfile, deleteProfile, grownUpUnlocked } = useGravy();
+  const locked = !grownUpUnlocked;
   const [editingId, setEditingId] = useState<string | null>(null);
   // Buffers the name being edited so typing doesn't push a state update (and a cloud sync) per
   // keystroke — the edit commits once, on blur. Seeded when an edit panel opens.
   const [editName, setEditName] = useState('');
   const [newName, setNewName] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [signInNonce, setSignInNonce] = useState(0);
 
   // Reset any in-progress edit/delete confirmation on every fresh open, adjusted during
   // render (not an effect) — this manager stays mounted at all times (visibility is CSS-only).
@@ -53,6 +56,7 @@ export function ProfilesManager({ open, onClose, onBack }: ProfilesManagerProps)
     if (open) {
       setEditingId(null);
       setConfirmDeleteId(null);
+      setSignInNonce((n) => n + 1);
     }
   }
 
@@ -62,6 +66,17 @@ export function ProfilesManager({ open, onClose, onBack }: ProfilesManagerProps)
     addProfile(name);
     setNewName('');
   };
+
+  // Self-gates like ApprovalsDrawer: re-locks immediately if grownUpUnlocked flips false while
+  // this is already open (e.g. signing out from Advanced Settings > Parent Account elsewhere),
+  // rather than trusting only the AccountMenu lock check it was opened through.
+  if (locked) {
+    return (
+      <Modal open={open} onClose={onClose} closeLabel="Close profiles" title="Sign In" onBack={onBack}>
+        <SignInPrompt key={signInNonce} />
+      </Modal>
+    );
+  }
 
   return (
     <Modal
