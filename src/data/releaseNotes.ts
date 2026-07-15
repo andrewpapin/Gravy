@@ -18,4 +18,5 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   { version: 3, note: 'The Arcade is now just one game — tap Daily to play, see today\'s stats, and check your game history.', prNumber: 211, at: '2026-07-13T15:00:00-04:00' },
   { version: 4, note: 'Roll to the Goal is harder now (10 dice, bigger target), starts the moment you tap Play, and shows your score for every round you play today.', prNumber: 212, at: '2026-07-13T16:30:00-04:00' },
   { version: 5, note: 'Fixed the Sign In screen so the email/password fields match the rest of the app.', prNumber: 214, at: '2026-07-15T15:30:00-04:00' },
+  { version: 6, note: 'Calendar now shows a red circle behind days with nothing tracked, so it\'s easy to spot and fix days you or your kid missed.', prNumber: 215, at: '2026-07-15T12:00:00-04:00' },
 ];
