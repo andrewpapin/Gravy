@@ -75,6 +75,7 @@ export function SignInPrompt() {
         <div className="flex-row-full sync-gate-join" style={{ width: '100%', maxWidth: 280 }}>
           <input
             type="text"
+            className="onb-input"
             placeholder="Family code"
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
@@ -107,6 +108,7 @@ export function SignInPrompt() {
           <input
             type="email"
             autoComplete="email"
+            className="onb-input"
             placeholder="Parent email"
             value={email}
             onChange={(e) => { setEmail(e.target.value); setError(null); setResetSent(false); }}
@@ -154,6 +156,7 @@ export function SignInPrompt() {
         <input
           type="email"
           autoComplete="email"
+          className="onb-input"
           placeholder="Parent email"
           value={email}
           onChange={(e) => { setEmail(e.target.value); setError(null); setLinkSent(false); }}
@@ -161,6 +164,7 @@ export function SignInPrompt() {
         <input
           type="password"
           autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+          className="onb-input"
           placeholder="Password (at least 6 characters)"
           value={password}
           onChange={(e) => { setPassword(e.target.value); setError(null); }}

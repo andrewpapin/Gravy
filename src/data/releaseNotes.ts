@@ -17,4 +17,5 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   { version: 2, note: 'You can now browse the full release notes history from the Grown-Up Menu.', prNumber: 209, at: '2026-07-13T09:35:23-04:00' },
   { version: 3, note: 'The Arcade is now just one game — tap Daily to play, see today\'s stats, and check your game history.', prNumber: 211, at: '2026-07-13T15:00:00-04:00' },
   { version: 4, note: 'Roll to the Goal is harder now (10 dice, bigger target), starts the moment you tap Play, and shows your score for every round you play today.', prNumber: 212, at: '2026-07-13T16:30:00-04:00' },
+  { version: 5, note: 'Fixed the Sign In screen so the email/password fields match the rest of the app.', prNumber: 214, at: '2026-07-15T15:30:00-04:00' },
 ];
