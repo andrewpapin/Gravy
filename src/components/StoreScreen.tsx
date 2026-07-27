@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStore, faHourglassHalf, faStar, faLock } from '@fortawesome/free-solid-svg-icons';
+import { faStore, faHourglassHalf, faStar, faLock, faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import { AppIcon } from './AppIcon';
 import { Modal } from './Modal';
 import { useGravy } from '../state/GravyContext';
@@ -7,6 +7,11 @@ import { useGravy } from '../state/GravyContext';
 interface StoreScreenProps {
   open: boolean;
   onClose: () => void;
+}
+
+function formatClaimedDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 export function StoreScreen({ open, onClose }: StoreScreenProps) {
@@ -19,6 +24,9 @@ export function StoreScreen({ open, onClose }: StoreScreenProps) {
     return sum + (r?.cost ?? 0);
   }, 0);
   const spendable = Math.max(0, state.points - reserved);
+  const claimedRewards = state.actionLog
+    .filter((e) => e.type === 'rewardApproved' && !e.undone)
+    .sort((a, b) => b.at - a.at);
 
   return (
     <Modal
@@ -99,6 +107,36 @@ export function StoreScreen({ open, onClose }: StoreScreenProps) {
                     <div className="pending-item-name">{reward.name}</div>
                     <div className="pending-item-status">
                       <FontAwesomeIcon icon={faHourglassHalf} aria-hidden="true" /> {reward.cost} pts · Waiting for approval
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <div className="card-title" style={{ marginBottom: 8 }}>
+          <span className="card-title-icon icon-sage"><FontAwesomeIcon icon={faCircleCheck} /></span> Claimed Prizes
+        </div>
+        {claimedRewards.length === 0 ? (
+          <div className="muted-note" style={{ fontSize: '0.8rem', textAlign: 'center', padding: 8 }}>
+            No prizes claimed yet
+          </div>
+        ) : (
+          <div>
+            {claimedRewards.map((entry) => {
+              const reward = state.rewards.find((r) => r.id === entry.itemId);
+              const name = reward?.name ?? entry.label.replace(/ approved.*$/, '');
+              const cost = reward?.cost ?? Math.abs(entry.pts);
+              return (
+                <div className="pending-item" key={entry.id}>
+                  <AppIcon iconKey={reward?.icon} emojiFallback={reward?.emoji ?? '🎁'} className="pending-item-emoji" />
+                  <div className="pending-item-info">
+                    <div className="pending-item-name">{name}</div>
+                    <div className="pending-item-status">
+                      <FontAwesomeIcon icon={faCircleCheck} aria-hidden="true" /> {cost} pts · Claimed {formatClaimedDate(entry.dateStr)}
                     </div>
                   </div>
                 </div>
