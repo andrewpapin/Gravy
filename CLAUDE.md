@@ -55,8 +55,12 @@ unintentional or unreported. Completed/decided items are condensed to one-liners
 
 `main` only accepts changes through a PR (`ci.yml` gates lint/test/build). Once a change is
 committed, pushed to the session's branch, and verified — `lint`/`test`/`build` green, plus a
-manual browser check for UI changes — open the pull request proactively; don't wait to be asked.
-Merging is a separate step and still needs explicit confirmation before it happens.
+manual browser check for UI changes — **before asking to proceed or creating the PR, send
+screenshots of every page/screen touched by the change** (via `run` skill / `verify_gravy.mjs`
+against a running `npm run dev`, using `SendUserFile`) so the user can see the visual result
+first. Only after screenshots are sent and the user has had a chance to review, open the pull
+request proactively; don't wait to be asked for the PR itself, just don't skip the screenshot
+step first. Merging is a separate step and still needs explicit confirmation before it happens.
 
 If the PR ships a user-facing change, add a `RELEASE_NOTES` entry (`src/data/releaseNotes.ts`) —
 bump `version` one higher than the current last entry, write a single plain-language bullet, set
