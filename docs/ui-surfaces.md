@@ -272,13 +272,13 @@ a `prevAuthUserRef` and, on an actual signed-in → signed-out transition (never
 simply never had an account, e.g. the Onboarding "Existing Kid" fork), sets `showSignedOutGate` and
 closes every open `AccountMenu`-reached drawer. While true, it renders in the same slot as
 `Onboarding`/`SyncGateModal` (taking priority over both) — a full-screen `.onb-screen` overlay
-blocking `HomeScreen` underneath. Its content deliberately mirrors `Onboarding`'s own `'welcome'`
-phase (the `onb-icon-badge`/`onb-wordmark`/`onb-tagline` logo block) rather than a distinct
-"locked out" message — signing out lands the device back on the same landing look as a fresh
-install, not a separate error-toned screen — with **Sign In as Grown-Up** (renders `SignInPrompt`
-inline) or **Continue as Kid** (dismisses the gate with no sign-in, same no-account posture as an
-"Existing Kid" device) in place of `Onboarding`'s New-Family/Existing-Parent/Existing-Kid buttons.
-The gate also clears `SIGNED_OUT_PENDING_KEY = 'gravy_signed_out_pending'`
+blocking `HomeScreen` underneath. Unlike `Onboarding`'s own `'welcome'` phase (a landing screen with
+three buttons before any form appears), the gate leads directly with `SignInPrompt` itself —
+re-authenticating is the expected path right after a sign-out, so there's no intermediate "pick a
+path" screen. **Continue as Kid** (dismisses the gate with no sign-in, same no-account posture as an
+"Existing Kid" device) sits below it as a full-width, de-emphasized `.signed-out-gate-kid-btn`,
+visually set apart from `SignInPrompt`'s own shrink-wrapped stacked buttons/links above it. The gate
+also clears `SIGNED_OUT_PENDING_KEY = 'gravy_signed_out_pending'`
 (`src/state/defaultState.ts`) on dismissal; that flag is what makes the gate persist across a
 reload/relaunch — set the moment the sign-out transition fires, checked synchronously as
 `showSignedOutGate`'s initial state, so a PWA restart mid-gate doesn't silently drop back to
