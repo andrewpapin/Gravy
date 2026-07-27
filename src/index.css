@@ -1822,6 +1822,14 @@ button.gtile.checked:disabled:active { transform: none; }
   gap: var(--space-sm);
   margin-top: var(--space-md);
 }
+/* De-emphasized "hand the device to a kid" escape hatch below SignedOutGate's sign-in form —
+   full-width (rather than shrink-wrapped like SignInPrompt's own stacked buttons above it) and
+   pushed down with extra margin so it reads as a distinct, secondary action, not part of the
+   sign-in flow it sits under. */
+.signed-out-gate-kid-btn {
+  width: 100%;
+  margin-top: var(--space-lg);
+}
 .onb-link {
   background: transparent;
   border: none;
