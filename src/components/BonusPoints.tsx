@@ -9,9 +9,10 @@ import { triggerHaptic } from '../lib/haptics';
 
 interface BonusPointsProps {
   dateStr?: string;
+  locked?: boolean;
 }
 
-export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
+export function BonusPoints({ dateStr, locked = false }: BonusPointsProps = {}) {
   const { state, logBonusItem, undoBonusItem, logBonusItemForDay, undoBonusItemForDay } = useGravy();
   const today = todayStr(state.settings.timezone);
   const day = dateStr ?? today;
@@ -44,6 +45,7 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
             const count = goalCounts[g.id] || 0;
             const started = count > 0;
             const logItem = () => {
+              if (locked) return;
               triggerHaptic();
               if (isToday) logBonusItem(g.id); else logBonusItemForDay(day, g.id);
             };
@@ -59,7 +61,7 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
               </>
             );
             return (
-              <div key={g.id} className="goal-row">
+              <div key={g.id} className={`goal-row ${locked ? 'day-locked' : ''}`}>
                 {started ? (
                   <div className="goal-row-box">{rowContent}</div>
                 ) : (
@@ -74,6 +76,7 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
                         logItem();
                       }
                     }}
+                    aria-disabled={locked}
                     aria-label={`Log ${g.name}`}
                   >
                     {rowContent}
@@ -84,7 +87,9 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
                     <button
                       type="button"
                       className="gstep-btn"
+                      disabled={locked}
                       onClick={() => {
+                        if (locked) return;
                         triggerHaptic();
                         if (isToday) undoBonusItem(g.id); else undoBonusItemForDay(day, g.id);
                       }}
@@ -94,6 +99,7 @@ export function BonusPoints({ dateStr }: BonusPointsProps = {}) {
                     <button
                       type="button"
                       className="gstep-btn"
+                      disabled={locked}
                       onClick={logItem}
                       aria-label={`Log ${g.name}`}
                     >+</button>

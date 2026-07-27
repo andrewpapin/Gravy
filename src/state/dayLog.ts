@@ -26,3 +26,15 @@ export function hasAnyLog(log: DayLog | null): boolean {
     Object.values(log.bonusCounts || {}).some((c) => c > 0)
   );
 }
+
+// Same as hasAnyLog, minus the points>0 check — used to gate the "Oops, I forgot…" button, since
+// unlike hasAnyLog this must stay false once oopsPoints is the only thing that bumped log.points
+// (otherwise the day would look "already logged" and the button couldn't be toggled back off).
+export function hasLoggedItems(log: DayLog | null): boolean {
+  if (!log) return false;
+  return (
+    Object.values(log.foodCounts).some((c) => c > 0) ||
+    log.goalIds.length > 0 ||
+    Object.values(log.bonusCounts || {}).some((c) => c > 0)
+  );
+}

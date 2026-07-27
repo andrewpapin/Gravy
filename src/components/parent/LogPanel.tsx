@@ -27,6 +27,7 @@ const ACTION_TYPE_ICON: Record<ActionLogType, IconDefinition> = {
   food: faUtensils,
   goal: faListCheck,
   bonus: faStar,
+  oops: faClockRotateLeft,
   game: faGamepad,
   rewardRequested: faEnvelope,
   rewardApproved: faCircleCheck,
@@ -56,7 +57,7 @@ const AUDIT_TYPE_ICON: Record<AuditLogType, IconDefinition> = {
   householdClaimed: faShieldHalved,
 };
 
-const UNDOABLE_TYPES: ActionLogType[] = ['food', 'goal', 'bonus'];
+const UNDOABLE_TYPES: ActionLogType[] = ['food', 'goal', 'bonus', 'oops'];
 
 type MergedEntry =
   | { kind: 'action'; entry: ActionLogEntry }

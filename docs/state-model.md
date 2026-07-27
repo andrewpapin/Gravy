@@ -67,8 +67,9 @@ The provider's imperative actions are split into per-domain custom hooks, each c
   `completeRollToGoalRound`/`declineRollToGoalRound` are the Daily Game's own pair (see
   `docs/systems.md`'s Daily Game section) — variable per-tier payout with its own independent
   `rollGoalRoundsToday` cap.
-- `useDayEditActions.ts` — the five `*ForDay` Calendar edits + `undoActionLogEntry` (takes the three
-  kid-progress today-inverses as deps to dispatch today-vs-`*ForDay`). Calendar is reached only once
+- `useDayEditActions.ts` — the five `*ForDay` Calendar edits, the `addOopsPointsForDay`/
+  `undoOopsPointsForDay` catch-up pair (below), + `undoActionLogEntry` (takes the three kid-progress
+  today-inverses as deps to dispatch today-vs-`*ForDay`). Calendar is reached only once
   `grownUpUnlocked`, so these always post immediately — never gated by `requiresApproval`.
 - `useRewardActions.ts` — `requestReward`, `approveReward`, `declineReward`.
 - `usePendingPointsActions.ts` — `approvePendingPointsAward`, `declinePendingPointsAward`. Takes
@@ -209,3 +210,16 @@ single-profile save by wrapping it as a one-entry root.
   whose date string is greater than today's so it can't navigate to a future date.
   `formatFriendlyDate()` (`src/state/defaultState.ts`, alongside `todayStr`/`addDaysToDateStr`) is
   the date-label formatter `CalendarPanel` uses.
+- **"Oops, I forgot…" catch-up** (`OopsForgotButton.tsx`, `src/components/parent/`) — a past-day-only
+  shortcut rendered above `FoodTray`/`DailyGoals`/`BonusPoints` in `CalendarPanel`, for a day nothing
+  was logged on at all. Tapping it awards `Math.round(getAverageDailyPoints(state, 30))`
+  (`src/state/statsSnapshot.ts` — the kid's rolling-30-day daily pace) via `addOopsPointsForDay`,
+  which stores the exact amount on `DayLog.oopsPoints` and logs an `'oops'`-type `ActionLogEntry`.
+  `oopsPoints`'s presence is also what locks that day's `FoodTray`/`DailyGoals`/`BonusPoints` (a
+  `locked` prop disables every tap handler and dims the controls) — it stands in for a whole day's
+  activity, so it can't be mixed with per-item edits for the same day. The button is a toggle: tapping
+  it again calls `undoOopsPointsForDay`, the exact inverse, which also unlocks the day; the Log
+  screen's own Undo button reaches the same inverse via `undoActionLogEntry`'s `'oops'` case. It's
+  disabled (can't be applied) once the day has any real food/goal/bonus item logged — gated by
+  `hasLoggedItems()` (`src/state/dayLog.ts`), a `hasAnyLog()` sibling that ignores `log.points` so it
+  doesn't misread a day whose only points came from the oops award itself.
