@@ -272,15 +272,27 @@ a `prevAuthUserRef` and, on an actual signed-in → signed-out transition (never
 simply never had an account, e.g. the Onboarding "Existing Kid" fork), sets `showSignedOutGate` and
 closes every open `AccountMenu`-reached drawer. While true, it renders in the same slot as
 `Onboarding`/`SyncGateModal` (taking priority over both) — a full-screen `.onb-screen` overlay
-(matching `Onboarding`'s own styling) blocking `HomeScreen` underneath, offering **Sign In as
-Grown-Up** (renders `SignInPrompt` inline) or **Continue as Kid** (dismisses the gate with no
-sign-in, same no-account posture as an "Existing Kid" device). The gate also clears
-`SIGNED_OUT_PENDING_KEY = 'gravy_signed_out_pending'` (`src/state/defaultState.ts`) on dismissal;
-that flag is what makes the gate persist across a reload/relaunch — set the moment the sign-out
-transition fires, checked synchronously as `showSignedOutGate`'s initial state, so a PWA restart
-mid-gate doesn't silently drop back to `HomeScreen` before the parent picks an option. Signing back
-in (from anywhere, not just the gate) clears both the state and the flag automatically once
-`authUser` resolves truthy again.
+blocking `HomeScreen` underneath. Its content deliberately mirrors `Onboarding`'s own `'welcome'`
+phase (the `onb-icon-badge`/`onb-wordmark`/`onb-tagline` logo block) rather than a distinct
+"locked out" message — signing out lands the device back on the same landing look as a fresh
+install, not a separate error-toned screen — with **Sign In as Grown-Up** (renders `SignInPrompt`
+inline) or **Continue as Kid** (dismisses the gate with no sign-in, same no-account posture as an
+"Existing Kid" device) in place of `Onboarding`'s New-Family/Existing-Parent/Existing-Kid buttons.
+The gate also clears `SIGNED_OUT_PENDING_KEY = 'gravy_signed_out_pending'`
+(`src/state/defaultState.ts`) on dismissal; that flag is what makes the gate persist across a
+reload/relaunch — set the moment the sign-out transition fires, checked synchronously as
+`showSignedOutGate`'s initial state, so a PWA restart mid-gate doesn't silently drop back to
+`HomeScreen` before the parent picks an option. Signing back in (from anywhere, not just the gate)
+clears both the state and the flag automatically once `authUser` resolves truthy again.
+
+A separate `LogoutToast` (`src/components/LogoutToast.tsx`) confirms the action itself: a
+`logoutToastNonce` counter in `AppShell`, bumped only on the live signed-in → signed-out
+transition (never when the gate is merely restored from `SIGNED_OUT_PENDING_KEY` on reload), drives
+a "Signed out successfully" pill reusing `UpdatePrompt`'s `.update-prompt` toast styling (its own
+`.logout-toast` z-index sits above `SignedOutGate`'s `.onb-screen` so it's visible over the gate).
+It reacts to the changed nonce during render — the same "adjusting state during render" pattern
+`AccountMenu` already uses for its own sign-in-prompt reset — rather than in an effect, so it never
+fires on mount; a `useEffect` only owns the ~2.5s auto-hide timeout, then it disappears on its own.
 
 ## First-Run Guided Tour (`src/components/tour/`)
 

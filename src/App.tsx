@@ -8,6 +8,7 @@ import { UpdatePrompt } from './components/UpdatePrompt';
 import { ReleaseNotesDrawer } from './components/ReleaseNotesDrawer';
 import { Celebration } from './components/Celebration';
 import { Confetti } from './components/Confetti';
+import { LogoutToast } from './components/LogoutToast';
 import { STORAGE_KEY, ONBOARDING_DONE_KEY, HOME_TOUR_DONE_KEY, SIGNED_OUT_PENDING_KEY } from './state/defaultState';
 import { safeGetItem, safeSetItem, safeRemoveItem } from './state/storage';
 
@@ -89,6 +90,10 @@ function AppShell() {
   const [showSignedOutGate, setShowSignedOutGate] = useState(
     () => safeGetItem(SIGNED_OUT_PENDING_KEY) === 'true',
   );
+  // Bumped only on the live sign-out transition below (never on mount, never on a reload that
+  // merely restores showSignedOutGate from the persisted flag) so LogoutToast fires once, right
+  // when "Log out" actually happens.
+  const [logoutToastNonce, setLogoutToastNonce] = useState(0);
   const prevAuthUserRef = useRef(authUser);
   useEffect(() => {
     const wasSignedIn = !!prevAuthUserRef.current;
@@ -96,6 +101,7 @@ function AppShell() {
     if (wasSignedIn && !authUser) {
       safeSetItem(SIGNED_OUT_PENDING_KEY, 'true');
       setShowSignedOutGate(true);
+      setLogoutToastNonce((n) => n + 1);
       setAccountMenuOpen(false);
       setGrownUpsOpen(false);
       setSwitchProfileOpen(false);
@@ -191,6 +197,7 @@ function AppShell() {
       <Confetti />
       <StorageErrorBanner />
       <UpdatePrompt />
+      <LogoutToast nonce={logoutToastNonce} />
       <Suspense fallback={null}>
         {showSignedOutGate ? (
           <SignedOutGate onContinueAsKid={() => { safeRemoveItem(SIGNED_OUT_PENDING_KEY); setShowSignedOutGate(false); }} />
