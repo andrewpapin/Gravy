@@ -2607,6 +2607,12 @@ button.gtile.checked:disabled:active { transform: none; }
   color: var(--danger);
 }
 
+/* Above SignedOutGate's .onb-screen (1100) — the toast confirms the sign-out that gate is
+   currently covering the screen for, so it needs to render on top of it, not behind. */
+.logout-toast {
+  z-index: 1150;
+}
+
 /* ===== CONFETTI ===== */
 .confetti-canvas {
   position: fixed;
