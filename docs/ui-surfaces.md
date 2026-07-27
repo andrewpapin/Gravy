@@ -79,8 +79,10 @@ button clears the flag once the parent confirms. There's no explicit "unlock" ca
 recomputes automatically once `authUser`/`householdStatus` update, and a `useEffect` in `AccountMenu`
 watches it and closes the prompt back to the item list once it flips true. Tapping the button when
 unlocked calls `signOutAccount()` directly — logging out is what re-locks the device, there's no
-separate "lock without signing out." A `signInNonce` flag remounts a fresh `SignInPrompt` on every
-open (mirroring the old `pinNonce` idea) so a half-finished sign-in attempt never lingers.
+separate "lock without signing out." Signing out also forces the full-screen `SignedOutGate` over
+`HomeScreen` itself, not just this menu — see "Sign-Out Gate" below. A `signInNonce` flag remounts a
+fresh `SignInPrompt` on every open (mirroring the old `pinNonce` idea) so a half-finished sign-in
+attempt never lingers.
 
 - **Reward Store** — no PIN, always tappable (its entry point is on `StatsCard`, not this menu).
   Approvals also isn't in this menu anymore — see the `TopBar` bell icon above.
@@ -259,6 +261,26 @@ true, the component shows "Check Your Email" (with a "Resend confirmation email"
 There's no "Skip for now" — account creation is mandatory on every path that reaches this phase. Its
 sign-in mode has the same "Forgot password?" sub-flow as `SignInPrompt` (see above), reusing
 `sendPasswordReset`.
+
+## Sign-Out Gate (`src/components/SignedOutGate.tsx`)
+
+`grownUpUnlocked` only ever gated the five parent-only panels — signing out never touched
+`HomeScreen` itself, so a device that had a signed-in parent would silently drop straight back to a
+fully-usable kid `HomeScreen` after "Log out," with nothing on screen indicating the device was no
+longer signed in. `SignedOutGate` closes that gap: `AppShell` (`src/App.tsx`) watches `authUser` via
+a `prevAuthUserRef` and, on an actual signed-in → signed-out transition (never on a device that
+simply never had an account, e.g. the Onboarding "Existing Kid" fork), sets `showSignedOutGate` and
+closes every open `AccountMenu`-reached drawer. While true, it renders in the same slot as
+`Onboarding`/`SyncGateModal` (taking priority over both) — a full-screen `.onb-screen` overlay
+(matching `Onboarding`'s own styling) blocking `HomeScreen` underneath, offering **Sign In as
+Grown-Up** (renders `SignInPrompt` inline) or **Continue as Kid** (dismisses the gate with no
+sign-in, same no-account posture as an "Existing Kid" device). The gate also clears
+`SIGNED_OUT_PENDING_KEY = 'gravy_signed_out_pending'` (`src/state/defaultState.ts`) on dismissal;
+that flag is what makes the gate persist across a reload/relaunch — set the moment the sign-out
+transition fires, checked synchronously as `showSignedOutGate`'s initial state, so a PWA restart
+mid-gate doesn't silently drop back to `HomeScreen` before the parent picks an option. Signing back
+in (from anywhere, not just the gate) clears both the state and the flag automatically once
+`authUser` resolves truthy again.
 
 ## First-Run Guided Tour (`src/components/tour/`)
 
