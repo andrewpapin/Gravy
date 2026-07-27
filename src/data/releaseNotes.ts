@@ -23,4 +23,5 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   { version: 8, note: 'Signing out as a grown-up now locks the whole device with a sign-in screen, instead of leaving the home screen usable.', prNumber: 217, at: '2026-07-27T12:00:00-04:00' },
   { version: 9, note: 'The sign-out screen now shows the Gravy logo instead of a "You\'re Signed Out" message, plus a quick confirmation toast when you sign out.', prNumber: 218, at: '2026-07-27T12:00:00-04:00' },
   { version: 10, note: 'The sign-out screen now goes straight to sign-in, with "Continue as Kid" as a button below it.', prNumber: 219, at: '2026-07-27T12:00:00-04:00' },
+  { version: 11, note: 'Sign-in and cloud sync setup now open as their own full screen, instead of a popup over your other screen.', prNumber: 221, at: '2026-07-27T12:00:00-04:00' },
 ];
