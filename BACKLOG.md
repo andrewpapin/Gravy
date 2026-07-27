@@ -395,6 +395,13 @@ only net-new items.)*
   `FirstKidPrompt` sets a name. *(P2, S.)*
 - **Feed the release-notes ticker or drop it (F18).** `RELEASE_NOTES` has one entry ever
   (`src/data/releaseNotes.ts:10-12`) at app version v1.1.205. *(P2, decision + S.)*
+- **Multi-step goals can't log partial progress on a past Calendar day.** `DailyGoals.tsx`'s
+  `isStepper = isToday && target > 1` means a `target > 1` goal only gets a plain
+  complete/undo toggle when edited via the Calendar's `*ForDay` actions — a parent can't
+  record "did 2 of 3" for a missed day, only all-or-nothing. Noted in passing while adding
+  the "Oops, I forgot…" catch-up button (which itself sidesteps this by awarding a flat
+  amount rather than per-goal). *(P2, S–M — extend `toggleGoalForDay` to accept a step count,
+  or a stepper UI for past days.)*
 
 ### Games & economy
 

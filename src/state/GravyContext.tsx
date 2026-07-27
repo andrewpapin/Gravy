@@ -84,6 +84,8 @@ interface GravyContextValue {
   toggleGoalForDay: (dateStr: string, goalId: number) => void;
   logBonusItemForDay: (dateStr: string, goalId: number) => void;
   undoBonusItemForDay: (dateStr: string, goalId: number) => void;
+  addOopsPointsForDay: (dateStr: string) => void;
+  undoOopsPointsForDay: (dateStr: string) => void;
   undoActionLogEntry: (entry: ActionLogEntry) => void;
   requestReward: (id: number) => void;
   approveReward: (prId: string) => void;

@@ -4,8 +4,13 @@ import { backfillStreaksFromLogs, todayStr } from '../defaultState';
 import { appendActionLog, markMostRecentUndone, type LogActor } from '../actionLog';
 import { FOODS } from '../../data/foods';
 import { applyBonusItemForDay, getFoodPts, reverseBonusItem } from '../points';
+import { hasLoggedItems } from '../dayLog';
+import { getAverageDailyPoints } from '../statsSnapshot';
 import { clone } from './shared';
 import type { AwardPointsForDay, MaybeCelebrateRankUp } from './types';
+
+// Rolling window (days) the "Oops, I forgot…" catch-up averages over.
+const OOPS_AVERAGE_WINDOW_DAYS = 30;
 
 export interface DayEditDeps {
   setState: Dispatch<SetStateAction<GravyState>>;
@@ -221,6 +226,59 @@ export function useDayEditActions(deps: DayEditDeps) {
     });
   }, [setState]);
 
+  // Awards the kid's typical daily pace (rolling-30-day average) to a past day in one tap, for
+  // days nothing was logged at all — a stand-in for a whole day's activity, not a specific item.
+  // Only usable while the day is clean (no food/goal/bonus logged) and not already applied; the
+  // Calendar UI enforces this too (the button is disabled otherwise), these are the defensive
+  // twin. Locks the day's other editors in the UI by virtue of log.oopsPoints being set.
+  const addOopsPointsForDay = useCallback((dateStr: string) => {
+    setState((prev) => {
+      const existing = prev.dayLogs[dateStr] ?? null;
+      if (existing?.oopsPoints !== undefined || hasLoggedItems(existing)) return prev;
+
+      const next = clone(prev);
+      if (!next.dayLogs[dateStr]) {
+        next.dayLogs[dateStr] = { foodCounts: {}, goalIds: [], points: 0 };
+      }
+      const log = next.dayLogs[dateStr];
+      const pts = Math.round(getAverageDailyPoints(next, OOPS_AVERAGE_WINDOW_DAYS));
+
+      awardPointsForDay(next, log, pts);
+      log.oopsPoints = pts;
+      appendActionLog(next, actorRef.current, {
+        type: 'oops',
+        label: `Oops, forgot to log! +${pts}`,
+        pts,
+        dateStr,
+      });
+
+      backfillStreaksFromLogs(next);
+      maybeCelebrateRankUp(prev.totalPoints, next);
+      return next;
+    });
+  }, [setState, awardPointsForDay, maybeCelebrateRankUp, actorRef]);
+
+  // Exact inverse of addOopsPointsForDay — reverses the recorded amount directly (no forgiveness
+  // logic needed, unlike bonus-item penalties) and clears oopsPoints so the day's editors unlock.
+  const undoOopsPointsForDay = useCallback((dateStr: string) => {
+    setState((prev) => {
+      const log = prev.dayLogs[dateStr];
+      if (!log || log.oopsPoints === undefined) return prev;
+
+      const next = clone(prev);
+      const nextLog = next.dayLogs[dateStr];
+      const pts = nextLog.oopsPoints as number;
+      next.points -= pts;
+      next.totalPoints -= pts;
+      nextLog.points -= pts;
+      delete nextLog.oopsPoints;
+
+      markMostRecentUndone(next.actionLog, 'oops', undefined, dateStr);
+      backfillStreaksFromLogs(next);
+      return next;
+    });
+  }, [setState]);
+
   // Dispatches a Log entry's Undo to the same exact-inverse action the live UI would call —
   // today's actions vs. the *ForDay variant, chosen by comparing the entry's day to today.
   const undoActionLogEntry = useCallback((entry: ActionLogEntry) => {
@@ -238,10 +296,17 @@ export function useDayEditActions(deps: DayEditDeps) {
         if (isToday) undoBonusItem(entry.itemId as number);
         else undoBonusItemForDay(entry.dateStr, entry.itemId as number);
         break;
+      case 'oops':
+        // Only ever created for past days (the button is calendar-only), so no isToday branch.
+        undoOopsPointsForDay(entry.dateStr);
+        break;
       default:
         break;
     }
-  }, [stateRef, removeFood, removeFoodForDay, decrementGoal, toggleGoalForDay, undoBonusItem, undoBonusItemForDay]);
+  }, [stateRef, removeFood, removeFoodForDay, decrementGoal, toggleGoalForDay, undoBonusItem, undoBonusItemForDay, undoOopsPointsForDay]);
 
-  return { logFoodForDay, removeFoodForDay, toggleGoalForDay, logBonusItemForDay, undoBonusItemForDay, undoActionLogEntry };
+  return {
+    logFoodForDay, removeFoodForDay, toggleGoalForDay, logBonusItemForDay, undoBonusItemForDay,
+    addOopsPointsForDay, undoOopsPointsForDay, undoActionLogEntry,
+  };
 }

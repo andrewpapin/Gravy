@@ -11,9 +11,10 @@ import { triggerHaptic } from '../lib/haptics';
 
 interface FoodTrayProps {
   dateStr?: string;
+  locked?: boolean;
 }
 
-export function FoodTray({ dateStr }: FoodTrayProps = {}) {
+export function FoodTray({ dateStr, locked = false }: FoodTrayProps = {}) {
   const { state, logFood, removeFood, logFoodForDay, removeFoodForDay } = useGravy();
   const today = todayStr(state.settings.timezone);
   const day = dateStr ?? today;
@@ -43,8 +44,10 @@ export function FoodTray({ dateStr }: FoodTrayProps = {}) {
             <button
               key={f.id}
               type="button"
-              className={`gtile ${logged ? 'checked' : ''}`}
+              className={`gtile ${logged ? 'checked' : ''} ${locked ? 'day-locked' : ''}`}
+              disabled={locked}
               onClick={() => {
+                if (locked) return;
                 triggerHaptic();
                 if (isToday) {
                   if (logged) removeFood(f.id); else logFood(f.id);

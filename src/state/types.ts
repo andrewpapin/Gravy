@@ -96,12 +96,14 @@ export interface DayLog {
   points: number;
   bonusCounts?: Record<number, number>; // tap counts for Bonus Points items, keyed by goal id
   bonusApplied?: Record<number, number>; // points actually applied per Bonus item this day (signed, forgiveness-aware) — mirrors GravyState.todayBonusApplied
+  oopsPoints?: number; // set when the Calendar's "Oops, I forgot…" catch-up was applied to this day (the exact amount awarded, for undo); presence also locks the day's food/goal/bonus editors
 }
 
 export type ActionLogType =
   | 'food'
   | 'goal'
   | 'bonus'
+  | 'oops'
   | 'game'
   | 'rewardRequested'
   | 'rewardApproved'

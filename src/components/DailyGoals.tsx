@@ -9,9 +9,10 @@ import { triggerHaptic } from '../lib/haptics';
 
 interface DailyGoalsProps {
   dateStr?: string;
+  locked?: boolean;
 }
 
-export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
+export function DailyGoals({ dateStr, locked = false }: DailyGoalsProps = {}) {
   const { state, incrementGoal, decrementGoal, toggleGoalForDay } = useGravy();
   const today = todayStr(state.settings.timezone);
   const day = dateStr ?? today;
@@ -52,6 +53,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
             const stepperStarted = isStepper && count > 0;
 
             const toggleCheck = () => {
+              if (locked) return;
               triggerHaptic();
               if (isToday) {
                 if (count > 0) decrementGoal(g.id); else incrementGoal(g.id);
@@ -59,7 +61,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                 toggleGoalForDay(day, g.id);
               }
             };
-            const logStep = () => { triggerHaptic(); incrementGoal(g.id); };
+            const logStep = () => { if (locked) return; triggerHaptic(); incrementGoal(g.id); };
 
             const rowContent = (
               <>
@@ -72,7 +74,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
             );
 
             return (
-              <div key={g.id} className={`goal-row ${done ? 'done' : ''}`}>
+              <div key={g.id} className={`goal-row ${done ? 'done' : ''} ${locked ? 'day-locked' : ''}`}>
                 {stepperStarted ? (
                   <div className="goal-row-box">{rowContent}</div>
                 ) : isStepper ? (
@@ -87,6 +89,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                         logStep();
                       }
                     }}
+                    aria-disabled={locked}
                     aria-label={`Log ${g.name}`}
                   >
                     {rowContent}
@@ -104,6 +107,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                       }
                     }}
                     aria-pressed={done}
+                    aria-disabled={locked}
                     aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
                   >
                     {rowContent}
@@ -114,13 +118,15 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                     <button
                       type="button"
                       className="gstep-btn"
-                      onClick={() => { triggerHaptic(); decrementGoal(g.id); }}
+                      disabled={locked}
+                      onClick={() => { if (locked) return; triggerHaptic(); decrementGoal(g.id); }}
                       aria-label={`Undo ${g.name}`}
                     >−</button>
                     <span className="gstep-count">{count}/{target}</span>
                     <button
                       type="button"
                       className="gstep-btn"
+                      disabled={locked}
                       onClick={logStep}
                       aria-label={`Complete ${g.name}`}
                     >+</button>
@@ -129,6 +135,7 @@ export function DailyGoals({ dateStr }: DailyGoalsProps = {}) {
                   <button
                     type="button"
                     className={`goal-row-check ${done ? 'done' : ''}`}
+                    disabled={locked}
                     onClick={toggleCheck}
                     aria-pressed={done}
                     aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}

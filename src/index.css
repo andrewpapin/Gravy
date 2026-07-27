@@ -337,6 +337,10 @@ button.calendar-day {
 .btn-yellow { background: var(--yellow); color: var(--dark); }
 .btn-dark { background: var(--dark); color: white; }
 .btn-ghost { background: transparent; color: var(--dark); box-shadow: none; border: var(--border-width-xl) solid var(--dark); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn:disabled:active { transform: none; }
+
+.oops-forgot-btn { margin-bottom: 12px; text-align: center; }
 
 /* ===== HOME SCREEN: GREETING ===== */
 .home-greeting {
@@ -526,6 +530,13 @@ button.gtile.checked:active { transform: scale(0.99); }
 button.gtile:disabled { cursor: default; }
 button.gtile:disabled:active,
 button.gtile.checked:disabled:active { transform: none; }
+
+/* Dims a Food/Daily/Bonus tile or row once the Calendar's "Oops, I forgot…" catch-up has been
+   applied to that day — pointer-events:none backs up the JS guards already in each handler. */
+.day-locked {
+  opacity: 0.45;
+  pointer-events: none;
+}
 
 .gtile-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
 .gtile-icon { font-size: 1.5rem; line-height: 1; color: var(--dark); }

@@ -95,7 +95,12 @@ below. A `signInNonce` flag remounts a fresh `SignInPrompt` on every open (mirro
   Settings" describes that scope more accurately than the old catch-all "Grown ups" label.
 - **Calendar** — opens `CalendarDrawer` (`src/components/parent/CalendarDrawer.tsx`), a thin
   `Modal` wrapper around `CalendarPanel` (view/edit past days) — a first-class `AccountMenu` item,
-  sibling to "Game Settings", rather than nested inside the Game Settings dashboard.
+  sibling to "Game Settings", rather than nested inside the Game Settings dashboard. Picking a past
+  date shows an "Oops, I forgot… +#" button (`OopsForgotButton.tsx`) above the food/goals/bonus
+  cards, for a day nothing was logged at all — it awards the kid's rolling-30-day average in one
+  tap and locks the cards below (disabled, dimmed) so they can't be mixed with the catch-up; tapping
+  it again undoes both. It's greyed out if the day already has any real activity logged. See
+  `docs/state-model.md`'s "Oops, I forgot…" entry for the state/action details.
 - **Profiles** — opens `ProfilesManager`, full CRUD for kid profiles (add/edit name, avatar
   icon+colors, theme; delete with confirm; never deletes the last profile).
 - **Advanced Settings** — opens `AdvancedSettingsDrawer`
@@ -202,13 +207,14 @@ panel with a back button otherwise:
   (newest first) two separate fields for display: the active profile's `actionLog` — kid-progress
   and reward actions only (food logged/removed, daily-goal steps, bonus-item taps, game wins,
   reward requested/approved/declined, points approved/declined, plus the Calendar's `*ForDay`
-  equivalents), each with label, signed point delta, and timestamp — and the shared `auditLog` —
-  household admin/destructive actions (catalog edits, settings, profile CRUD, danger-zone resets,
-  sync/ownership changes), each attributed to the parent account that made it. Only `food`/`goal`/
-  `bonus` action entries get an "Undo" button, shown when they're the most-recent non-undone entry
-  for their (type, item, day) key — tapping calls `undoActionLogEntry(entry)`, which dispatches to
-  the same exact-inverse context function (`removeFood`/`decrementGoal`/`undoBonusItem` or their
-  `*ForDay` variants) used by the live UI. On a kid-only device, that original `food`/`goal`/`bonus`
+  equivalents and its `'oops'`-type catch-up entries), each with label, signed point delta, and
+  timestamp — and the shared `auditLog` — household admin/destructive actions (catalog edits,
+  settings, profile CRUD, danger-zone resets, sync/ownership changes), each attributed to the
+  parent account that made it. Only `food`/`goal`/`bonus`/`oops` action entries get an "Undo"
+  button, shown when they're the most-recent non-undone entry for their (type, item, day) key —
+  tapping calls `undoActionLogEntry(entry)`, which dispatches to the same exact-inverse context
+  function (`removeFood`/`decrementGoal`/`undoBonusItem`/`undoOopsPointsForDay` or their `*ForDay`
+  variants) used by the live UI. On a kid-only device, that original `food`/`goal`/`bonus`
   entry logs `pts: 0` (the points are pending, not yet real) until a parent resolves it from
   Approvals, which appends its own `pointsApproved`/`pointsDeclined` entry carrying the actual point
   delta — mirroring how `rewardRequested` logs `pts: 0` and `rewardApproved`/`rewardDeclined` carry
