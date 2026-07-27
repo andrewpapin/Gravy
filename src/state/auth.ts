@@ -129,7 +129,13 @@ export async function sendMagicLink(email: string): Promise<AuthResult> {
 }
 
 export async function signOut(): Promise<void> {
-  await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    // The server-side revoke failed (e.g. offline) — force-clear the local session anyway so
+    // onAuthStateChange still fires SIGNED_OUT and the device locks, instead of silently staying
+    // signed in with no feedback.
+    await supabase.auth.signOut({ scope: 'local' });
+  }
 }
 
 // --- Household ownership (Epic 8 item 3/4) -------------------------------------------------
