@@ -113,7 +113,9 @@ Deep detail lives in `docs/`. Read the linked file when working in that area.
   Existing Parent / Existing Kid), including New Family's pending-email-confirmation screen and
   Existing Parent's auto-attach-by-account (falling back to manual code entry); the post-onboarding
   `FirstKidPrompt` + spotlight `HomeTour` (`src/components/tour/`), mounted on top of the live
-  `HomeScreen` rather than as part of `Onboarding`.
+  `HomeScreen` rather than as part of `Onboarding`; the full-screen `SignedOutGate` that blocks
+  `HomeScreen` (same slot/priority as `Onboarding`/`SyncGateModal`) the moment a signed-in parent
+  signs out on a device, persisted via `SIGNED_OUT_PENDING_KEY` so it survives a reload.
 - **Subsystems** (`docs/systems.md`) — Arcade/games hub (`src/data/games.ts`, `completeGameRound`,
   `DAILY_GAME_WIN_CAP`); Rank ladder (`src/data/ranks.ts`, `getRank`, `useTodaySnapshot`); Icon system (`src/data/icons.ts`,
   `AppIcon`); Theming (`Settings.theme`, `src/index.css`); Time zone (`Settings.timezone`,

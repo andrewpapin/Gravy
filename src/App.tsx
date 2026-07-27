@@ -1,4 +1,4 @@
-import { useState, Component, lazy, Suspense, type ReactNode } from 'react';
+import { useState, useEffect, useRef, Component, lazy, Suspense, type ReactNode } from 'react';
 import { GravyProvider, useGravy } from './state/GravyContext';
 import { HomeScreen } from './components/HomeScreen';
 import { GrownUpsDrawer } from './components/parent/GrownUpsDrawer';
@@ -8,8 +8,8 @@ import { UpdatePrompt } from './components/UpdatePrompt';
 import { ReleaseNotesDrawer } from './components/ReleaseNotesDrawer';
 import { Celebration } from './components/Celebration';
 import { Confetti } from './components/Confetti';
-import { STORAGE_KEY, ONBOARDING_DONE_KEY, HOME_TOUR_DONE_KEY } from './state/defaultState';
-import { safeGetItem } from './state/storage';
+import { STORAGE_KEY, ONBOARDING_DONE_KEY, HOME_TOUR_DONE_KEY, SIGNED_OUT_PENDING_KEY } from './state/defaultState';
+import { safeGetItem, safeSetItem, safeRemoveItem } from './state/storage';
 
 // These are all overlays/modals that aren't needed for the initial kid-facing paint (closed
 // by default, or — for Onboarding/SyncGateModal — only one of the two ever mounts depending
@@ -25,6 +25,7 @@ const ReleaseNotesHistoryDrawer = lazy(() => import('./components/ReleaseNotesHi
 const ApprovalsDrawer = lazy(() => import('./components/parent/ApprovalsDrawer').then((m) => ({ default: m.ApprovalsDrawer })));
 const SyncGateModal = lazy(() => import('./components/SyncGateModal').then((m) => ({ default: m.SyncGateModal })));
 const Onboarding = lazy(() => import('./components/Onboarding').then((m) => ({ default: m.Onboarding })));
+const SignedOutGate = lazy(() => import('./components/SignedOutGate').then((m) => ({ default: m.SignedOutGate })));
 const FirstKidPrompt = lazy(() => import('./components/tour/FirstKidPrompt').then((m) => ({ default: m.FirstKidPrompt })));
 const HomeTour = lazy(() => import('./components/tour/HomeTour').then((m) => ({ default: m.HomeTour })));
 const ResetPasswordScreen = lazy(() => import('./components/ResetPasswordScreen').then((m) => ({ default: m.ResetPasswordScreen })));
@@ -55,7 +56,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 }
 
 function AppShell() {
-  const { passwordRecovery } = useGravy();
+  const { passwordRecovery, authUser } = useGravy();
   const [storeOpen, setStoreOpen] = useState(false);
   const [dailyGameOpen, setDailyGameOpen] = useState(false);
   const [rankOpen, setRankOpen] = useState(false);
@@ -77,6 +78,37 @@ function AppShell() {
   const [tourDone, setTourDone] = useState(
     () => alreadyHadProgress || safeGetItem(HOME_TOUR_DONE_KEY) === 'true',
   );
+  // Forces a full-screen sign-in gate over HomeScreen the moment a signed-in parent signs out on
+  // this device (see SignedOutGate) — otherwise "Log out" just silently drops back to a fully
+  // usable kid HomeScreen with no way to tell the device is no longer signed in. Only reacts to
+  // an actual signed-in -> signed-out transition (prevAuthUserRef), never to a device that simply
+  // never had an account (the "Existing Kid" onboarding fork, which is account-free by design).
+  // Persisted (not just this piece of React state) so the gate survives a reload/relaunch instead
+  // of a PWA restart silently dropping the device straight back into a usable HomeScreen before
+  // the grown-up picks "Sign In" or "Continue as Kid".
+  const [showSignedOutGate, setShowSignedOutGate] = useState(
+    () => safeGetItem(SIGNED_OUT_PENDING_KEY) === 'true',
+  );
+  const prevAuthUserRef = useRef(authUser);
+  useEffect(() => {
+    const wasSignedIn = !!prevAuthUserRef.current;
+    prevAuthUserRef.current = authUser;
+    if (wasSignedIn && !authUser) {
+      safeSetItem(SIGNED_OUT_PENDING_KEY, 'true');
+      setShowSignedOutGate(true);
+      setAccountMenuOpen(false);
+      setGrownUpsOpen(false);
+      setSwitchProfileOpen(false);
+      setProfilesOpen(false);
+      setSettingsOpen(false);
+      setCalendarOpen(false);
+      setReleaseNotesHistoryOpen(false);
+      setApprovalsOpen(false);
+    } else if (!wasSignedIn && authUser) {
+      safeRemoveItem(SIGNED_OUT_PENDING_KEY);
+      setShowSignedOutGate(false);
+    }
+  }, [authUser]);
 
   return (
     <>
@@ -160,7 +192,9 @@ function AppShell() {
       <StorageErrorBanner />
       <UpdatePrompt />
       <Suspense fallback={null}>
-        {onboarded ? (
+        {showSignedOutGate ? (
+          <SignedOutGate onContinueAsKid={() => { safeRemoveItem(SIGNED_OUT_PENDING_KEY); setShowSignedOutGate(false); }} />
+        ) : onboarded ? (
           <SyncGateModal />
         ) : (
           <Onboarding
@@ -168,12 +202,12 @@ function AppShell() {
           />
         )}
       </Suspense>
-      {onboarded && needsFirstKid && (
+      {onboarded && !showSignedOutGate && needsFirstKid && (
         <Suspense fallback={null}>
           <FirstKidPrompt onDone={() => setNeedsFirstKid(false)} />
         </Suspense>
       )}
-      {onboarded && !needsFirstKid && !tourDone && (
+      {onboarded && !showSignedOutGate && !needsFirstKid && !tourDone && (
         <Suspense fallback={null}>
           <HomeTour onDone={() => setTourDone(true)} />
         </Suspense>

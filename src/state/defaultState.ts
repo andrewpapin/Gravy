@@ -12,6 +12,11 @@ export const ONBOARDING_DONE_KEY = 'gravy_onboarded';
 // retroactively to installs that already had ONBOARDING_DONE_KEY or STORAGE_KEY before this
 // shipped — see the bypass check alongside `onboarded` in AppShell.
 export const HOME_TOUR_DONE_KEY = 'gravy_home_tour_done';
+// Set the moment a signed-in parent signs out on this device, cleared once they either sign back
+// in or explicitly pick "Continue as Kid" — persisted (not just React state) so the SignedOutGate
+// survives a reload/relaunch instead of a PWA restart silently dropping the device straight back
+// into a fully-usable HomeScreen. See the showSignedOutGate wiring in AppShell.
+export const SIGNED_OUT_PENDING_KEY = 'gravy_signed_out_pending';
 // Fallback points for a food item with no configured value (e.g. one added to FOODS after a
 // save was written) — mirrors the points-per-food-group default every FOODS entry starts at.
 export const DEFAULT_FOOD_PTS = 10;
