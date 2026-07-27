@@ -4,6 +4,7 @@ import { faRightToBracket, faRightFromBracket, faRightLeft, faUsers, faUserShiel
 import { useGravy } from '../state/GravyContext';
 import { Modal } from './Modal';
 import { SignInPrompt } from './SignInPrompt';
+import { FullPageOverlay } from './FullPageOverlay';
 import { APP_VERSION } from '../version';
 
 interface AccountMenuProps {
@@ -49,13 +50,24 @@ export function AccountMenu({
   // itself, so this is computed at render time rather than reset via an effect.
   const showSignInPrompt = signInPromptOpen && locked;
 
+  // Sign-in is its own full page (FullPageOverlay), not swapped into the Grown-Up Menu drawer's
+  // body — same "page, not a modal/drawer" treatment as SignedOutGate/Onboarding/SyncGatePage.
+  // "Back" just closes this prompt, which — since `open` never changes — falls straight back to
+  // rendering the Modal below on the next render.
+  if (open && showSignInPrompt) {
+    return (
+      <FullPageOverlay onBack={() => setSignInPromptOpen(false)}>
+        <SignInPrompt key={signInNonce} />
+      </FullPageOverlay>
+    );
+  }
+
   return (
     <Modal
       open={open}
       onClose={onClose}
       closeLabel="Close grown-up menu"
-      title={showSignInPrompt ? 'Sign In' : 'Grown-Up Menu'}
-      onBack={showSignInPrompt ? () => setSignInPromptOpen(false) : undefined}
+      title="Grown-Up Menu"
       headerExtra={
         <button
           type="button"
@@ -67,55 +79,51 @@ export function AccountMenu({
         </button>
       }
     >
-      {showSignInPrompt ? (
-        <SignInPrompt key={signInNonce} />
-      ) : (
-        <div className="account-menu">
-          {profiles.length > 1 && (
-            <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenSwitchProfile)}>
-              <span className="account-menu-option-icon"><FontAwesomeIcon icon={faRightLeft} /></span>
-              <span className="account-menu-option-text">
-                <span className="account-menu-option-title">Switch Profile</span>
-                <span className="account-menu-option-sub">Pick another kid</span>
-              </span>
-            </button>
-          )}
-          <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenGrownUps)}>
-            <span className="account-menu-option-icon"><FontAwesomeIcon icon={faUserShield} /></span>
+      <div className="account-menu">
+        {profiles.length > 1 && (
+          <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenSwitchProfile)}>
+            <span className="account-menu-option-icon"><FontAwesomeIcon icon={faRightLeft} /></span>
             <span className="account-menu-option-text">
-              <span className="account-menu-option-title">Game Settings</span>
-              <span className="account-menu-option-sub">Goals and rewards</span>
+              <span className="account-menu-option-title">Switch Profile</span>
+              <span className="account-menu-option-sub">Pick another kid</span>
             </span>
           </button>
-          <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenCalendar)}>
-            <span className="account-menu-option-icon"><FontAwesomeIcon icon={faCalendarDays} /></span>
-            <span className="account-menu-option-text">
-              <span className="account-menu-option-title">Calendar</span>
-              <span className="account-menu-option-sub">View and edit past days</span>
-            </span>
+        )}
+        <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenGrownUps)}>
+          <span className="account-menu-option-icon"><FontAwesomeIcon icon={faUserShield} /></span>
+          <span className="account-menu-option-text">
+            <span className="account-menu-option-title">Game Settings</span>
+            <span className="account-menu-option-sub">Goals and rewards</span>
+          </span>
+        </button>
+        <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenCalendar)}>
+          <span className="account-menu-option-icon"><FontAwesomeIcon icon={faCalendarDays} /></span>
+          <span className="account-menu-option-text">
+            <span className="account-menu-option-title">Calendar</span>
+            <span className="account-menu-option-sub">View and edit past days</span>
+          </span>
+        </button>
+        <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenProfiles)}>
+          <span className="account-menu-option-icon"><FontAwesomeIcon icon={faUsers} /></span>
+          <span className="account-menu-option-text">
+            <span className="account-menu-option-title">Profiles</span>
+            <span className="account-menu-option-sub">Manage kids</span>
+          </span>
+        </button>
+        <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenSettings)}>
+          <span className="account-menu-option-icon"><FontAwesomeIcon icon={faGear} /></span>
+          <span className="account-menu-option-text">
+            <span className="account-menu-option-title">Advanced Settings</span>
+            <span className="account-menu-option-sub">Time zone, family code, and reset</span>
+          </span>
+        </button>
+        <div className="account-menu-version">
+          v{APP_VERSION} ·{' '}
+          <button type="button" className="account-menu-release-notes-link" onClick={onOpenReleaseNotes}>
+            Release Notes
           </button>
-          <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenProfiles)}>
-            <span className="account-menu-option-icon"><FontAwesomeIcon icon={faUsers} /></span>
-            <span className="account-menu-option-text">
-              <span className="account-menu-option-title">Profiles</span>
-              <span className="account-menu-option-sub">Manage kids</span>
-            </span>
-          </button>
-          <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenSettings)}>
-            <span className="account-menu-option-icon"><FontAwesomeIcon icon={faGear} /></span>
-            <span className="account-menu-option-text">
-              <span className="account-menu-option-title">Advanced Settings</span>
-              <span className="account-menu-option-sub">Time zone, family code, and reset</span>
-            </span>
-          </button>
-          <div className="account-menu-version">
-            v{APP_VERSION} ·{' '}
-            <button type="button" className="account-menu-release-notes-link" onClick={onOpenReleaseNotes}>
-              Release Notes
-            </button>
-          </div>
         </div>
-      )}
+      </div>
     </Modal>
   );
 }

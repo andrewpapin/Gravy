@@ -3,13 +3,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHandSparkles,
   faCloud,
-  faChevronLeft,
   faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import { ONBOARDING_DONE_KEY } from '../state/defaultState';
 import { safeSetItem } from '../state/storage';
 import { AccountSetupStep } from './AccountSetupStep';
+import { FullPageOverlay } from './FullPageOverlay';
 
 // Three-way fork: a brand-new family (creates + owns a household), an existing parent setting up
 // another device (signs in, then auto-attaches to their own household by account — falling back to
@@ -83,98 +83,90 @@ export function Onboarding({ onComplete }: { onComplete: (result: { isNewFamily:
   const showBack = phase === 'account' || phase === 'join';
 
   return (
-    <div className="onb-screen">
-      {showBack && (
-        <button className="onb-back" onClick={handleBack} aria-label="Back">
-          <FontAwesomeIcon icon={faChevronLeft} /> Back
-        </button>
+    <FullPageOverlay onBack={showBack ? handleBack : undefined}>
+      {phase === 'welcome' && (
+        <>
+          <span className="onb-icon-badge"><FontAwesomeIcon icon={faHandSparkles} /></span>
+          <div className="onb-wordmark">
+            Gr<span className="onb-wordmark-accent">a</span>vy
+          </div>
+          <div className="onb-tagline">
+            Turn chores, meals, and rewards into a game your kid actually wants to play.
+          </div>
+          <div className="onb-actions">
+            <button
+              className="btn btn-primary"
+              onClick={() => { setAccountInitialMode('signup'); setPhase('account'); }}
+            >
+              New Family
+            </button>
+            <button
+              className="btn btn-ghost"
+              onClick={() => { setAccountInitialMode('signin'); setPhase('account'); }}
+            >
+              Existing Parent
+            </button>
+            <button className="btn btn-ghost" onClick={() => goJoin(null)}>
+              Existing Kid
+            </button>
+          </div>
+        </>
       )}
 
-      <div className="onb-content">
-        {phase === 'welcome' && (
-          <>
-            <span className="onb-icon-badge"><FontAwesomeIcon icon={faHandSparkles} /></span>
-            <div className="onb-wordmark">
-              Gr<span className="onb-wordmark-accent">a</span>vy
-            </div>
-            <div className="onb-tagline">
-              Turn chores, meals, and rewards into a game your kid actually wants to play.
-            </div>
-            <div className="onb-actions">
-              <button
-                className="btn btn-primary"
-                onClick={() => { setAccountInitialMode('signup'); setPhase('account'); }}
-              >
-                New Family
-              </button>
-              <button
-                className="btn btn-ghost"
-                onClick={() => { setAccountInitialMode('signin'); setPhase('account'); }}
-              >
-                Existing Parent
-              </button>
-              <button className="btn btn-ghost" onClick={() => goJoin(null)}>
-                Existing Kid
-              </button>
-            </div>
-          </>
-        )}
+      {phase === 'account' && <AccountSetupStep initialMode={accountInitialMode} onDone={handleAccountDone} />}
 
-        {phase === 'account' && <AccountSetupStep initialMode={accountInitialMode} onDone={handleAccountDone} />}
-
-        {phase === 'join' && (
-          <>
-            <span className="onb-icon-badge"><FontAwesomeIcon icon={faCloud} /></span>
-            <div className="onb-title">Join Your Family</div>
-            <div className="onb-desc">{joinHint ?? 'Enter the code from another device to sync up.'}</div>
-            <div className="flex-row-full sync-gate-join">
-              <input
-                type="text"
-                className="onb-input"
-                placeholder="Enter household code"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleJoin(); }}
-                autoFocus
-              />
-              <button className="btn btn-primary" onClick={handleJoin} disabled={syncing || !joinCode.trim()}>
-                Join
-              </button>
+      {phase === 'join' && (
+        <>
+          <span className="onb-icon-badge"><FontAwesomeIcon icon={faCloud} /></span>
+          <div className="onb-title">Join Your Family</div>
+          <div className="onb-desc">{joinHint ?? 'Enter the code from another device to sync up.'}</div>
+          <div className="flex-row-full sync-gate-join">
+            <input
+              type="text"
+              className="onb-input"
+              placeholder="Enter household code"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleJoin(); }}
+              autoFocus
+            />
+            <button className="btn btn-primary" onClick={handleJoin} disabled={syncing || !joinCode.trim()}>
+              Join
+            </button>
+          </div>
+          {syncing && <div className="settings-sub sync-gate-status">Connecting…</div>}
+          {!syncing && syncStatus === 'error' && (
+            <div className="settings-sub sync-gate-status sync-gate-error">
+              <FontAwesomeIcon icon={faTriangleExclamation} /> Couldn't connect — check the code and try again
             </div>
-            {syncing && <div className="settings-sub sync-gate-status">Connecting…</div>}
-            {!syncing && syncStatus === 'error' && (
+          )}
+        </>
+      )}
+
+      {phase === 'creating' && (
+        <>
+          <span className="onb-icon-badge"><FontAwesomeIcon icon={faCloud} /></span>
+          {revealFailed ? (
+            <>
+              <div className="onb-title">Couldn't Set Up Sync</div>
               <div className="settings-sub sync-gate-status sync-gate-error">
-                <FontAwesomeIcon icon={faTriangleExclamation} /> Couldn't connect — check the code and try again
+                <FontAwesomeIcon icon={faTriangleExclamation} />{' '}
+                {navigator.onLine ? 'Server error' : 'No internet connection'} — try again
               </div>
-            )}
-          </>
-        )}
-
-        {phase === 'creating' && (
-          <>
-            <span className="onb-icon-badge"><FontAwesomeIcon icon={faCloud} /></span>
-            {revealFailed ? (
-              <>
-                <div className="onb-title">Couldn't Set Up Sync</div>
-                <div className="settings-sub sync-gate-status sync-gate-error">
-                  <FontAwesomeIcon icon={faTriangleExclamation} />{' '}
-                  {navigator.onLine ? 'Server error' : 'No internet connection'} — try again
-                </div>
-                <div className="onb-actions">
-                  <button className="btn btn-primary" onClick={startCreate}>
-                    Try Again
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="onb-title">Setting Up…</div>
-                <div className="onb-desc">One sec…</div>
-              </>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+              <div className="onb-actions">
+                <button className="btn btn-primary" onClick={startCreate}>
+                  Try Again
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="onb-title">Setting Up…</div>
+              <div className="onb-desc">One sec…</div>
+            </>
+          )}
+        </>
+      )}
+    </FullPageOverlay>
   );
 }

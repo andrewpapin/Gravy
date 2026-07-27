@@ -13,7 +13,7 @@ import { STORAGE_KEY, ONBOARDING_DONE_KEY, HOME_TOUR_DONE_KEY, SIGNED_OUT_PENDIN
 import { safeGetItem, safeSetItem, safeRemoveItem } from './state/storage';
 
 // These are all overlays/modals that aren't needed for the initial kid-facing paint (closed
-// by default, or — for Onboarding/SyncGateModal — only one of the two ever mounts depending
+// by default, or — for Onboarding/SyncGatePage — only one of the two ever mounts depending
 // on first-run state). Loading them on demand keeps their weight out of the main bundle.
 const StoreScreen = lazy(() => import('./components/StoreScreen').then((m) => ({ default: m.StoreScreen })));
 const DailyGameDrawer = lazy(() => import('./components/DailyGameDrawer').then((m) => ({ default: m.DailyGameDrawer })));
@@ -24,7 +24,7 @@ const AdvancedSettingsDrawer = lazy(() => import('./components/parent/AdvancedSe
 const CalendarDrawer = lazy(() => import('./components/parent/CalendarDrawer').then((m) => ({ default: m.CalendarDrawer })));
 const ReleaseNotesHistoryDrawer = lazy(() => import('./components/ReleaseNotesHistoryDrawer').then((m) => ({ default: m.ReleaseNotesHistoryDrawer })));
 const ApprovalsDrawer = lazy(() => import('./components/parent/ApprovalsDrawer').then((m) => ({ default: m.ApprovalsDrawer })));
-const SyncGateModal = lazy(() => import('./components/SyncGateModal').then((m) => ({ default: m.SyncGateModal })));
+const SyncGatePage = lazy(() => import('./components/SyncGatePage').then((m) => ({ default: m.SyncGatePage })));
 const Onboarding = lazy(() => import('./components/Onboarding').then((m) => ({ default: m.Onboarding })));
 const SignedOutGate = lazy(() => import('./components/SignedOutGate').then((m) => ({ default: m.SignedOutGate })));
 const FirstKidPrompt = lazy(() => import('./components/tour/FirstKidPrompt').then((m) => ({ default: m.FirstKidPrompt })));
@@ -202,7 +202,7 @@ function AppShell() {
         {showSignedOutGate ? (
           <SignedOutGate onContinueAsKid={() => { safeRemoveItem(SIGNED_OUT_PENDING_KEY); setShowSignedOutGate(false); }} />
         ) : onboarded ? (
-          <SyncGateModal />
+          <SyncGatePage />
         ) : (
           <Onboarding
             onComplete={({ isNewFamily }) => { setOnboarded(true); setNeedsFirstKid(isNewFamily); }}

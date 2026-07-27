@@ -103,18 +103,23 @@ Deep detail lives in `docs/`. Read the linked file when working in that area.
   derived from the signed-in account and its household membership.
 - **UI surfaces** (`docs/ui-surfaces.md`) — kid view + `AccountMenu` (the single `grownUpUnlocked`
   lock gating Approvals/Profiles/Game Settings/Calendar/Advanced Settings, now account-based
-  via `SignInPrompt` rather than PIN-based); the "Game Settings" dashboard (`ParentDashboard`
-  component, formerly labeled "Grown ups") two-level router and its 5 first-level panels
-  (`GoalsPanel` — taking a `filter: 'daily'|'bonus'` prop — plus `PointsPanel`/`StorePanel`/
-  `ArcadePanel`, each its own `RootMenu` destination); `ApprovalsPanel`/`CalendarPanel` reached
-  directly from
+  via `SignInPrompt` rather than PIN-based); the shared `FullPageOverlay` (`src/components/
+  FullPageOverlay.tsx`) full-screen treatment every auth-adjacent screen uses instead of a modal/
+  drawer — `Onboarding`/`SignedOutGate`/`FirstKidPrompt`/`SyncGatePage` render it directly, and
+  every self-gating parent drawer (`AccountMenu`, `ApprovalsDrawer`, `GrownUpsDrawer`,
+  `ProfilesManager`, `ProfileSwitcher`, `AdvancedSettingsDrawer`, `CalendarDrawer`) renders it
+  in place of its normal `Modal` body whenever `open && locked`; the "Game Settings" dashboard
+  (`ParentDashboard` component, formerly labeled "Grown ups") two-level router and its 5
+  first-level panels (`GoalsPanel` — taking a `filter: 'daily'|'bonus'` prop — plus
+  `PointsPanel`/`StorePanel`/`ArcadePanel`, each its own `RootMenu` destination);
+  `ApprovalsPanel`/`CalendarPanel` reached directly from
   `AccountMenu` via `ApprovalsDrawer`/`CalendarDrawer`, plus `SettingsPanel` (including the nested
   `LogPanel`) reached via `AdvancedSettingsDrawer`; `Onboarding`'s three-button fork (New Family /
   Existing Parent / Existing Kid), including New Family's pending-email-confirmation screen and
   Existing Parent's auto-attach-by-account (falling back to manual code entry); the post-onboarding
   `FirstKidPrompt` + spotlight `HomeTour` (`src/components/tour/`), mounted on top of the live
   `HomeScreen` rather than as part of `Onboarding`; the full-screen `SignedOutGate` that blocks
-  `HomeScreen` (same slot/priority as `Onboarding`/`SyncGateModal`) the moment a signed-in parent
+  `HomeScreen` (same slot/priority as `Onboarding`/`SyncGatePage`) the moment a signed-in parent
   signs out on a device, persisted via `SIGNED_OUT_PENDING_KEY` so it survives a reload.
 - **Subsystems** (`docs/systems.md`) — Arcade/games hub (`src/data/games.ts`, `completeGameRound`,
   `DAILY_GAME_WIN_CAP`); Rank ladder (`src/data/ranks.ts`, `getRank`, `useTodaySnapshot`); Icon system (`src/data/icons.ts`,

@@ -25,7 +25,7 @@ Deep reference for localStorage persistence, Supabase cloud sync, the household 
   `gravy_delete_household` each scope to one row by code, and `gravy_lookup_household` (called by
   `fetchHousehold()`) additionally rate-limits to 10 lookups per 5-minute window per source IP
   before returning a code's state — exceeding it fails `joinHousehold` (surfaced to the caller as
-  `syncStatus === 'error'`, shown inline by `SyncGateModal`/`SyncPanel`/`SignInPrompt`). That
+  `syncStatus === 'error'`, shown inline by `SyncGatePage`/`SyncPanel`/`SignInPrompt`). That
   function opportunistically deletes other rate-limit buckets whose window has
   lapsed on every call, so `household_lookup_attempts` stays bounded without a scheduled cleanup
   job. The table's SELECT grant/policy is open to `anon` **and** `authenticated` (both required for
@@ -87,7 +87,7 @@ Deep reference for localStorage persistence, Supabase cloud sync, the household 
   echo as a genuine remote change and merge it in, clobbering a click made in the intervening moment
   with the (now-stale) echoed scalars. This was a real bug (a tapped goal/food/reward flashing done
   then reverting) fixed by marking the snapshot as seen at send-time instead of on resolution.
-- `SyncGateModal` is only reachable post-onboarding, after `resetAll()` ("Reset Everything")
+- `SyncGatePage` is only reachable post-onboarding, after `resetAll()` ("Reset Everything")
   disconnects sync (`setHouseholdCode(null)`) without signing the account out — reconnecting here is
   optional (`gravy_sync_skipped` key) since the account, and this device's settings access, are
   untouched either way. Onboarding itself is now the mandatory create/join path (see

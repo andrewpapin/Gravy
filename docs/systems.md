@@ -189,7 +189,7 @@ Two components consume this data, for two different purposes:
   drawer surfaces once per meaningful release: the reload after a deploy is what makes "loads with a
   new version" and "a PR merged to main" the same event from the client's point of view. Mounted
   last in `AppShell` (`App.tsx`) and given `overlayClassName="release-notes-overlay"` (z-index 1200)
-  so it always stacks above the cloud-sync gate (`SyncGateModal`, z-index 1100) rather than getting
+  so it always stacks above the cloud-sync gate (`SyncGatePage`, z-index 1100) rather than getting
   silently buried behind it.
 - **`ReleaseNotesHistoryDrawer.tsx`** — an on-demand full history, reached via the "Release Notes"
   link next to the version number in the Grown-Up Menu (`AccountMenu.tsx`). Lists every entry in

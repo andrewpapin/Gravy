@@ -35,7 +35,7 @@ export interface HouseholdSyncValue {
   setHouseholdStatus: Dispatch<SetStateAction<HouseholdStatus | null>>;
   // True from the moment the user lands via a password-reset email link until they finish
   // setting a new password (ResetPasswordScreen calls clearPasswordRecovery). Drives that
-  // screen's mandatory-overlay visibility, the same way onboarding/SyncGateModal work.
+  // screen's mandatory-overlay visibility, the same way onboarding/SyncGatePage work.
   passwordRecovery: boolean;
   clearPasswordRecovery: () => void;
   // Last root JSON we pushed to / received from Supabase, so the outgoing-push effect can skip

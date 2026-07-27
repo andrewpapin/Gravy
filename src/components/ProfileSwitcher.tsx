@@ -5,6 +5,7 @@ import { useGravy } from '../state/GravyContext';
 import { AppIcon } from './AppIcon';
 import { Modal } from './Modal';
 import { SignInPrompt } from './SignInPrompt';
+import { FullPageOverlay } from './FullPageOverlay';
 
 interface ProfileSwitcherProps {
   open: boolean;
@@ -30,11 +31,13 @@ export function ProfileSwitcher({ open, onClose, onBack }: ProfileSwitcherProps)
     onClose();
   };
 
-  if (locked) {
+  // FullPageOverlay has no hidden state (unlike Modal's `open` prop) — must gate on `open` here,
+  // not just `locked`, or this would render on top of everything even while closed.
+  if (open && locked) {
     return (
-      <Modal open={open} onClose={onClose} closeLabel="Close switch profile" title="Sign In" onBack={onBack}>
+      <FullPageOverlay onBack={onBack}>
         <SignInPrompt key={signInNonce} />
-      </Modal>
+      </FullPageOverlay>
     );
   }
 

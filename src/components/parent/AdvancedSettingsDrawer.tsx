@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGravy } from '../../state/GravyContext';
 import { Modal } from '../Modal';
 import { SignInPrompt } from '../SignInPrompt';
+import { FullPageOverlay } from '../FullPageOverlay';
 import { SettingsPanel } from './SettingsPanel';
 
 interface HeaderState {
@@ -30,15 +31,25 @@ export function AdvancedSettingsDrawer({ open, onClose, onBack }: AdvancedSettin
     if (open) setSignInNonce((n) => n + 1);
   }
 
+  // FullPageOverlay has no hidden state (unlike Modal's `open` prop) — must gate on `open` here,
+  // not just `locked`, or this would render on top of everything even while closed.
+  if (open && locked) {
+    return (
+      <FullPageOverlay onBack={onBack}>
+        <SignInPrompt key={signInNonce} />
+      </FullPageOverlay>
+    );
+  }
+
   return (
     <Modal
       open={open}
       onClose={onClose}
       closeLabel="Close advanced settings"
-      title={locked ? 'Sign In' : header.title}
-      onBack={locked ? onBack : (header.onBack ?? onBack)}
+      title={header.title}
+      onBack={header.onBack ?? onBack}
     >
-      {locked ? <SignInPrompt key={signInNonce} /> : <SettingsPanel onHeaderChange={setHeader} />}
+      <SettingsPanel onHeaderChange={setHeader} />
     </Modal>
   );
 }
