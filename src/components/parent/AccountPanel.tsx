@@ -3,10 +3,11 @@ import { faUser, faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../../state/GravyContext';
 
 // Reached only when grownUpUnlocked (signed in + household member) — see isGrownUpUnlocked in
-// state/auth.ts — so authUser is always set here in practice. The sign-in form now lives in
-// SignInPrompt (AccountMenu), the only place it's reachable, since signing out immediately
-// re-locks this screen too. COPPA: an account is a parent identity only — never a child's name
-// or data (that stays in-app after sign-in).
+// state/auth.ts — so authUser is always set here in practice. The sign-in form itself lives in
+// SignInPrompt, rendered as a full page (FullPageOverlay) by whichever parent screen this button's
+// sign-out re-locks (AccountMenu, ApprovalsDrawer, GrownUpsDrawer, ProfilesManager, ProfileSwitcher,
+// AdvancedSettingsDrawer, CalendarDrawer all self-gate the same way). COPPA: an account is a parent
+// identity only — never a child's name or data (that stays in-app after sign-in).
 export function AccountPanel() {
   const { authUser, signOutAccount } = useGravy();
   if (!authUser) return null;

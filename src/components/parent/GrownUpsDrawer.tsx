@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react';
 import { useGravy } from '../../state/GravyContext';
 import { Modal } from '../Modal';
 import { SignInPrompt } from '../SignInPrompt';
+import { FullPageOverlay } from '../FullPageOverlay';
 
 // Loaded on demand so the parent dashboard's weight stays out of the initial bundle the
 // kid-facing app ships.
@@ -36,21 +37,27 @@ export function GrownUpsDrawer({ open, onClose, onBack }: GrownUpsDrawerProps) {
     if (open) setSignInNonce((n) => n + 1);
   }
 
+  // FullPageOverlay has no hidden state (unlike Modal's `open` prop) — must gate on `open` here,
+  // not just `locked`, or this would render on top of everything even while closed.
+  if (open && locked) {
+    return (
+      <FullPageOverlay onBack={onBack}>
+        <SignInPrompt key={signInNonce} />
+      </FullPageOverlay>
+    );
+  }
+
   return (
     <Modal
       open={open}
       onClose={onClose}
       closeLabel="Close grown-up mode"
-      title={locked ? 'Sign In' : header.title}
-      onBack={locked ? onBack : (header.onBack ?? onBack)}
+      title={header.title}
+      onBack={header.onBack ?? onBack}
     >
-      {locked ? (
-        <SignInPrompt key={signInNonce} />
-      ) : (
-        <Suspense fallback={<div className="pin-screen"><div className="pin-sub">Loading…</div></div>}>
-          <ParentDashboard onHeaderChange={setHeader} />
-        </Suspense>
-      )}
+      <Suspense fallback={<div className="pin-screen"><div className="pin-sub">Loading…</div></div>}>
+        <ParentDashboard onHeaderChange={setHeader} />
+      </Suspense>
     </Modal>
   );
 }

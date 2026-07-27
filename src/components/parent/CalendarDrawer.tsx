@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGravy } from '../../state/GravyContext';
 import { Modal } from '../Modal';
 import { SignInPrompt } from '../SignInPrompt';
+import { FullPageOverlay } from '../FullPageOverlay';
 import { CalendarPanel } from './CalendarPanel';
 
 interface HeaderState {
@@ -29,15 +30,25 @@ export function CalendarDrawer({ open, onClose, onBack }: CalendarDrawerProps) {
     if (open) setSignInNonce((n) => n + 1);
   }
 
+  // FullPageOverlay has no hidden state (unlike Modal's `open` prop) — must gate on `open` here,
+  // not just `locked`, or this would render on top of everything even while closed.
+  if (open && locked) {
+    return (
+      <FullPageOverlay onBack={onBack}>
+        <SignInPrompt key={signInNonce} />
+      </FullPageOverlay>
+    );
+  }
+
   return (
     <Modal
       open={open}
       onClose={onClose}
       closeLabel="Close calendar"
-      title={locked ? 'Sign In' : header.title}
-      onBack={locked ? onBack : (header.onBack ?? onBack)}
+      title={header.title}
+      onBack={header.onBack ?? onBack}
     >
-      {locked ? <SignInPrompt key={signInNonce} /> : <CalendarPanel onHeaderChange={setHeader} goToRoot={onBack} />}
+      <CalendarPanel onHeaderChange={setHeader} goToRoot={onBack} />
     </Modal>
   );
 }

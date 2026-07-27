@@ -28,7 +28,7 @@ import { useCatalogActions } from './actions/useCatalogActions';
 import { useProfileActions } from './actions/useProfileActions';
 import { useHouseholdActions } from './actions/useHouseholdActions';
 
-// Re-exported here so existing consumers (Onboarding, SyncGateModal) keep their import path;
+// Re-exported here so existing consumers (Onboarding, SyncGatePage) keep their import path;
 // the source of truth now lives in ./actions/shared.
 export { SYNC_SKIPPED_KEY };
 export type { SyncStatus };

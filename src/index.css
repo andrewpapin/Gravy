@@ -1018,8 +1018,9 @@ button.gtile.checked:disabled:active { transform: none; }
   font-size: var(--text-xs);
   color: var(--muted);
 }
-/* Above .sync-gate-overlay (1100) — release notes shouldn't get buried behind the cloud-sync
-   gate, since unlike that gate this one is dismissible and won't reappear once seen. */
+/* Above SyncGatePage/Onboarding/SignedOutGate's .onb-screen (1100) — release notes shouldn't get
+   buried behind a mandatory-looking full-page gate, since unlike those this one is dismissible
+   and won't reappear once seen. */
 .release-notes-overlay {
   z-index: 1200;
 }
@@ -1703,18 +1704,9 @@ button.gtile.checked:disabled:active { transform: none; }
   max-width: 320px;
 }
 
-/* Sync gate */
-.sync-gate-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
-  background: rgba(47,62,70,0.92);
-}
+/* Sync gate (SyncGatePage) — page chrome itself is FullPageOverlay's .onb-screen/.onb-content;
+   these are just its own content-specific spacing/status classes, also reused by Onboarding and
+   SignInPrompt's own join/status rows. */
 .sync-gate-join { margin-top: 12px; }
 .sync-gate-status { margin-top: 10px; }
 .sync-gate-error { color: var(--danger); }
@@ -1841,21 +1833,6 @@ button.gtile.checked:disabled:active { transform: none; }
   cursor: pointer;
   padding: var(--space-xs);
 }
-.onb-modal-card {
-  background: var(--cream);
-  border-radius: var(--radius);
-  padding: 24px 20px 20px;
-  width: 100%;
-  max-width: 320px;
-  text-align: center;
-  box-shadow: var(--shadow-lg);
-  border: var(--border-width-xl) solid var(--dark);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
 /* First-run guided tour (post-onboarding, spotlights real home-screen elements) */
 .tour-overlay {
   position: fixed;

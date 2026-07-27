@@ -6,6 +6,7 @@ import type { Theme } from '../state/types';
 import { AppIcon } from './AppIcon';
 import { Modal } from './Modal';
 import { SignInPrompt } from './SignInPrompt';
+import { FullPageOverlay } from './FullPageOverlay';
 import { IconPicker } from './IconPicker';
 import { ColorPicker, type ColorOption } from './ColorPicker';
 import { AVATAR_ICONS } from '../data/icons';
@@ -70,11 +71,13 @@ export function ProfilesManager({ open, onClose, onBack }: ProfilesManagerProps)
   // Self-gates like ApprovalsDrawer: re-locks immediately if grownUpUnlocked flips false while
   // this is already open (e.g. signing out from Advanced Settings > Parent Account elsewhere),
   // rather than trusting only the AccountMenu lock check it was opened through.
-  if (locked) {
+  // FullPageOverlay has no hidden state (unlike Modal's `open` prop) — must gate on `open` here,
+  // not just `locked`, or this would render on top of everything even while closed.
+  if (open && locked) {
     return (
-      <Modal open={open} onClose={onClose} closeLabel="Close profiles" title="Sign In" onBack={onBack}>
+      <FullPageOverlay onBack={onBack}>
         <SignInPrompt key={signInNonce} />
-      </Modal>
+      </FullPageOverlay>
     );
   }
 

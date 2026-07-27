@@ -49,10 +49,11 @@ The bell icon opens `ApprovalsDrawer` directly — Approvals is no longer an `Ac
 used to be the first one); it's its own top-level entry point next to the hamburger, marked with a
 count pill via the `nav-badge` CSS class with `data-count={pendingRewards.length + pendingPointsAwards.length}`.
 Since it's no longer reached only through an already-unlocked `AccountMenu`, `ApprovalsDrawer` gates
-itself: it reads `grownUpUnlocked` directly and renders `SignInPrompt` (title "Sign In") in place of
-`ApprovalsPanel` whenever locked, falling back to the panel on its own once sign-in flips
-`grownUpUnlocked` true (same mechanic as `AccountMenu`'s own sign-in swap, including a `signInNonce`
-remount) — a kid tapping the bell on a locked device sees a sign-in prompt, not the pending list.
+itself: it reads `grownUpUnlocked` directly and, whenever locked, renders full-page sign-in in place
+of `ApprovalsPanel` (see "Full-page sign-in" below), falling back to the panel on its own once
+sign-in flips `grownUpUnlocked` true (same mechanic every self-gating drawer uses, including a
+`signInNonce` remount) — a kid tapping the bell on a locked device sees a sign-in page, not the
+pending list.
 
 Tapping the hamburger icon in `TopBar` always opens **`AccountMenu`**, whether locked or unlocked —
 it's a single "open the menu" button, not a lock/unlock toggle, so closing the menu (e.g. after
@@ -64,25 +65,25 @@ to the left of the close (X) button. That button reflects `grownUpUnlocked` (a d
 when locked, "Log Out" glyph + yellow background when unlocked. The item list itself always renders
 (it's not swapped out for a PIN pad): each item button gets `disabled` and a greyed-out/desaturated
 style whenever `grownUpUnlocked` is false, so the menu's shape is visible but inert while locked.
-Tapping the button when locked swaps the body (title becomes "Sign In", and a back-chevron appears
-via `Modal`'s `onBack`) to render `SignInPrompt` (`src/components/SignInPrompt.tsx`) inline — either
-a sign-up/sign-in/magic-link form (not signed in at all) or a family-code join prompt (signed in but
-not yet a member of this device's household). The sign-in form's "Forgot password?" link swaps to a
-third internal mode that just collects an email and calls `sendPasswordReset` (`src/state/auth.ts`,
-wrapping `supabase.auth.resetPasswordForEmail`) — the reset email's link returns the user to the
-app's origin, where Supabase fires a `PASSWORD_RECOVERY` auth event (`onPasswordRecovery` in
-`auth.ts`) that `useHouseholdSync` turns into the `passwordRecovery` context flag. `AppShell`
-(`src/App.tsx`) renders the full-screen `ResetPasswordScreen` overlay whenever that flag is true,
-above every other overlay (mounted last, after `ReleaseNotesDrawer`) since a parent can land on that
-link at any point in the app; it collects a new password, calls `updatePassword`, and the "Continue"
-button clears the flag once the parent confirms. There's no explicit "unlock" call: `grownUpUnlocked`
-recomputes automatically once `authUser`/`householdStatus` update, and a `useEffect` in `AccountMenu`
-watches it and closes the prompt back to the item list once it flips true. Tapping the button when
-unlocked calls `signOutAccount()` directly — logging out is what re-locks the device, there's no
-separate "lock without signing out." Signing out also forces the full-screen `SignedOutGate` over
-`HomeScreen` itself, not just this menu — see "Sign-Out Gate" below. A `signInNonce` flag remounts a
-fresh `SignInPrompt` on every open (mirroring the old `pinNonce` idea) so a half-finished sign-in
-attempt never lingers.
+Tapping the button when locked closes the `Modal` drawer entirely and renders full-page sign-in
+instead (see "Full-page sign-in" below) — either a sign-up/sign-in/magic-link form (not signed in at
+all) or a family-code join prompt (signed in but not yet a member of this device's household). The
+sign-in form's "Forgot password?" link swaps to a third internal mode that just collects an email
+and calls `sendPasswordReset` (`src/state/auth.ts`, wrapping `supabase.auth.resetPasswordForEmail`)
+— the reset email's link returns the user to the app's origin, where Supabase fires a
+`PASSWORD_RECOVERY` auth event (`onPasswordRecovery` in `auth.ts`) that `useHouseholdSync` turns into
+the `passwordRecovery` context flag. `AppShell` (`src/App.tsx`) renders the full-screen
+`ResetPasswordScreen` overlay whenever that flag is true, above every other overlay (mounted last,
+after `ReleaseNotesDrawer`) since a parent can land on that link at any point in the app; it collects
+a new password, calls `updatePassword`, and the "Continue" button clears the flag once the parent
+confirms. There's no explicit "unlock" call: `grownUpUnlocked` recomputes automatically once
+`authUser`/`householdStatus` update; since `signInPromptOpen && locked` stops being true the instant
+`grownUpUnlocked` flips, the very next render falls back to `Modal`'s item list on its own — no
+effect needed. Tapping the button when unlocked calls `signOutAccount()` directly — logging out is
+what re-locks the device, there's no separate "lock without signing out." Signing out also forces
+the full-screen `SignedOutGate` over `HomeScreen` itself, not just this menu — see "Sign-Out Gate"
+below. A `signInNonce` flag remounts a fresh `SignInPrompt` on every open (mirroring the old
+`pinNonce` idea) so a half-finished sign-in attempt never lingers.
 
 - **Reward Store** — no PIN, always tappable (its entry point is on `StatsCard`, not this menu).
   Approvals also isn't in this menu anymore — see the `TopBar` bell icon above.
@@ -108,10 +109,15 @@ every render from `authUser` (the Supabase Auth session, which persists across t
 `householdStatus.isMember` (this device's membership in its currently-synced household). So a device
 stays unlocked across reopens as long as the parent stays signed in and synced to a household they
 belong to; it only re-locks when they sign out (or this device's household membership changes).
-`GrownUpsDrawer`/`ProfilesManager`/`ProfileSwitcher`/`AdvancedSettingsDrawer`/`CalendarDrawer` don't
-render `SignInPrompt` themselves; they assume they're only opened from `AccountMenu` once unlocked.
-`ApprovalsDrawer` is the one exception — it's reached from the `TopBar` bell, not `AccountMenu`, so
-it gates itself (see above) rather than assuming.
+Every parent drawer opened from `AccountMenu` — `GrownUpsDrawer`/`ProfilesManager`/`ProfileSwitcher`/
+`AdvancedSettingsDrawer`/`CalendarDrawer` — self-gates the same way `ApprovalsDrawer` does, rather
+than trusting only the lock check `AccountMenu` made before opening it: each independently checks
+`grownUpUnlocked` and, while `open && locked`, renders full-page sign-in (see "Full-page sign-in"
+below) instead of its normal content. This matters because none of these drawers unmount when
+closed (`Modal` handles hidden state internally, per drawer), so if `grownUpUnlocked` flips false
+*while one is already open* — e.g. tapping "Sign out" inside `AdvancedSettingsDrawer`'s own Parent
+Account panel while `CalendarDrawer` is also open underneath — every open drawer re-locks itself
+independently on its own next render, not just the one the sign-out happened in.
 
 Every drawer reached directly from `AccountMenu` (the five above) is a first-level drawer and gets
 a working back button via the shared `Modal` component's optional `onBack` prop — `Modal` renders a
@@ -216,6 +222,29 @@ panel with a back button otherwise:
 the same wiring `GrownUpsDrawer` uses for `ParentDashboard` — so the Modal title/back button track
 which settings section (if any) is drilled into.
 
+## Full-page sign-in (`src/components/FullPageOverlay.tsx`)
+
+Auth-adjacent screens read as their own page, not a modal/drawer floating over `HomeScreen` — a
+deliberate redesign away from an earlier version where `SyncGatePage` was a centered card over a
+dimmed backdrop and every self-gating drawer swapped `SignInPrompt` into its own bottom-sheet body.
+`FullPageOverlay` is the shared primitive: a full-screen `.onb-screen` (`position: fixed; inset: 0`)
+wrapping centered `.onb-content`, with an optional `onBack` prop rendering a back-chevron button
+(`.onb-back`) — pass it to make a screen navigable-back-from, omit it for one with no way back (a
+mandatory gate, or the first step of a flow). `Onboarding`, `SignedOutGate`, `FirstKidPrompt`, and
+`SyncGatePage` (the renamed former `SyncGateModal` — same "Create/Join/Skip" household setup
+content, now on this page treatment instead of a modal card) all render it directly.
+
+Every self-gating drawer (`AccountMenu`, `ApprovalsDrawer`, `GrownUpsDrawer`, `ProfilesManager`,
+`ProfileSwitcher`, `AdvancedSettingsDrawer`, `CalendarDrawer`) renders it too, but conditionally: each
+checks `open && locked` (not just `locked` — `FullPageOverlay` has no hidden state the way `Modal`'s
+`open` prop does, so omitting the `open` check would render sign-in on top of everything even while
+the drawer itself is closed) and, when true, returns `<FullPageOverlay onBack={onBack}><SignInPrompt
+key={signInNonce} /></FullPageOverlay>` in place of its normal `Modal`-wrapped content. `onBack` in
+every case just clears the drawer's own local "show sign-in" state (`AccountMenu`'s
+`signInPromptOpen`) or is the drawer's own `onBack`/`onClose` prop — since none of these drawers'
+`open` prop changes when their sign-in page is dismissed, the very next render falls through to
+their normal `Modal` return on its own, no explicit "reopen the drawer" call needed.
+
 ## Onboarding
 
 First-run users (no `localStorage[STORAGE_KEY]` and no `ONBOARDING_DONE_KEY = 'gravy_onboarded'`)
@@ -271,7 +300,7 @@ longer signed in. `SignedOutGate` closes that gap: `AppShell` (`src/App.tsx`) wa
 a `prevAuthUserRef` and, on an actual signed-in → signed-out transition (never on a device that
 simply never had an account, e.g. the Onboarding "Existing Kid" fork), sets `showSignedOutGate` and
 closes every open `AccountMenu`-reached drawer. While true, it renders in the same slot as
-`Onboarding`/`SyncGateModal` (taking priority over both) — a full-screen `.onb-screen` overlay
+`Onboarding`/`SyncGatePage` (taking priority over both) — a full-screen `.onb-screen` overlay
 blocking `HomeScreen` underneath. Unlike `Onboarding`'s own `'welcome'` phase (a landing screen with
 three buttons before any form appears), the gate leads directly with `SignInPrompt` itself —
 re-authenticating is the expected path right after a sign-out, so there's no intermediate "pick a

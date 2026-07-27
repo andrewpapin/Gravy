@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGravy } from '../../state/GravyContext';
 import { Modal } from '../Modal';
 import { SignInPrompt } from '../SignInPrompt';
+import { FullPageOverlay } from '../FullPageOverlay';
 import { ApprovalsPanel } from './ApprovalsPanel';
 
 interface ApprovalsDrawerProps {
@@ -10,7 +11,8 @@ interface ApprovalsDrawerProps {
 }
 
 // Reached directly from the TopBar bell (not nested under the already-unlocked AccountMenu), so
-// — unlike the other parent drawers — this one gates itself: locked, it shows SignInPrompt
+// — unlike the other parent drawers — this one gates itself: locked, it shows a full-page sign-in
+// (same "page, not a modal/drawer" treatment as AccountMenu/SignedOutGate/Onboarding/SyncGatePage)
 // instead of the pending list, falling away back to ApprovalsPanel on its own once
 // grownUpUnlocked flips true (computed at render, same mechanic as AccountMenu).
 export function ApprovalsDrawer({ open, onClose }: ApprovalsDrawerProps) {
@@ -23,9 +25,17 @@ export function ApprovalsDrawer({ open, onClose }: ApprovalsDrawerProps) {
     if (open) setSignInNonce((n) => n + 1);
   }
 
+  if (open && locked) {
+    return (
+      <FullPageOverlay onBack={onClose}>
+        <SignInPrompt key={signInNonce} />
+      </FullPageOverlay>
+    );
+  }
+
   return (
-    <Modal open={open} onClose={onClose} closeLabel="Close approvals" title={locked ? 'Sign In' : 'Approvals'}>
-      {locked ? <SignInPrompt key={signInNonce} /> : <ApprovalsPanel />}
+    <Modal open={open} onClose={onClose} closeLabel="Close approvals" title="Approvals">
+      <ApprovalsPanel />
     </Modal>
   );
 }
