@@ -20,4 +20,5 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   { version: 5, note: 'Fixed the Sign In screen so the email/password fields match the rest of the app.', prNumber: 214, at: '2026-07-15T15:30:00-04:00' },
   { version: 6, note: 'Calendar now shows a red circle behind days with nothing tracked, so it\'s easy to spot and fix days you or your kid missed.', prNumber: 215, at: '2026-07-15T12:00:00-04:00' },
   { version: 7, note: 'Fixed a bug where signing out while a Grown-Up screen was open (Game Settings, Profiles, Calendar, Advanced Settings, Switch Profile) left it unlocked instead of asking you to sign back in.', prNumber: 216, at: '2026-07-15T12:00:00-04:00' },
+  { version: 8, note: 'Signing out as a grown-up now locks the whole device with a sign-in screen, instead of leaving the home screen usable.', prNumber: 217, at: '2026-07-27T12:00:00-04:00' },
 ];
