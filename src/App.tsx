@@ -19,7 +19,6 @@ const StoreScreen = lazy(() => import('./components/StoreScreen').then((m) => ({
 const DailyGameDrawer = lazy(() => import('./components/DailyGameDrawer').then((m) => ({ default: m.DailyGameDrawer })));
 const RankScreen = lazy(() => import('./components/RankScreen').then((m) => ({ default: m.RankScreen })));
 const ProfileSwitcher = lazy(() => import('./components/ProfileSwitcher').then((m) => ({ default: m.ProfileSwitcher })));
-const ProfilesManager = lazy(() => import('./components/ProfilesManager').then((m) => ({ default: m.ProfilesManager })));
 const AdvancedSettingsDrawer = lazy(() => import('./components/parent/AdvancedSettingsDrawer').then((m) => ({ default: m.AdvancedSettingsDrawer })));
 const CalendarDrawer = lazy(() => import('./components/parent/CalendarDrawer').then((m) => ({ default: m.CalendarDrawer })));
 const ReleaseNotesHistoryDrawer = lazy(() => import('./components/ReleaseNotesHistoryDrawer').then((m) => ({ default: m.ReleaseNotesHistoryDrawer })));
@@ -64,7 +63,6 @@ function AppShell() {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [grownUpsOpen, setGrownUpsOpen] = useState(false);
   const [switchProfileOpen, setSwitchProfileOpen] = useState(false);
-  const [profilesOpen, setProfilesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [releaseNotesHistoryOpen, setReleaseNotesHistoryOpen] = useState(false);
@@ -105,7 +103,6 @@ function AppShell() {
       setAccountMenuOpen(false);
       setGrownUpsOpen(false);
       setSwitchProfileOpen(false);
-      setProfilesOpen(false);
       setSettingsOpen(false);
       setCalendarOpen(false);
       setReleaseNotesHistoryOpen(false);
@@ -140,7 +137,6 @@ function AppShell() {
           onClose={() => setAccountMenuOpen(false)}
           onOpenGrownUps={() => { setAccountMenuOpen(false); setGrownUpsOpen(true); }}
           onOpenSwitchProfile={() => { setAccountMenuOpen(false); setSwitchProfileOpen(true); }}
-          onOpenProfiles={() => { setAccountMenuOpen(false); setProfilesOpen(true); }}
           onOpenSettings={() => { setAccountMenuOpen(false); setSettingsOpen(true); }}
           onOpenCalendar={() => { setAccountMenuOpen(false); setCalendarOpen(true); }}
           onOpenReleaseNotes={() => { setAccountMenuOpen(false); setReleaseNotesHistoryOpen(true); }}
@@ -155,13 +151,6 @@ function AppShell() {
             open={switchProfileOpen}
             onClose={() => setSwitchProfileOpen(false)}
             onBack={() => { setSwitchProfileOpen(false); setAccountMenuOpen(true); }}
-          />
-        </Suspense>
-        <Suspense fallback={null}>
-          <ProfilesManager
-            open={profilesOpen}
-            onClose={() => setProfilesOpen(false)}
-            onBack={() => { setProfilesOpen(false); setAccountMenuOpen(true); }}
           />
         </Suspense>
         <Suspense fallback={null}>

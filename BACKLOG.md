@@ -283,8 +283,8 @@ S-sized items are also done now — see `BACKLOG_DONE.md` Epic 13.)*
   with a hand-rolled back-navigation if/else chain (`handleBack`) that has to independently
   know every phase's provenance. *(P2, S — candidate for `useReducer`, smaller now than
   before.)*
-- **`AppShell` tracks overlay visibility via ten independent booleans**
-  (`src/App.tsx:53-62`) rather than one discriminated-union `activeOverlay` state; permits
+- **`AppShell` tracks overlay visibility via nine independent booleans**
+  (`src/App.tsx:60-69`) rather than one discriminated-union `activeOverlay` state; permits
   two overlays open at once in principle and adds a boolean per future drawer. *(P2, S.)*
 - **Duplicated "menu/detail router + header-sync" pattern**, implemented identically three
   times (`ParentDashboard.tsx`, `SettingsPanel.tsx`, partially `CalendarPanel.tsx`), and a
@@ -292,7 +292,7 @@ S-sized items are also done now — see `BACKLOG_DONE.md` Epic 13.)*
   extract `useSubPanelRouter`/`useDrawerHeader`.)*
 - **Theme set hand-encoded in three unsynchronized places** (CSS `:root[data-theme]`
   blocks, `THEME_COLORS` in `GravyContext.tsx:35-43`, `THEME_OPTIONS` in
-  `ProfilesManager.tsx:12-20`) — nothing enforces all three stay in sync when a theme is
+  `ProfilesPanel.tsx:11-15`) — nothing enforces all three stay in sync when a theme is
   added. *(P2, S.)*
 - **Icon registry requires touching three places per pickable icon**
   (`src/data/icons.ts`) with nothing enforcing consistency. *(P2, S.)*
