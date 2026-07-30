@@ -1,15 +1,12 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrashCan, faPenToSquare, faCheck } from '@fortawesome/free-solid-svg-icons';
-import { useGravy } from '../state/GravyContext';
-import type { Theme } from '../state/types';
-import { AppIcon } from './AppIcon';
-import { Modal } from './Modal';
-import { SignInPrompt } from './SignInPrompt';
-import { FullPageOverlay } from './FullPageOverlay';
-import { IconPicker } from './IconPicker';
-import { ColorPicker, type ColorOption } from './ColorPicker';
-import { AVATAR_ICONS } from '../data/icons';
+import { useGravy } from '../../state/GravyContext';
+import type { Theme } from '../../state/types';
+import { AppIcon } from '../AppIcon';
+import { IconPicker } from '../IconPicker';
+import { ColorPicker, type ColorOption } from '../ColorPicker';
+import { AVATAR_ICONS } from '../../data/icons';
 
 const THEME_OPTIONS: { id: Theme; label: string }[] = [
   { id: 'capri', label: 'Capri' },
@@ -32,34 +29,14 @@ const AVATAR_COLORS: ColorOption[] = [
   { hex: '#161B1F', label: 'Black' },
 ];
 
-interface ProfilesManagerProps {
-  open: boolean;
-  onClose: () => void;
-  onBack: () => void;
-}
-
-export function ProfilesManager({ open, onClose, onBack }: ProfilesManagerProps) {
-  const { profiles, addProfile, updateProfile, deleteProfile, grownUpUnlocked } = useGravy();
-  const locked = !grownUpUnlocked;
+export function ProfilesPanel() {
+  const { profiles, addProfile, updateProfile, deleteProfile } = useGravy();
   const [editingId, setEditingId] = useState<string | null>(null);
   // Buffers the name being edited so typing doesn't push a state update (and a cloud sync) per
   // keystroke — the edit commits once, on blur. Seeded when an edit panel opens.
   const [editName, setEditName] = useState('');
   const [newName, setNewName] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [signInNonce, setSignInNonce] = useState(0);
-
-  // Reset any in-progress edit/delete confirmation on every fresh open, adjusted during
-  // render (not an effect) — this manager stays mounted at all times (visibility is CSS-only).
-  const [prevOpen, setPrevOpen] = useState(open);
-  if (open !== prevOpen) {
-    setPrevOpen(open);
-    if (open) {
-      setEditingId(null);
-      setConfirmDeleteId(null);
-      setSignInNonce((n) => n + 1);
-    }
-  }
 
   const handleAdd = () => {
     const name = newName.trim();
@@ -68,27 +45,8 @@ export function ProfilesManager({ open, onClose, onBack }: ProfilesManagerProps)
     setNewName('');
   };
 
-  // Self-gates like ApprovalsDrawer: re-locks immediately if grownUpUnlocked flips false while
-  // this is already open (e.g. signing out from Advanced Settings > Parent Account elsewhere),
-  // rather than trusting only the AccountMenu lock check it was opened through.
-  // FullPageOverlay has no hidden state (unlike Modal's `open` prop) — must gate on `open` here,
-  // not just `locked`, or this would render on top of everything even while closed.
-  if (open && locked) {
-    return (
-      <FullPageOverlay onBack={onBack}>
-        <SignInPrompt key={signInNonce} />
-      </FullPageOverlay>
-    );
-  }
-
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      closeLabel="Close profiles"
-      title="Profiles"
-      onBack={onBack}
-    >
+    <div>
       <div className="section-label">Kids</div>
       {profiles.map((p) => (
         <div key={p.id} className="profile-manage-item">
@@ -218,6 +176,6 @@ export function ProfilesManager({ open, onClose, onBack }: ProfilesManagerProps)
           <FontAwesomeIcon icon={faPlus} /> Add
         </button>
       </form>
-    </Modal>
+    </div>
   );
 }

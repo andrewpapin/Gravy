@@ -26,4 +26,5 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   { version: 11, note: 'Fixed logging out sometimes not working when the connection is spotty.', prNumber: 220, at: '2026-07-27T12:00:00-04:00' },
   { version: 12, note: 'Sign-in and cloud sync setup now open as their own full screen, instead of a popup over your other screen.', prNumber: 221, at: '2026-07-27T12:00:00-04:00' },
   { version: 13, note: 'The Calendar now has an "Oops, I forgot..." button for days nothing was logged — one tap gives your kid their usual daily points.', prNumber: 222, at: '2026-07-27T15:00:00-04:00' },
+  { version: 14, note: 'Profiles moved into Advanced Settings, instead of its own item in the Grown-Up Menu.', prNumber: 225, at: '2026-07-28T12:00:00-04:00' },
 ];

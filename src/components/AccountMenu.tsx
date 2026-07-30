@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRightToBracket, faRightFromBracket, faRightLeft, faUsers, faUserShield, faGear, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
+import { faRightToBracket, faRightFromBracket, faRightLeft, faUserShield, faGear, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import { Modal } from './Modal';
 import { SignInPrompt } from './SignInPrompt';
@@ -12,7 +12,6 @@ interface AccountMenuProps {
   onClose: () => void;
   onOpenGrownUps: () => void;
   onOpenSwitchProfile: () => void;
-  onOpenProfiles: () => void;
   onOpenSettings: () => void;
   onOpenCalendar: () => void;
   onOpenReleaseNotes: () => void;
@@ -23,7 +22,6 @@ export function AccountMenu({
   onClose,
   onOpenGrownUps,
   onOpenSwitchProfile,
-  onOpenProfiles,
   onOpenSettings,
   onOpenCalendar,
   onOpenReleaseNotes,
@@ -101,13 +99,6 @@ export function AccountMenu({
           <span className="account-menu-option-text">
             <span className="account-menu-option-title">Calendar</span>
             <span className="account-menu-option-sub">View and edit past days</span>
-          </span>
-        </button>
-        <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenProfiles)}>
-          <span className="account-menu-option-icon"><FontAwesomeIcon icon={faUsers} /></span>
-          <span className="account-menu-option-text">
-            <span className="account-menu-option-title">Profiles</span>
-            <span className="account-menu-option-sub">Manage kids</span>
           </span>
         </button>
         <button type="button" className="account-menu-option" disabled={locked} onClick={runIfUnlocked(onOpenSettings)}>

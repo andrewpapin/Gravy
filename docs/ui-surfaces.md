@@ -101,20 +101,22 @@ below. A `signInNonce` flag remounts a fresh `SignInPrompt` on every open (mirro
   tap and locks the cards below (disabled, dimmed) so they can't be mixed with the catch-up; tapping
   it again undoes both. It's greyed out if the day already has any real activity logged. See
   `docs/state-model.md`'s "Oops, I forgot…" entry for the state/action details.
-- **Profiles** — opens `ProfilesManager`, full CRUD for kid profiles (add/edit name, avatar
-  icon+colors, theme; delete with confirm; never deletes the last profile).
 - **Advanced Settings** — opens `AdvancedSettingsDrawer`
   (`src/components/parent/AdvancedSettingsDrawer.tsx`) directly — a `Modal` wrapper around
   `SettingsPanel`, which is itself a two-level menu/drill-down router (see below), and includes
-  the Log (see below) as one of its nested panels. It's a top-level `AccountMenu` item, sibling to
-  Profiles, since it's account-level config rather than day-to-day parenting tasks.
+  Profiles and the Log (see below) as nested panels. It's a top-level `AccountMenu` item, since
+  it's account-level config rather than day-to-day parenting tasks. Profiles (`ProfilesPanel`) is
+  full CRUD for kid profiles (add/edit name, avatar icon+colors, theme; delete with confirm; never
+  deletes the last profile) — it used to be its own top-level `AccountMenu` item but was folded
+  into Advanced Settings as one more `SettingsMenu` card, alongside Time Zone/Parent
+  Account/Family Code/Log/Reset.
 
 The unlocked state (`grownUpUnlocked` in `GravyContext`) is not stored anywhere — it's recomputed on
 every render from `authUser` (the Supabase Auth session, which persists across tab/PWA restarts) and
 `householdStatus.isMember` (this device's membership in its currently-synced household). So a device
 stays unlocked across reopens as long as the parent stays signed in and synced to a household they
 belong to; it only re-locks when they sign out (or this device's household membership changes).
-Every parent drawer opened from `AccountMenu` — `GrownUpsDrawer`/`ProfilesManager`/`ProfileSwitcher`/
+Every parent drawer opened from `AccountMenu` — `GrownUpsDrawer`/`ProfileSwitcher`/
 `AdvancedSettingsDrawer`/`CalendarDrawer` — self-gates the same way `ApprovalsDrawer` does, rather
 than trusting only the lock check `AccountMenu` made before opening it: each independently checks
 `grownUpUnlocked` and, while `open && locked`, renders full-page sign-in (see "Full-page sign-in"
@@ -124,7 +126,7 @@ closed (`Modal` handles hidden state internally, per drawer), so if `grownUpUnlo
 Account panel while `CalendarDrawer` is also open underneath — every open drawer re-locks itself
 independently on its own next render, not just the one the sign-out happened in.
 
-Every drawer reached directly from `AccountMenu` (the five above) is a first-level drawer and gets
+Every drawer reached directly from `AccountMenu` (the four above) is a first-level drawer and gets
 a working back button via the shared `Modal` component's optional `onBack` prop — `Modal` renders a
 back-chevron button ahead of the title when `onBack` is passed. Each of these drawers' `onBack`
 closes itself and reopens `AccountMenu` (wired in `AppShell`, `src/App.tsx`). `ApprovalsDrawer` has
@@ -137,7 +139,7 @@ so back goes to the nested panel's own root first, and only falls through to `Ac
 you're at that drawer's own top level.
 
 There is no longer a no-PIN "kid settings" screen — theme and child name are now per-profile fields
-edited through the PIN-gated `ProfilesManager`.
+edited through the PIN-gated `ProfilesPanel` (nested inside Advanced Settings).
 
 ## Game Settings dashboard (`src/components/parent/`, `ParentDashboard` component)
 
@@ -160,7 +162,7 @@ list, not tabs); picking a card drills into one panel with a back button:
   Bonus Item" button opens it empty, a pencil (`faPenToSquare`) button on each row opens it
   pre-filled; Cancel/Save sit in one row, with a full-width Delete button below them (edit mode
   only) that swaps in an inline "This can't be undone" confirm — mirroring the delete-confirm
-  block `ProfilesManager` already uses for deleting a kid profile — rather than a separate
+  block `ProfilesPanel` already uses for deleting a kid profile — rather than a separate
   `ConfirmDialog` popup.
 - `PointsPanel` — food-tray point values (one points input per `FOODS` item,
   `Settings.foodPtsByItem`, set via `saveFoodPts`, plus the full-tray `bonusPts`); its own
@@ -240,7 +242,7 @@ mandatory gate, or the first step of a flow). `Onboarding`, `SignedOutGate`, `Fi
 `SyncGatePage` (the renamed former `SyncGateModal` — same "Create/Join/Skip" household setup
 content, now on this page treatment instead of a modal card) all render it directly.
 
-Every self-gating drawer (`AccountMenu`, `ApprovalsDrawer`, `GrownUpsDrawer`, `ProfilesManager`,
+Every self-gating drawer (`AccountMenu`, `ApprovalsDrawer`, `GrownUpsDrawer`,
 `ProfileSwitcher`, `AdvancedSettingsDrawer`, `CalendarDrawer`) renders it too, but conditionally: each
 checks `open && locked` (not just `locked` — `FullPageOverlay` has no hidden state the way `Modal`'s
 `open` prop does, so omitting the `open` check would render sign-in on top of everything even while

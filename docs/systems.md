@@ -86,7 +86,7 @@ profile's avatar icon and colors (`avatarIconColor`/`avatarBgColor`).
 `Settings.theme` is one of `'capri' | 'classic' | 'twopointoh'` (renamed from the older
 `light`/`dark`/`rainbow`/`gold` — `migrateLegacyState()` falls back any unrecognized saved value to
 `'capri'`; the set was later trimmed from seven themes down to these three), set per-profile via
-`ProfilesManager` and applied globally for the active profile. `'capri'` is the base/default theme
+`ProfilesPanel` (nested inside Advanced Settings) and applied globally for the active profile. `'capri'` is the base/default theme
 (its tokens live on the unmarked `:root` in `src/index.css`); `'classic'` is the original default
 palette, demoted to a selectable theme under `:root[data-theme="classic"]`; `'twopointoh'`
 ("2.0") is a black-and-white-forward theme whose only saturated color lives on the three
