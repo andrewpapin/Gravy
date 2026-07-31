@@ -3,6 +3,7 @@ import { faFire, faChevronRight, faCoins, faCloudArrowUp } from '@fortawesome/fr
 import { AppIcon } from './AppIcon';
 import { useGravy } from '../state/GravyContext';
 import { useTodaySnapshot } from '../state/useTodaySnapshot';
+import { pressable } from '../lib/pressable';
 import { useEffect, useRef, useState } from 'react';
 
 interface StatsCardProps {
@@ -31,7 +32,7 @@ export function StatsCard({ onOpenRank, onOpenStore }: StatsCardProps) {
 
   return (
     <div className="stats-card">
-      <button className="stats-rank" onClick={onOpenRank} type="button" aria-label="View stats">
+      <button className="stats-rank" {...pressable(onOpenRank)} type="button" aria-label="View stats">
         <div className="stats-rank-header">
           <div className="stats-rank-icon-circle">
             <AppIcon iconKey={rank.icon} emojiFallback={rank.emoji} className="stats-rank-emoji" />
@@ -57,7 +58,7 @@ export function StatsCard({ onOpenRank, onOpenStore }: StatsCardProps) {
         <button
           type="button"
           className="stats-coins-bar"
-          onClick={onOpenStore}
+          {...pressable(() => onOpenStore?.())}
           aria-label={`${displayPoints} points — open Reward Store`}
         >
           <span className="stats-coins-bar-label">

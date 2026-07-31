@@ -5,7 +5,10 @@ import { CollapsibleCard } from './CollapsibleCard';
 import { useGravy } from '../state/GravyContext';
 import { getDayLog } from '../state/dayLog';
 import { todayStr } from '../state/defaultState';
-import { triggerHaptic } from '../lib/haptics';
+import { pressable } from '../lib/pressable';
+
+/** The check button is a toggle — without a guard a fast double-tap completes then un-completes. */
+const TOGGLE_COOLDOWN_MS = 350;
 
 interface DailyGoalsProps {
   dateStr?: string;
@@ -53,15 +56,20 @@ export function DailyGoals({ dateStr, locked = false }: DailyGoalsProps = {}) {
             const stepperStarted = isStepper && count > 0;
 
             const toggleCheck = () => {
-              if (locked) return;
-              triggerHaptic();
               if (isToday) {
                 if (count > 0) decrementGoal(g.id); else incrementGoal(g.id);
               } else {
                 toggleGoalForDay(day, g.id);
               }
             };
-            const logStep = () => { if (locked) return; triggerHaptic(); incrementGoal(g.id); };
+            const logStep = () => incrementGoal(g.id);
+            // The row body always stays tappable. On a multi-step goal it mirrors the "+"
+            // button (it used to go inert the moment the count left zero, shrinking the target
+            // from a full-width row to two small circles mid-interaction).
+            const bodyPress = isStepper
+              ? pressable(logStep, { disabled: locked })
+              : pressable(toggleCheck, { disabled: locked, cooldownMs: TOGGLE_COOLDOWN_MS });
+            const bodyAction = isStepper ? logStep : toggleCheck;
 
             const rowContent = (
               <>
@@ -75,51 +83,36 @@ export function DailyGoals({ dateStr, locked = false }: DailyGoalsProps = {}) {
 
             return (
               <div key={g.id} className={`goal-row ${done ? 'done' : ''} ${locked ? 'day-locked' : ''}`}>
-                {stepperStarted ? (
-                  <div className="goal-row-box">{rowContent}</div>
-                ) : isStepper ? (
-                  <div
-                    className="goal-row-box goal-row-box-clickable"
-                    role="button"
-                    tabIndex={0}
-                    onClick={logStep}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        logStep();
-                      }
-                    }}
-                    aria-disabled={locked}
-                    aria-label={`Log ${g.name}`}
-                  >
-                    {rowContent}
-                  </div>
-                ) : (
-                  <div
-                    className="goal-row-box goal-row-box-clickable"
-                    role="button"
-                    tabIndex={0}
-                    onClick={toggleCheck}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        toggleCheck();
-                      }
-                    }}
-                    aria-pressed={done}
-                    aria-disabled={locked}
-                    aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
-                  >
-                    {rowContent}
-                  </div>
-                )}
+                <div
+                  className="goal-row-box goal-row-box-clickable"
+                  role="button"
+                  tabIndex={0}
+                  {...bodyPress}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (!locked) bodyAction();
+                    }
+                  }}
+                  aria-pressed={isStepper ? undefined : done}
+                  aria-disabled={locked}
+                  aria-label={
+                    isStepper
+                      ? `Log ${g.name}`
+                      : done
+                        ? `${g.name}, done. Tap to undo.`
+                        : `${g.name}. Tap to complete.`
+                  }
+                >
+                  {rowContent}
+                </div>
                 {stepperStarted ? (
                   <div className="gtile-stepper goal-row-stepper">
                     <button
                       type="button"
                       className="gstep-btn"
                       disabled={locked}
-                      onClick={() => { if (locked) return; triggerHaptic(); decrementGoal(g.id); }}
+                      {...pressable(() => decrementGoal(g.id), { disabled: locked })}
                       aria-label={`Undo ${g.name}`}
                     >−</button>
                     <span className="gstep-count">{count}/{target}</span>
@@ -127,7 +120,7 @@ export function DailyGoals({ dateStr, locked = false }: DailyGoalsProps = {}) {
                       type="button"
                       className="gstep-btn"
                       disabled={locked}
-                      onClick={logStep}
+                      {...pressable(logStep, { disabled: locked })}
                       aria-label={`Complete ${g.name}`}
                     >+</button>
                   </div>
@@ -136,7 +129,7 @@ export function DailyGoals({ dateStr, locked = false }: DailyGoalsProps = {}) {
                     type="button"
                     className={`goal-row-check ${done ? 'done' : ''}`}
                     disabled={locked}
-                    onClick={toggleCheck}
+                    {...pressable(toggleCheck, { disabled: locked, cooldownMs: TOGGLE_COOLDOWN_MS })}
                     aria-pressed={done}
                     aria-label={done ? `${g.name}, done. Tap to undo.` : `${g.name}. Tap to complete.`}
                   >

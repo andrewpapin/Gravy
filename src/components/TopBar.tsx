@@ -3,6 +3,7 @@ import { faBars, faBell } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import { AppIcon } from './AppIcon';
 import { Greeting } from './Greeting';
+import { pressable } from '../lib/pressable';
 
 interface TopBarProps {
   dateStr: string;
@@ -28,7 +29,7 @@ export function TopBar({ dateStr, onOpenAccountMenu, onOpenApprovals }: TopBarPr
         {onOpenApprovals && (
           <button
             className="topbar-icon-btn"
-            onClick={onOpenApprovals}
+            {...pressable(onOpenApprovals)}
             aria-label="Open approvals"
             type="button"
           >
@@ -44,7 +45,7 @@ export function TopBar({ dateStr, onOpenAccountMenu, onOpenApprovals }: TopBarPr
         {onOpenAccountMenu && (
           <button
             className="topbar-icon-btn"
-            onClick={onOpenAccountMenu}
+            {...pressable(onOpenAccountMenu)}
             aria-label="Open grown-up menu"
             type="button"
             data-tour-id="account-menu"

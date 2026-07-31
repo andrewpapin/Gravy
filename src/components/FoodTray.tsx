@@ -7,7 +7,10 @@ import { useGravy } from '../state/GravyContext';
 import { getDayLog } from '../state/dayLog';
 import { todayStr } from '../state/defaultState';
 import { getFoodPts } from '../state/points';
-import { triggerHaptic } from '../lib/haptics';
+import { pressable } from '../lib/pressable';
+
+/** Food tiles are toggles — without a short guard a fast double-tap logs then silently un-logs. */
+const TOGGLE_COOLDOWN_MS = 350;
 
 interface FoodTrayProps {
   dateStr?: string;
@@ -46,15 +49,13 @@ export function FoodTray({ dateStr, locked = false }: FoodTrayProps = {}) {
               type="button"
               className={`gtile ${logged ? 'checked' : ''} ${locked ? 'day-locked' : ''}`}
               disabled={locked}
-              onClick={() => {
-                if (locked) return;
-                triggerHaptic();
+              {...pressable(() => {
                 if (isToday) {
                   if (logged) removeFood(f.id); else logFood(f.id);
                 } else {
                   if (logged) removeFoodForDay(day, f.id); else logFoodForDay(day, f.id);
                 }
-              }}
+              }, { disabled: locked, cooldownMs: TOGGLE_COOLDOWN_MS })}
               aria-label={logged ? `${f.label}, logged. Tap to undo.` : `${f.label}. Tap to log.`}
             >
               <span className="tile-pts" aria-hidden="true">+{getFoodPts(state.settings, f.id)}</span>
