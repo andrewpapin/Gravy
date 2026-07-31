@@ -220,6 +220,19 @@ opinionated changes that need a mockup before committing.
   changes the brand feel, not just density), so it should be designed and
   reviewed as a deliberate visual-direction decision rather than a tweak.
   *(P2, S–M.)*
+- **`.card-collapse-body` clips (and un-taps) long goal lists.** `src/index.css`
+  animates the collapse with `max-height: 2000px → 0` plus `overflow: hidden`.
+  A family with enough goals to exceed 2000px of card body gets the tail rows
+  visually clipped *and* untappable, with no scroll affordance and no warning.
+  Found during the tap-reliability pass (`src/lib/pressable.ts`); out of scope
+  there because the fix is a different shape — measure the body and set
+  `max-height: none` after the expand transition ends, or animate `grid-template-rows`
+  instead. *(P2, S.)*
+- **`maximum-scale=1.0` blocks pinch-zoom.** `index.html`'s viewport meta pins the
+  maximum scale. iOS Safari ignores it (accessibility override) but Android Chrome
+  honors it, so low-vision users on Android can't zoom. It isn't needed to avoid the
+  300ms tap delay — the global `touch-action: manipulation` in `src/index.css` already
+  handles that — so this is very likely safe to drop. *(P2, S, a11y.)*
 
 ## Epic 13 — Engineering & Security Audit (July 2026)
 

@@ -103,7 +103,9 @@
   --danger: #d7263d;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+/* `-webkit-touch-callout: none` matters on iOS: without it a slightly-slow press on a goal row
+   or food tile raises the native selection/callout UI, which swallows the tap. */
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; touch-action: manipulation; }
 
 html {
   overscroll-behavior-y: none;
@@ -116,6 +118,9 @@ body {
   min-height: 100dvh;
   overflow-x: hidden;
   overscroll-behavior-y: none;
+  /* WebKit still needs the prefix — unprefixed `user-select` alone doesn't stop iOS from
+     starting a text selection out of a press on a tile. */
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -148,7 +153,11 @@ body {
   cursor: pointer;
   transition: background var(--transition), color var(--transition);
 }
-.topbar-icon-btn:hover { background: var(--sage); color: var(--card); }
+/* Hover-capable pointers only: on touch, :hover latches after a tap and the button stays
+   inverted until you tap elsewhere, which reads as a stuck/flashing button. */
+@media (hover: hover) and (pointer: fine) {
+  .topbar-icon-btn:hover { background: var(--sage); color: var(--card); }
+}
 .topbar-icon-btn:active {
   transform: translate(2px, 2px);
   box-shadow: 0 0 0 var(--dark);
@@ -208,7 +217,9 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 12px;
-  padding-bottom: var(--space-md);
+  /* Clears the iOS home indicator in the installed PWA — the last Bonus Points row used to sit
+     inside the system swipe-up strip, where the first tap goes to the OS, not the app. */
+  padding-bottom: max(var(--space-md), env(safe-area-inset-bottom));
 }
 
 /* ===== CARDS ===== */
@@ -422,6 +433,8 @@ button.calendar-day {
   gap: 8px;
   flex: 1;
   min-width: 0;
+  /* Padding alone left these at ~41px, under the 44px minimum touch target. */
+  min-height: 44px;
   color: white;
   font-family: var(--font-display);
   font-weight: 900;
@@ -903,6 +916,24 @@ button.gtile.checked:disabled:active { transform: none; }
   transition: opacity var(--transition-slow);
 }
 .calendar-modal-overlay.show { opacity: 1; pointer-events: all; }
+
+/* Suspense fallback for the lazily-loaded home-screen overlays (see OverlayLoading.tsx) —
+   same scrim as the real drawer, centered rather than bottom-anchored. */
+.calendar-modal-overlay.overlay-loading {
+  align-items: center;
+  justify-content: center;
+}
+.overlay-loading-spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: var(--border-width-xl) solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--cream);
+  animation: overlay-loading-spin 0.7s linear infinite;
+}
+@keyframes overlay-loading-spin {
+  to { transform: rotate(360deg); }
+}
 .calendar-modal-sheet {
   width: 100%;
   max-height: 90dvh;
@@ -1114,7 +1145,9 @@ button.gtile.checked:disabled:active { transform: none; }
   min-height: 36px;
   transition: background var(--transition);
 }
-.calendar-day:hover:not(.empty) { background: var(--cream); }
+@media (hover: hover) and (pointer: fine) {
+  .calendar-day:hover:not(.empty) { background: var(--cream); }
+}
 .calendar-day.empty { cursor: default; pointer-events: none; }
 .calendar-day:disabled { opacity: 0.35; cursor: default; }
 .calendar-day.today { border-color: var(--dark); }
@@ -2550,10 +2583,17 @@ button.gtile.checked:disabled:active { transform: none; }
   cursor: pointer;
   transition: transform 0.08s, box-shadow 0.08s;
 }
-.settings-row-edit-btn:hover,
 .settings-row-edit-btn:focus-visible {
   background: var(--dark);
   color: white;
+}
+/* :hover guarded separately so it doesn't latch on touch; :focus-visible above stays
+   unconditional for keyboard users. */
+@media (hover: hover) and (pointer: fine) {
+  .settings-row-edit-btn:hover {
+    background: var(--dark);
+    color: white;
+  }
 }
 .settings-row-edit-btn:active {
   transform: translate(2px, 2px);

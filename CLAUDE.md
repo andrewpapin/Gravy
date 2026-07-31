@@ -27,6 +27,10 @@ test. There
 is no component/UI test setup — `verify_gravy.mjs` at the repo root is an ad-hoc Playwright
 smoke-test (not wired into `npm`) that drives the app in a headless browser against a running
 `npm run dev`; run it manually with `node verify_gravy.mjs` if you need a scripted UI walkthrough.
+`verify_taps.mjs` alongside it is the same kind of ad-hoc script for home-screen **touch**
+behavior — it drives real CDP touch events (not synthetic clicks) to cover what
+`src/lib/pressable.ts` guarantees, and is the way to check a change there; run it with
+`node verify_taps.mjs` against a running dev server (it exits non-zero on failure).
 
 See `BACKLOG.md` for the living backlog of **open** items (security, infra, accessibility, process
 gaps) — check it before assuming a known gap (e.g. the open-SELECT RLS policy on `households`) is
@@ -105,7 +109,10 @@ Deep detail lives in `docs/`. Read the linked file when working in that area.
   is claimed at creation); `safe*` storage wrappers; Parent Accounts (`src/state/auth.ts`) —
   there's no PIN; `isGrownUpUnlocked` (also in `src/state/auth.ts`) is the sole access gate,
   derived from the signed-in account and its household membership.
-- **UI surfaces** (`docs/ui-surfaces.md`) — kid view + `AccountMenu` (the single `grownUpUnlocked`
+- **UI surfaces** (`docs/ui-surfaces.md`) — tap handling (`src/lib/pressable.ts`): every
+  home-screen control uses `{...pressable(fn)}` rather than a bare `onClick`, firing at pointerup
+  with a drift tolerance and scroll-cancel so taps don't get eaten inside the scroll area — read
+  the doc's "Tap handling" section before adding a control there; kid view + `AccountMenu` (the single `grownUpUnlocked`
   lock gating Approvals/Profiles/Game Settings/Calendar/Advanced Settings, now account-based
   via `SignInPrompt` rather than PIN-based); the shared `FullPageOverlay` (`src/components/
   FullPageOverlay.tsx`) full-screen treatment every auth-adjacent screen uses instead of a modal/

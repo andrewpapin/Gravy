@@ -7,6 +7,38 @@ links here; read it when working on screens, drawers, `AccountMenu`, `ParentDash
 Both surfaces are reached as overlay drawers/modals from `HomeScreen` (`src/App.tsx` `AppShell`);
 there is no router, just boolean open/close state per drawer.
 
+## Tap handling (`src/lib/pressable.ts`)
+
+Every interactive control on `HomeScreen` activates through `pressable(onPress, options)` spread
+onto the element (`{...pressable(fn)}`) instead of a bare `onClick`. A plain `onClick` is
+unreliable on touch inside the scrolling card area: WebKit cancels the synthesized click when the
+finger drifts a few pixels, so a tap paints its `:active` style and then does nothing — the
+"it flashes but I have to tap two or three times" report this replaced.
+
+`pressable` decides at `pointerup` using its own tolerance (`shouldFirePress` in
+`src/lib/pressGesture.ts`, unit-tested — 12px of drift is still a tap), and cancels when the
+page scrolled mid-gesture, so a flick (or the tap that halts iOS momentum scrolling) never logs a
+goal. That scroll signal comes from `src/lib/scrollActivity.ts`, which installs one capture-phase
+`scroll` listener on `document` at import time — note that `.scroll-area` is usually *not* the
+scroller here (`.screen` is `min-height: 100dvh`, so the document itself scrolls), which is why
+the listener is global rather than bound to that element.
+
+Three things to know when using it:
+
+- **It is a plain function, not a hook.** It's called per row/tile inside `.map()`, which the
+  Rules of Hooks forbid, so per-control gesture state lives in a WeakMap keyed by the DOM element.
+- **It swallows the browser's follow-up `click`.** Acting at pointerup means the UI has already
+  changed when that click is hit-tested — for a press that opens a drawer it would land on the
+  drawer's own scrim and close it again immediately. Its `onClick` prop stays wired as the
+  fallback path for keyboard/VoiceOver activation, which produces a click with no pointer gesture
+  behind it; `role="button"` divs keep their own `onKeyDown` as well.
+- **`cooldownMs`** is 0 by default (steppers stay rapid-fire) and set to 350 on toggle-style
+  controls — food tiles and the goal Complete/Undo button — where a fast second tap would undo
+  the first and read as nothing having happened.
+
+`pressable` owns the haptic (`src/lib/haptics.ts`), so callers don't call `triggerHaptic`
+themselves. It never calls `preventDefault` on the pointer events, so scrolling is unaffected.
+
 ## Kid view (`src/components/`)
 
 `HomeScreen` (avatar/greeting top bar, quick-links pill row, rank/streak stats card, food tray,
@@ -14,7 +46,10 @@ daily goals, bonus items) plus drawers for the reward store, the Daily Game, and
 ladder. `FoodTray` and `BonusPoints` share a 3-column tile grid (`.tray-grid`/`.goal-grid`,
 `.gtile`); `DailyGoals` instead renders as a vertical list of full-width horizontal rows
 (`.goal-rows`/`.goal-row`) — icon + name/points on the left, a Complete/Undo button (or the
-shared `.gtile-stepper` for multi-step goals) on the right. All three are each wrapped in
+shared `.gtile-stepper` for multi-step goals) on the right. The row body stays tappable in every
+state — for a multi-step goal, and for a `BonusPoints` item that's already been logged, it fires
+the same action as the stepper's `+` (it used to go inert once the count left zero, shrinking the
+target from a full-width row to two small circles mid-interaction). All three are each wrapped in
 `CollapsibleCard`
 (`src/components/CollapsibleCard.tsx`), which renders the header as a full-width toggle button
 (chevron + progress badge) and persists the collapsed/expanded state per kid via `Settings.

@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../state/GravyContext';
 import type { CollapsibleSection } from '../state/types';
-import { triggerHaptic } from '../lib/haptics';
+import { pressable } from '../lib/pressable';
 
 interface CollapsibleCardProps {
   section: CollapsibleSection;
@@ -22,7 +22,7 @@ export function CollapsibleCard({ section, title, badge, children, tourId }: Col
       <button
         type="button"
         className="card-collapse-toggle flex-between"
-        onClick={() => { triggerHaptic(); toggleSectionCollapsed(section); }}
+        {...pressable(() => toggleSectionCollapsed(section))}
         aria-expanded={!collapsed}
       >
         <div className="goal-card-title">{title}</div>

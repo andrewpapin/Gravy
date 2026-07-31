@@ -5,7 +5,7 @@ import { CollapsibleCard } from './CollapsibleCard';
 import { useGravy } from '../state/GravyContext';
 import { getDayLog } from '../state/dayLog';
 import { todayStr } from '../state/defaultState';
-import { triggerHaptic } from '../lib/haptics';
+import { pressable } from '../lib/pressable';
 
 interface BonusPointsProps {
   dateStr?: string;
@@ -45,8 +45,6 @@ export function BonusPoints({ dateStr, locked = false }: BonusPointsProps = {}) 
             const count = goalCounts[g.id] || 0;
             const started = count > 0;
             const logItem = () => {
-              if (locked) return;
-              triggerHaptic();
               if (isToday) logBonusItem(g.id); else logBonusItemForDay(day, g.id);
             };
             const rowContent = (
@@ -62,37 +60,33 @@ export function BonusPoints({ dateStr, locked = false }: BonusPointsProps = {}) 
             );
             return (
               <div key={g.id} className={`goal-row ${locked ? 'day-locked' : ''}`}>
-                {started ? (
-                  <div className="goal-row-box">{rowContent}</div>
-                ) : (
-                  <div
-                    className="goal-row-box goal-row-box-clickable"
-                    role="button"
-                    tabIndex={0}
-                    onClick={logItem}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        logItem();
-                      }
-                    }}
-                    aria-disabled={locked}
-                    aria-label={`Log ${g.name}`}
-                  >
-                    {rowContent}
-                  </div>
-                )}
+                {/* The row body stays tappable once the item has been logged too — it used to
+                    go inert past the first log, leaving only the small ± circles. */}
+                <div
+                  className="goal-row-box goal-row-box-clickable"
+                  role="button"
+                  tabIndex={0}
+                  {...pressable(logItem, { disabled: locked })}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (!locked) logItem();
+                    }
+                  }}
+                  aria-disabled={locked}
+                  aria-label={`Log ${g.name}`}
+                >
+                  {rowContent}
+                </div>
                 {started && (
                   <div className="gtile-stepper goal-row-stepper">
                     <button
                       type="button"
                       className="gstep-btn"
                       disabled={locked}
-                      onClick={() => {
-                        if (locked) return;
-                        triggerHaptic();
+                      {...pressable(() => {
                         if (isToday) undoBonusItem(g.id); else undoBonusItemForDay(day, g.id);
-                      }}
+                      }, { disabled: locked })}
                       aria-label={`Undo ${g.name}`}
                     >−</button>
                     <span className="gstep-count">{count}</span>
@@ -100,7 +94,7 @@ export function BonusPoints({ dateStr, locked = false }: BonusPointsProps = {}) 
                       type="button"
                       className="gstep-btn"
                       disabled={locked}
-                      onClick={logItem}
+                      {...pressable(logItem, { disabled: locked })}
                       aria-label={`Log ${g.name}`}
                     >+</button>
                   </div>

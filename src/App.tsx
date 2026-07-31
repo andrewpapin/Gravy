@@ -9,15 +9,20 @@ import { ReleaseNotesDrawer } from './components/ReleaseNotesDrawer';
 import { Celebration } from './components/Celebration';
 import { Confetti } from './components/Confetti';
 import { LogoutToast } from './components/LogoutToast';
+import { OverlayLoading } from './components/OverlayLoading';
 import { STORAGE_KEY, ONBOARDING_DONE_KEY, HOME_TOUR_DONE_KEY, SIGNED_OUT_PENDING_KEY } from './state/defaultState';
 import { safeGetItem, safeSetItem, safeRemoveItem } from './state/storage';
 
 // These are all overlays/modals that aren't needed for the initial kid-facing paint (closed
 // by default, or — for Onboarding/SyncGatePage — only one of the two ever mounts depending
 // on first-run state). Loading them on demand keeps their weight out of the main bundle.
-const StoreScreen = lazy(() => import('./components/StoreScreen').then((m) => ({ default: m.StoreScreen })));
-const DailyGameDrawer = lazy(() => import('./components/DailyGameDrawer').then((m) => ({ default: m.DailyGameDrawer })));
-const RankScreen = lazy(() => import('./components/RankScreen').then((m) => ({ default: m.RankScreen })));
+const loadStoreScreen = () => import('./components/StoreScreen');
+const loadDailyGameDrawer = () => import('./components/DailyGameDrawer');
+const loadRankScreen = () => import('./components/RankScreen');
+
+const StoreScreen = lazy(() => loadStoreScreen().then((m) => ({ default: m.StoreScreen })));
+const DailyGameDrawer = lazy(() => loadDailyGameDrawer().then((m) => ({ default: m.DailyGameDrawer })));
+const RankScreen = lazy(() => loadRankScreen().then((m) => ({ default: m.RankScreen })));
 const ProfileSwitcher = lazy(() => import('./components/ProfileSwitcher').then((m) => ({ default: m.ProfileSwitcher })));
 const ProfilesManager = lazy(() => import('./components/ProfilesManager').then((m) => ({ default: m.ProfilesManager })));
 const AdvancedSettingsDrawer = lazy(() => import('./components/parent/AdvancedSettingsDrawer').then((m) => ({ default: m.AdvancedSettingsDrawer })));
@@ -94,6 +99,19 @@ function AppShell() {
   // merely restores showSignedOutGate from the persisted flag) so LogoutToast fires once, right
   // when "Log out" actually happens.
   const [logoutToastNonce, setLogoutToastNonce] = useState(0);
+  // Warm the three quick-link chunks once the home screen is idle, so tapping Daily/Stats/
+  // Prizes opens instantly instead of waiting on a download at tap time.
+  useEffect(() => {
+    const warm = () => { void loadStoreScreen(); void loadDailyGameDrawer(); void loadRankScreen(); };
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(warm, { timeout: 4000 });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    // Safari has no requestIdleCallback — a short timer keeps it off the critical path.
+    const id = window.setTimeout(warm, 2000);
+    return () => window.clearTimeout(id);
+  }, []);
+
   const prevAuthUserRef = useRef(authUser);
   useEffect(() => {
     const wasSignedIn = !!prevAuthUserRef.current;
@@ -126,13 +144,16 @@ function AppShell() {
           onOpenDailyGame={() => setDailyGameOpen(true)}
           onOpenRank={() => setRankOpen(true)}
         />
-        <Suspense fallback={null}>
+        {/* The three quick-link pills are the most-tapped controls on the home screen, so
+            (unlike the parent drawers) they get a visible fallback — a `null` fallback made a
+            cold tap look like it had been ignored while the chunk downloaded. */}
+        <Suspense fallback={storeOpen ? <OverlayLoading /> : null}>
           <StoreScreen open={storeOpen} onClose={() => setStoreOpen(false)} />
         </Suspense>
-        <Suspense fallback={null}>
+        <Suspense fallback={dailyGameOpen ? <OverlayLoading /> : null}>
           <DailyGameDrawer open={dailyGameOpen} onClose={() => setDailyGameOpen(false)} />
         </Suspense>
-        <Suspense fallback={null}>
+        <Suspense fallback={rankOpen ? <OverlayLoading /> : null}>
           <RankScreen open={rankOpen} onClose={() => setRankOpen(false)} />
         </Suspense>
         <AccountMenu

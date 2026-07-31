@@ -2,18 +2,34 @@ import { useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useGravy } from '../state/GravyContext';
 
+// The overlay is `pointer-events: all` for the whole of its --transition-slow (0.3s) fade-in,
+// during which it's still nearly invisible. Without this delay a tap aimed at the button
+// underneath lands on a scrim the kid can't see yet and silently dismisses it — which reads as
+// "my tap did nothing". Slightly longer than the fade so the overlay is legible before it
+// accepts a dismiss.
+const DISMISS_ARM_MS = 350;
+
 export function Celebration() {
   const { celebration, hideCelebration } = useGravy();
   const overlayRef = useRef<HTMLDivElement>(null);
+  // A ref, not state — arming only gates the dismiss handler, so there's nothing to re-render.
+  const shownAtRef = useRef(0);
 
   useEffect(() => {
-    if (celebration) overlayRef.current?.focus();
+    if (!celebration) return;
+    shownAtRef.current = Date.now();
+    overlayRef.current?.focus();
   }, [celebration]);
+
+  const dismiss = () => {
+    if (Date.now() - shownAtRef.current < DISMISS_ARM_MS) return;
+    hideCelebration();
+  };
 
   return (
     <div
       className={`celebration ${celebration ? 'show' : ''}`}
-      onClick={hideCelebration}
+      onClick={dismiss}
       role={celebration ? 'button' : undefined}
       tabIndex={celebration ? 0 : -1}
       aria-label="Dismiss celebration"
@@ -21,7 +37,7 @@ export function Celebration() {
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          hideCelebration();
+          dismiss();
         }
       }}
     >
