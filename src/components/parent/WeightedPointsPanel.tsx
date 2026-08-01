@@ -28,7 +28,7 @@ export function WeightedPointsPanel() {
         />
       </div>
 
-      <div className="muted-note" style={{ fontSize: '0.75rem', lineHeight: 1.5, marginTop: 12 }}>
+      <div className="muted-note weighting-explainer">
         <p>
           Normally every food group is worth whatever you set in Game Settings &rarr; Points. With
           this on, those values flex based on the last {WEIGHT_WINDOW_DAYS} days: a food group

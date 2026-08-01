@@ -590,6 +590,10 @@ button.gtile.checked:disabled:active { transform: none; }
 .tile-pts.boosted { background: var(--success); color: #fff; }
 .tile-pts.reduced { background: var(--muted); color: #fff; }
 .tile-pts-arrow { margin-left: 2px; font-size: 0.85em; }
+/* Explanatory copy in the Dynamic Points panel. `.muted-note` doesn't space its paragraphs, and
+   this one runs to three of them — without a gap they read as one wall of text. */
+.weighting-explainer { font-size: 0.75rem; line-height: 1.5; margin-top: 12px; }
+.weighting-explainer p + p { margin-top: 10px; }
 .tile-check {
   position: absolute;
   top: 6px; right: 6px;
