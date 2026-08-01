@@ -11,8 +11,13 @@ export type AwardPoints = (next: GravyState, pts: number) => void;
 export type AwardPointsForDay = (next: GravyState, log: DayLog, pts: number) => void;
 export type MaybeCelebrateRankUp = (prevTotalPoints: number, next: GravyState, delayMs?: number) => void;
 
-// Excludes foodPtsByItem — set per food item via saveFoodPts, not this generic setter.
-export type SettableSettingKey = Exclude<keyof Settings, 'foodPtsByItem'>;
+// Excludes foodPtsByItem — set per food item via saveFoodPts, not this generic setter — and the
+// two Dynamic Point Weighting keys, which are a boolean and a map: saveSetting's fallback branch
+// coerces with parseInt, so routing either through it would silently write NaN.
+export type SettableSettingKey = Exclude<
+  keyof Settings,
+  'foodPtsByItem' | 'weightedFoodPtsEnabled' | 'weightedFoodPtsExcluded'
+>;
 
 // Per-kid identity fields a parent can edit for any profile.
 export type ProfilePatch = Partial<

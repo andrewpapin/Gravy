@@ -113,7 +113,8 @@ complete, independent `GravyState` for one kid. `loadRoot()`/`saveRoot()` in
 single-profile save by wrapping it as a one-entry root.
 
 - **Shared vs. per-kid fields** — `goals`, `rewards`, and a subset of `settings`
-  (`SHARED_SETTING_KEYS`: `foodPtsByItem`, `bonusPts`, `gamePts`, `timezone`) are identical across
+  (`SHARED_SETTING_KEYS`: `foodPtsByItem`, `bonusPts`, `gamePts`, `timezone`,
+  `weightedFoodPtsEnabled`, `weightedFoodPtsExcluded`) are identical across
   every profile in a household. Per-kid fields are everything else: progress (points, streaks,
   counters, logs) plus identity (`childName`, `avatarIcon`, `avatarIconColor`, `avatarBgColor`,
   `theme`) and UI preferences (`collapsedSections` — which home-screen goal cards this kid has
@@ -151,9 +152,37 @@ single-profile save by wrapping it as a one-entry root.
   replaying `dayLogs` for saves written before these fields existed.
 - **Day rollover** — `applyDayRollover()` archives yesterday's food counts/completed goals/bonus
   counts into `dayLogs[dateStr]`, updates the four streaks, then clears the live `today*` fields
-  (food, daily-goal completions/counts, bonus-item ledger, `rollGoalRoundsToday`,
+  (food, daily-goal completions/counts, bonus-item and food award ledgers, `rollGoalRoundsToday`,
   `rollGoalDailyScore`, `rollGoalRoundsLog`). Bonus-item completions, like daily goals, reset every
   day.
+- **Dynamic Point Weighting** (`src/state/weightedPoints.ts`) — an opt-in layer, off by default,
+  that scales each food group's configured `foodPtsByItem` value by how often that food has been
+  logged over the trailing `WEIGHT_WINDOW_DAYS` (30) days, relative to the *other participating
+  foods*. A food logged less often than the peer average is worth more; one logged more often is
+  worth less, clamped to `WEIGHT_MIN`–`WEIGHT_MAX` (0.5×–2.0×) and rounded to whole points. Below
+  `WEIGHT_MIN_ACTIVE_DAYS` (7) logged days in the window every multiplier stays neutral, so a new
+  household isn't swung around by noise. Scope is the food tray only — goals, bonus items and
+  reward costs are untouched.
+  - **Per-food exclusion** (`Settings.weightedFoodPtsExcluded`, keyed by `Food.id`). An excluded
+    food is pinned to its base value *and* dropped from the peer average, so it neither moves nor
+    moves anything else. `sweets` ships excluded: without that, never eating sweets would boost
+    them to 16pts *and* dilute the average enough to cut vegetables' boost from 18 to the same 16.
+  - **Config is shared, weights are per-kid.** Both settings are in `SHARED_SETTING_KEYS`, so the
+    rules are household-wide; the multipliers are derived from each profile's own `dayLogs`, so
+    two siblings with identical config get different numbers.
+  - **Nothing is cached.** The multipliers are a pure function of the days *strictly before* the
+    as-of date, so they're already constant for a whole day and change only at the rollover
+    boundary. `getFoodPts(state, foodId, asOfDateStr?)` in `src/state/points.ts` is the single read
+    path; `getBaseFoodPts(settings, foodId)` returns the unscaled configured value. Past-day edits
+    pass their own date, so a day is priced on its own trend rather than today's.
+- **Award ledgers and exact undo** — `GravyState.todayFoodApplied` and `DayLog.foodApplied` record
+  what each food actually paid, alongside the equivalent `todayBonusApplied`/`DayLog.bonusApplied`
+  for bonus items. Removals reverse the recorded amount instead of re-deriving it, so an undo is
+  exact even when the base value, the weighting config, or the trailing window has moved in
+  between. This matters because the Log's Undo (`undoActionLogEntry`) routes by date: an award made
+  today is reversed through the past-day path from tomorrow onward, when a re-derived weight would
+  no longer match. Both ledgers are cleared at day rollover, `todayFoodApplied` archiving into
+  `DayLog.foodApplied` first.
 - **Counters** (`GravyState.counters`) — lifetime aggregates: `foodLogs`
   (per food-group), `fullTrayDays`, `totalGoals`, `allGoalsDays`, `comboDays` (full tray + all daily
   goals same day), `totalRewards`, `maxDayPoints`, `gamesPlayed`, `gamesWon`. Roll to the Goal rounds

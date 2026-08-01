@@ -20,6 +20,10 @@ export const SIGNED_OUT_PENDING_KEY = 'gravy_signed_out_pending';
 // Fallback points for a food item with no configured value (e.g. one added to FOODS after a
 // save was written) — mirrors the points-per-food-group default every FOODS entry starts at.
 export const DEFAULT_FOOD_PTS = 10;
+// Foods that start out excluded from Dynamic Point Weighting (Settings.weightedFoodPtsExcluded).
+// Sweets are the one food group where "eaten rarely" is the desired outcome, so letting the
+// weighting reward scarcity there would invert the whole point of the feature.
+export const DEFAULT_WEIGHT_EXCLUDED_FOODS: Record<string, boolean> = { sweets: true };
 
 export const defaultState: GravyState = {
   points: 0,
@@ -34,6 +38,7 @@ export const defaultState: GravyState = {
   todayGoals: [],
   todayGoalCounts: {},
   todayBonusApplied: {},
+  todayFoodApplied: {},
   rollGoalRoundsToday: 0,
   rollGoalDailyScore: 0,
   rollGoalRoundsLog: [],
@@ -91,6 +96,8 @@ export const defaultState: GravyState = {
     avatarBgColor: '#FFFFFF',
     timezone: DEFAULT_TIMEZONE,
     collapsedSections: {},
+    weightedFoodPtsEnabled: false,
+    weightedFoodPtsExcluded: { ...DEFAULT_WEIGHT_EXCLUDED_FOODS },
   },
 };
 
@@ -232,6 +239,9 @@ export function migrateLegacyState(state: Record<string, unknown>): void {
     settings.foodPtsByItem = Object.fromEntries(FOODS.map((f) => [f.id, settings.foodPts]));
   }
   if (settings) delete settings.foodPts;
+  // Dynamic Point Weighting needs no migration: it ships off, and hydrateState's settings backfill
+  // loop already deep-clones any key missing from a save out of defaultState.settings — which is
+  // where the seeded `sweets` exclusion lives.
 
   // Log entries used to carry an `actorLabel` stamped with the signed-in parent's email — a
   // data leak, since both logs ride the synced household payload readable by anyone with the
@@ -296,6 +306,18 @@ function sanitizeFoodPtsByItem(v: unknown): Record<string, number> {
   }
   for (const f of FOODS) {
     if (!(f.id in result)) result[f.id] = DEFAULT_FOOD_PTS;
+  }
+  return result;
+}
+
+// Keeps only real booleans. Unlike sanitizeFoodPtsByItem this fills in nothing: an absent food
+// id simply means "participates in weighting", which is the intended default for any food added
+// to FOODS later. Entries for since-removed foods are kept, same round-tripping reason.
+function sanitizeWeightedFoodPtsExcluded(v: unknown): Record<string, boolean> {
+  const obj = asPlainObject(v);
+  const result: Record<string, boolean> = {};
+  for (const key of Object.keys(obj)) {
+    if (typeof obj[key] === 'boolean') result[key] = obj[key] as boolean;
   }
   return result;
 }
@@ -420,6 +442,7 @@ function sanitizeState(state: GravyState): void {
   state.todayFoodCounts = asPlainObject(state.todayFoodCounts) as Record<string, number>;
   state.todayGoalCounts = asPlainObject(state.todayGoalCounts) as Record<number, number>;
   state.todayBonusApplied = asPlainObject(state.todayBonusApplied) as Record<number, number>;
+  state.todayFoodApplied = asPlainObject(state.todayFoodApplied) as Record<string, number>;
   state.dayLogs = asPlainObject(state.dayLogs) as GravyState['dayLogs'];
 
   state.todayGoals = asNumberArray(state.todayGoals);
@@ -449,6 +472,8 @@ function sanitizeState(state: GravyState): void {
   settings.bonusPts = asFiniteNumber(settings.bonusPts, defaultState.settings.bonusPts);
   settings.timezone = isValidTimezone(settings.timezone) ? settings.timezone : defaultState.settings.timezone;
   settings.collapsedSections = sanitizeCollapsedSections(settings.collapsedSections);
+  settings.weightedFoodPtsEnabled = settings.weightedFoodPtsEnabled === true;
+  settings.weightedFoodPtsExcluded = sanitizeWeightedFoodPtsExcluded(settings.weightedFoodPtsExcluded);
 }
 
 // Takes a raw parsed flat GravyState (or null/garbage), runs the legacy migration, backfills any
@@ -517,6 +542,10 @@ export const SHARED_SETTING_KEYS: (keyof Settings)[] = [
   'bonusPts',
   'gamePts',
   'timezone',
+  // The weighting *rules* are household-wide, like the base point values they scale. The
+  // resulting multipliers are not — they live in GravyState.foodWeights, per kid.
+  'weightedFoodPtsEnabled',
+  'weightedFoodPtsExcluded',
 ];
 
 function genProfileId(): string {
@@ -640,6 +669,9 @@ export function applyDayRollover(state: GravyState): GravyState {
         goalIds: [...state.todayGoals],
         points: state.todayPoints,
         bonusCounts,
+        // Carried over so a food logged today and removed on a later day (the Log's Undo routes
+        // by date — see undoActionLogEntry) still reverses the exact amount that was awarded.
+        foodApplied: { ...state.todayFoodApplied },
       };
     }
     state.todayFoodCounts = {};
@@ -650,6 +682,7 @@ export function applyDayRollover(state: GravyState): GravyState {
     state.todayGoalCounts = {};
     // Bonus penalties settle at the end of the day — start the new day with a clean ledger.
     state.todayBonusApplied = {};
+    state.todayFoodApplied = {};
     state.rollGoalRoundsToday = 0;
     state.rollGoalDailyScore = 0;
     state.rollGoalRoundsLog = [];

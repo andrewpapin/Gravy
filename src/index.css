@@ -584,6 +584,12 @@ button.gtile.checked:disabled:active { transform: none; }
   line-height: 1;
 }
 .tile-pts.negative { background: var(--danger); color: #fff; }
+/* Dynamic Point Weighting (see src/state/weightedPoints.ts): this food is currently worth more or
+   less than its configured base. Colour-only modifiers, same approach as .negative above — the
+   pill's geometry is shared so a weighted tile stays aligned with an unweighted one. */
+.tile-pts.boosted { background: var(--success); color: #fff; }
+.tile-pts.reduced { background: var(--muted); color: #fff; }
+.tile-pts-arrow { margin-left: 2px; font-size: 0.85em; }
 .tile-check {
   position: absolute;
   top: 6px; right: 6px;

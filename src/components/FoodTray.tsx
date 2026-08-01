@@ -1,12 +1,14 @@
+import { useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faCheck, faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons';
 import { FOODS } from '../data/foods';
 import { AppIcon } from './AppIcon';
 import { CollapsibleCard } from './CollapsibleCard';
 import { useGravy } from '../state/GravyContext';
 import { getDayLog } from '../state/dayLog';
 import { todayStr } from '../state/defaultState';
-import { getFoodPts } from '../state/points';
+import { getBaseFoodPts } from '../state/points';
+import { applyWeight, computeFoodWeights, isFoodWeighted } from '../state/weightedPoints';
 import { pressable } from '../lib/pressable';
 
 /** Food tiles are toggles — without a short guard a fast double-tap logs then silently un-logs. */
@@ -25,6 +27,9 @@ export function FoodTray({ dateStr, locked = false }: FoodTrayProps = {}) {
   const foodCounts = getDayLog(state, day, today)?.foodCounts ?? {};
   const eatenCount = Object.values(foodCounts).filter((v) => v > 0).length;
   const allEaten = eatenCount === FOODS.length;
+  // Computed once for the whole tray rather than per tile — each call scans a 30-day window.
+  // Keyed on the viewed day so browsing history shows what that day actually paid.
+  const weights = useMemo(() => computeFoodWeights(state, day), [state, day]);
 
   return (
     <CollapsibleCard
@@ -43,6 +48,11 @@ export function FoodTray({ dateStr, locked = false }: FoodTrayProps = {}) {
         {FOODS.map((f) => {
           const count = foodCounts[f.id] || 0;
           const logged = count > 0;
+          const base = getBaseFoodPts(state.settings, f.id);
+          const pts = isFoodWeighted(state.settings, f.id) ? applyWeight(base, weights[f.id] ?? 1) : base;
+          // Compare the rounded points, not the raw multiplier: a 1.02x weight on a 10pt food
+          // still renders "+10", and an arrow pointing at an unchanged number is just confusing.
+          const drift = pts > base ? 'boosted' : pts < base ? 'reduced' : '';
           return (
             <button
               key={f.id}
@@ -56,9 +66,15 @@ export function FoodTray({ dateStr, locked = false }: FoodTrayProps = {}) {
                   if (logged) removeFoodForDay(day, f.id); else logFoodForDay(day, f.id);
                 }
               }, { disabled: locked, cooldownMs: TOGGLE_COOLDOWN_MS })}
-              aria-label={logged ? `${f.label}, logged. Tap to undo.` : `${f.label}. Tap to log.`}
+              aria-label={
+                `${f.label}, worth ${pts} points${drift ? `, ${drift}` : ''}. `
+                + (logged ? 'Logged. Tap to undo.' : 'Tap to log.')
+              }
             >
-              <span className="tile-pts" aria-hidden="true">+{getFoodPts(state.settings, f.id)}</span>
+              <span className={`tile-pts ${drift}`} aria-hidden="true">
+                +{pts}
+                {drift && <FontAwesomeIcon icon={drift === 'boosted' ? faArrowUp : faArrowDown} className="tile-pts-arrow" />}
+              </span>
               {logged && (
                 <span className="tile-check" aria-hidden="true">
                   <FontAwesomeIcon icon={faCheck} />

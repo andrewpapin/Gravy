@@ -44,7 +44,13 @@ themselves. It never calls `preventDefault` on the pointer events, so scrolling 
 `HomeScreen` (avatar/greeting top bar, quick-links pill row, rank/streak stats card, food tray,
 daily goals, bonus items) plus drawers for the reward store, the Daily Game, and the rank
 ladder. `FoodTray` and `BonusPoints` share a 3-column tile grid (`.tray-grid`/`.goal-grid`,
-`.gtile`); `DailyGoals` instead renders as a vertical list of full-width horizontal rows
+`.gtile`). Each food tile's `.tile-pts` pill shows what that food pays on the viewed day; with
+Dynamic Point Weighting on (`docs/state-model.md`) it also carries an ↑/↓ arrow and a
+`.boosted`/`.reduced` colour modifier when the value differs from the parent-configured base —
+colour-only modifiers on the shared pill geometry, the same approach as the existing `.negative`.
+The arrow is compared on the *rounded* points, not the raw multiplier, so it never points at an
+unchanged number, and the tile's `aria-label` carries the value and direction since the pill itself
+is `aria-hidden`. `DailyGoals` instead renders as a vertical list of full-width horizontal rows
 (`.goal-rows`/`.goal-row`) — icon + name/points on the left, a Complete/Undo button (or the
 shared `.gtile-stepper` for multi-step goals) on the right. The row body stays tappable in every
 state — for a multi-step goal, and for a `BonusPoints` item that's already been logged, it fires
@@ -201,7 +207,11 @@ list, not tabs); picking a card drills into one panel with a back button:
   `Settings.foodPtsByItem`, set via `saveFoodPts`, plus the full-tray `bonusPts`); its own
   top-level `'food-tray'` destination rather than nested inside `GoalsPanel`. Unlike
   `GoalsPanel`/`StorePanel` there's nothing to add or delete here, so it keeps the older
-  inline-input-with-autosave editing style.
+  inline-input-with-autosave editing style. When Dynamic Point Weighting is on (see Advanced
+  Settings below) each row additionally gets a `SettingsToggle` for that food's participation
+  (`setFoodWeightExcluded`) and a `settings-sub` line showing what the food is worth today after
+  weighting. Both are hidden entirely when the feature is off, so the panel is unchanged for
+  households that never enable it.
 - `StorePanel` — reward CRUD, its own top-level `'store'` destination; same pencil-triggered
   add/edit drawer pattern as `GoalsPanel` (icon, name, cost instead of pts/target). The add/edit
   drawer also has an optional dollar `valueUsd` field (`Reward.valueUsd` in `types.ts`); once set,
@@ -226,7 +236,8 @@ Settings" → "Log" (see below).
 root-menu panels — it's reached directly from `AccountMenu`'s "Advanced Settings" item via
 `AdvancedSettingsDrawer`, not nested inside the Game Settings dashboard. It follows the same
 two-level menu/drill-down router shape as `ParentDashboard`: a local `root` state (`'menu' |
-SettingsDest` where `SettingsDest` is `'timezone' | 'account' | 'sync' | 'log' | 'reset'`) that
+SettingsDest` where `SettingsDest` is `'timezone' | 'account' | 'sync' | 'log' | 'weighting' |
+'reset'`) that
 renders `SettingsMenu` (a `menu-card` list, mirroring `RootMenu`) at `'menu'`, and drills into one
 panel with a back button otherwise:
 
@@ -238,6 +249,12 @@ panel with a back button otherwise:
 - `SyncPanel` (menu label "Family Code") — household code create/join/change/leave. The old "Secure
   this household" claim banner is gone: every household is now claimed (owned) at creation, so the
   unclaimed-state branch it handled can no longer occur.
+- `WeightedPointsPanel` (menu label "Dynamic Points") — the master on/off switch for Dynamic Point
+  Weighting (`setWeightedFoodPtsEnabled`; see `docs/state-model.md` for the mechanic), plus the
+  plain-language explanation of what it does to a kid's point values and a note of which foods are
+  currently excluded. It gets a whole destination rather than an inline row precisely because it
+  needs that copy — a parent who enables it blind will see point values move on their own. The
+  per-food participation toggles live in Game Settings → Points, next to the values they scale.
 - `LogPanel` (`src/components/parent/LogPanel.tsx`, menu label "Log") — merges and time-sorts
   (newest first) two separate fields for display: the active profile's `actionLog` — kid-progress
   and reward actions only (food logged/removed, daily-goal steps, bonus-item taps, game wins,

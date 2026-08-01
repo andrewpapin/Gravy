@@ -77,6 +77,15 @@ export interface Settings {
   // Which home-screen goal cards this kid has collapsed. Per-kid UI preference — not in
   // SHARED_SETTING_KEYS, so each profile keeps its own.
   collapsedSections: Partial<Record<CollapsibleSection, boolean>>;
+  // Dynamic Point Weighting, off by default. When on, each participating food's configured
+  // base points flex up/down with how often it's actually been logged over the trailing
+  // window — see src/state/weightedPoints.ts. Household-wide (SHARED_SETTING_KEYS), like
+  // foodPtsByItem: the rules are the same for every kid, only the resulting weights differ.
+  weightedFoodPtsEnabled: boolean;
+  // Per-food opt-out keyed by Food.id. true = pinned to its base value, and left out of the
+  // peer average so it neither moves nor moves anything else. Seeded with sweets:true — a kid
+  // who never eats sweets must not make sweets the most valuable thing on the tray.
+  weightedFoodPtsExcluded: Record<string, boolean>;
 }
 
 // One row per Roll to the Goal round played today — see GravyState.rollGoalRoundsLog.
@@ -96,6 +105,7 @@ export interface DayLog {
   points: number;
   bonusCounts?: Record<number, number>; // tap counts for Bonus Points items, keyed by goal id
   bonusApplied?: Record<number, number>; // points actually applied per Bonus item this day (signed, forgiveness-aware) — mirrors GravyState.todayBonusApplied
+  foodApplied?: Record<string, number>; // points actually awarded per food on this day — mirrors GravyState.todayFoodApplied, so a past-day removal reverses the exact amount given
   oopsPoints?: number; // set when the Calendar's "Oops, I forgot…" catch-up was applied to this day (the exact amount awarded, for undo); presence also locks the day's food/goal/bonus editors
 }
 
@@ -167,6 +177,12 @@ export interface GravyState {
   // kid is broke (capped at the current balance), so this records what was really deducted/
   // added so an undo reverses exactly that — never handing back points that were forgiven.
   todayBonusApplied: Record<number, number>;
+  // Points actually awarded per food logged today, keyed by Food.id. Recorded at award time so a
+  // later removal reverses exactly what was given, whatever has changed in between — a base value
+  // edited, weighting switched on or off, a food excluded, or (with Dynamic Point Weighting on)
+  // simply the trailing window sliding at midnight. Same rationale as todayBonusApplied above;
+  // cleared at day rollover, archived into DayLog.foodApplied.
+  todayFoodApplied: Record<string, number>;
   // Roll to the Goal's own independent daily-rounds structure — see ROLL_TO_GOAL_ROUNDS_PER_DAY.
   rollGoalRoundsToday: number;
   // Sum of today's completed Roll to the Goal rounds' 0-500 display scores (the "Final Daily

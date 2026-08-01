@@ -336,11 +336,30 @@ only net-new items.)*
   logging Sweets daily — a kid who skips dessert can never hold a food streak, and Sweets pays
   the same +10 as Veggie. Decide the intended model (exclude Sweets from gating, or a
   configurable gating set), then update rollover/backfill/`FoodTray` copy together. The panel's
-  top reputational-risk item. *(P1, S–M.)*
+  top reputational-risk item. *(P1, S–M.)* **Partially mitigated** by Dynamic Point Weighting
+  (`src/state/weightedPoints.ts`): a parent can now turn on weighting so Sweets no longer pays the
+  same as Veggie. That's opt-in and only touches point *values* — the Full Tray / `foodStreak` /
+  `megaStreak` gating still requires logging Sweets daily, so this item stays open.
 - **Make the food-group list parent-editable, or at least Sweets-optional (F2).** `FOODS` is a
   hardcoded const (`src/data/foods.ts:10-17`); `PointsPanel` edits point values only, so parents
   can't remove/rename a group the way they can any goal or reward. Shape depends on the F1
   decision. *(P1, M.)*
+- **Extend Dynamic Point Weighting beyond the food tray.** Weighting currently applies only to
+  `FOODS`; Daily Goals and Bonus Points items still pay a flat rate. Doing goals needs a
+  `getGoalPts` chokepoint that doesn't exist — `goal.pts` is read raw at the award, undo, and
+  display sites — plus an award ledger for goals mirroring `todayFoodApplied`. Negative bonus items
+  must stay hard-excluded either way: "rarely swears → bigger swear-jar penalty" inverts the
+  intent. Reward costs were considered and rejected — a kid saving toward a 200pt reward shouldn't
+  see the goalpost move. *(P2, M.)*
+- **The full-tray bonus has no award ledger.** `useKidProgressActions.ts` and
+  `useDayEditActions.ts` re-read `settings.bonusPts` when reversing a full-tray bonus, so editing
+  that value between the award and the undo mints or burns points. The food path no longer has this
+  problem (`todayFoodApplied` / `DayLog.foodApplied`); the bonus path still does. Pre-existing and
+  unrelated to weighting, found while wiring the food ledger. *(P2, S.)*
+- **`WEIGHT_SENSITIVITY` is a hardcoded constant.** At the shipped 1.5, a kid's most-eaten food
+  clamps to 0.5× — halving the value of their favourite, which may read as punishment rather than
+  encouragement. Revisit against real household data; consider exposing it, or raising
+  `WEIGHT_MIN` above 0.5. *(P2, S.)*
 - **Review the seeded food-penalty item against responsive-feeding guidance (F3).** "Junk food
   as a 'meal'" −20 (`src/state/defaultState.ts:68`) coexists with Sweets earning +10, and
   penalizing a child for food choices contradicts division-of-responsibility feeding practice.

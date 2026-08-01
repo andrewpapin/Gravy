@@ -49,7 +49,12 @@ export function useKidProgressActions(deps: KidProgressDeps) {
       const label = `${food?.label ?? ''} logged!`;
       const isFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
       const bonusTriggered = !wasFull && isFull && next.settings.bonusPts > 0;
-      const foodPts = getFoodPts(next.settings, id);
+      const foodPts = getFoodPts(next, id);
+      // Record what this tap is worth before anything else can change it. Written in both branches:
+      // a pending award still lands at this value when a parent approves it later, and removeFood
+      // has to be able to reverse it exactly either way.
+      if (!next.todayFoodApplied) next.todayFoodApplied = {};
+      next.todayFoodApplied[id] = foodPts;
 
       if (requiresApproval) {
         const totalPts = foodPts + (bonusTriggered ? next.settings.bonusPts : 0);
@@ -95,12 +100,16 @@ export function useKidProgressActions(deps: KidProgressDeps) {
       // cancel it instead of touching the balance — it was never credited.
       const pending = takeMostRecentPending(next, 'food', id);
       if (!pending) {
-        // Exact inverse of logFood's award (see awardPoints note) — no zero-floor here.
-        const foodPts = getFoodPts(next.settings, id);
+        // Exact inverse of logFood's award (see awardPoints note) — no zero-floor here. Reverses
+        // the recorded amount rather than re-deriving it, so a base-points edit or a weighting
+        // change between the tap and this removal can't mint or burn points. The fallback covers
+        // saves written before the ledger existed.
+        const foodPts = next.todayFoodApplied?.[id] ?? getFoodPts(next, id);
         next.points -= foodPts;
         next.totalPoints -= foodPts;
         next.todayPoints -= foodPts;
       }
+      if (next.todayFoodApplied) delete next.todayFoodApplied[id];
       const isFull = FOODS.every((f) => (next.todayFoodCounts[f.id] || 0) > 0);
       if (wasFull && !isFull) {
         next.counters.fullTrayDays = Math.max(0, next.counters.fullTrayDays - 1);

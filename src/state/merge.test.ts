@@ -52,6 +52,22 @@ describe('mergeStates — id-keyed collections', () => {
     expect(merged.goals[0]).toMatchObject({ id: 1, name: 'Remote name', pts: 9 });
   });
 
+  // The weighting config is household-wide, so it follows settings' existing last-write-wins rule
+  // rather than unioning — two parents must not end up with the union of their exclusion maps.
+  // The multipliers themselves are derived from dayLogs on read, so there is nothing else to merge.
+  it('takes the remote weighting config on conflict, like every other setting', () => {
+    const local = freshState();
+    local.settings.weightedFoodPtsEnabled = false;
+    local.settings.weightedFoodPtsExcluded = { sweets: true, grain: true };
+    const remote = freshState();
+    remote.settings.weightedFoodPtsEnabled = true;
+    remote.settings.weightedFoodPtsExcluded = { sweets: true };
+
+    const merged = mergeStates(local, remote);
+    expect(merged.settings.weightedFoodPtsEnabled).toBe(true);
+    expect(merged.settings.weightedFoodPtsExcluded).toEqual({ sweets: true });
+  });
+
   it('puts remote items first, then local-only items, preserving snapshot order', () => {
     const local = freshState();
     local.goals = [goal(2, 'Local only')];

@@ -50,7 +50,10 @@ export function useDayEditActions(deps: DayEditDeps) {
       // the live balance/lifetime total exactly like logging the same item today does.
       const food = FOODS.find((f) => f.id === foodId);
       const label = `${food?.label ?? ''} added!`;
-      const foodPts = getFoodPts(next.settings, foodId);
+      // Priced on the edited day's own trend, not today's — see getFoodPts.
+      const foodPts = getFoodPts(next, foodId, dateStr);
+      if (!log.foodApplied) log.foodApplied = {};
+      log.foodApplied[foodId] = foodPts;
       awardPointsForDay(next, log, foodPts);
       appendActionLog(next, actorRef.current, {
         type: 'food',
@@ -93,11 +96,16 @@ export function useDayEditActions(deps: DayEditDeps) {
       next.counters.foodLogs[foodId] = Math.max(0, (next.counters.foodLogs[foodId] || 0) - 1);
 
       // Exact inverse of logFoodForDay's award (see awardPoints note) — no zero-floor here,
-      // so re-adding the same item afterward lands back exactly where the balance was.
-      const foodPts = getFoodPts(next.settings, foodId);
+      // so re-adding the same item afterward lands back exactly where the balance was. Reverses
+      // the amount recorded on the day's log rather than re-deriving it: the Log's Undo routes a
+      // food entry here as soon as its day is no longer today (see undoActionLogEntry), by which
+      // point a re-derived weighting would be pricing it off a different window. The fallback
+      // covers days logged before the ledger existed.
+      const foodPts = nextLog.foodApplied?.[foodId] ?? getFoodPts(next, foodId, dateStr);
       next.points -= foodPts;
       next.totalPoints -= foodPts;
       nextLog.points -= foodPts;
+      if (nextLog.foodApplied) delete nextLog.foodApplied[foodId];
 
       const isFullTray = FOODS.every((f) => (nextLog.foodCounts[f.id] || 0) > 0);
       if (wasFullTray && !isFullTray) {

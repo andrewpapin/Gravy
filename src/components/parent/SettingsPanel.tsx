@@ -5,6 +5,7 @@ import { TimezonePanel } from './TimezonePanel';
 import { AccountPanel } from './AccountPanel';
 import { SyncPanel } from './SyncPanel';
 import { LogPanel } from './LogPanel';
+import { WeightedPointsPanel } from './WeightedPointsPanel';
 import { DangerZonePanel } from './DangerZonePanel';
 
 type Root = 'menu' | SettingsDest;
@@ -14,6 +15,7 @@ const ROOT_TITLES: Record<Exclude<Root, 'menu'>, string> = {
   account: 'Parent Account',
   sync: 'Family Code',
   log: 'Log',
+  weighting: 'Dynamic Points',
   reset: 'Reset',
 };
 
@@ -41,5 +43,6 @@ export function SettingsPanel({ onHeaderChange }: SettingsPanelProps) {
   if (root === 'account') return <AccountPanel />;
   if (root === 'sync') return <SyncPanel />;
   if (root === 'log') return <LogPanel />;
+  if (root === 'weighting') return <WeightedPointsPanel />;
   return <DangerZonePanel />;
 }

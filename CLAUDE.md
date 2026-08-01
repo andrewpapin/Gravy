@@ -20,7 +20,9 @@ deploying from `main`. Run all three before considering a change finished.
 ## Testing
 
 Vitest covers the pure point/streak logic: `src/state/points.ts` (award/forgiveness/exact-undo
-arithmetic), `src/state/defaultState.ts` (`applyDayRollover`, `backfillStreaksFromLogs`),
+arithmetic), `src/state/weightedPoints.ts` (Dynamic Point Weighting â€” the trailing-window
+multipliers and the per-food exclusions), `src/state/defaultState.ts` (`applyDayRollover`,
+`backfillStreaksFromLogs`),
 `src/state/auth.ts` (`normalizeHouseholdStatus`), and `src/state/merge.ts` (`mergeRoots`/`mergeStates`, the
 collection/record-level cloud-sync merge). Colocated `*.test.ts` files live next to the module they
 test. There
@@ -88,7 +90,8 @@ day-rollover effects, and celebrations. There is no toast/notification system â€
 reactive layer (household code/status, Supabase realtime push/subscribe, auth tracking) lives in its
 own `src/state/useHouseholdSync.ts` hook. The provider's imperative actions are split into
 per-domain custom hooks under `src/state/actions/` (kid-progress, day-edit, rewards, catalog,
-profile, household); the pure point arithmetic lives in `src/state/points.ts`. Persisted shapes are
+profile, household); the pure point arithmetic lives in `src/state/points.ts`, with the opt-in
+Dynamic Point Weighting layer beside it in `src/state/weightedPoints.ts`. Persisted shapes are
 in `src/state/types.ts`.
 
 > **`README.md`** is a user-facing overview; this file is authoritative for architecture. Update the

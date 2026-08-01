@@ -26,6 +26,12 @@ account — there's no PIN.
   "Stats" view with charts covering points history, an activity heatmap,
   personal bests, goals trend, favorite foods, games breakdown, and rewards
   history
+- **Dynamic Points** *(optional, off by default)* — instead of every food group
+  being worth a flat amount, their values flex with the last 30 days: a group
+  your kid rarely eats becomes worth more, one they eat daily a little less
+  (never beyond half or double what you set). Individual groups can be left
+  out — sweets are excluded by default, so avoiding them can't make them the
+  most valuable thing on the tray
 - **Store** — spend points on parent-defined rewards (pending approval)
 - **Pending points** — on a device that's never signed in with a parent
   account (joined via family code only), a kid's chores/food/bonus

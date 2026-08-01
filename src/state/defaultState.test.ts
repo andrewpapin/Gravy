@@ -151,13 +151,28 @@ describe('applyDayRollover', () => {
     expect(result.dayLogs['2024-01-10'].bonusCounts).toEqual({ [BONUS_GOAL.id]: 3 });
   });
 
-  it('resets per-day ledgers (todayGoalCounts, todayBonusApplied, rollGoalRoundsToday, rollGoalDailyScore, rollGoalRoundsLog) for the new day', () => {
+  it('archives what each food actually paid into the closed day log', () => {
+    setToday('2024-01-11T08:00:00Z');
+    const state = freshState({
+      lastActiveDate: '2024-01-10',
+      todayFoodCounts: { veggie: 1 },
+      todayFoodApplied: { veggie: 18 },
+      todayPoints: 18,
+    });
+    const result = applyDayRollover(state);
+    // Without this a food logged today and undone from the Log tomorrow (undoActionLogEntry routes
+    // by date) would be reversed at whatever it is worth then, not what it actually paid.
+    expect(result.dayLogs['2024-01-10'].foodApplied).toEqual({ veggie: 18 });
+  });
+
+  it('resets per-day ledgers (todayGoalCounts, todayBonusApplied, todayFoodApplied, rollGoalRoundsToday, rollGoalDailyScore, rollGoalRoundsLog) for the new day', () => {
     setToday('2024-01-11T08:00:00Z');
     const state = freshState({
       lastActiveDate: '2024-01-10',
       todayPoints: 10,
       todayGoalCounts: { [BONUS_GOAL.id]: 2 },
       todayBonusApplied: { [BONUS_GOAL.id]: 30 },
+      todayFoodApplied: { veggie: 18 },
       rollGoalRoundsToday: 3,
       rollGoalDailyScore: 950,
       rollGoalRoundsLog: [
@@ -167,6 +182,7 @@ describe('applyDayRollover', () => {
     const result = applyDayRollover(state);
     expect(result.todayGoalCounts).toEqual({});
     expect(result.todayBonusApplied).toEqual({});
+    expect(result.todayFoodApplied).toEqual({});
     expect(result.rollGoalRoundsToday).toBe(0);
     expect(result.rollGoalDailyScore).toBe(0);
     expect(result.rollGoalRoundsLog).toEqual([]);
@@ -302,6 +318,47 @@ describe('backfillStreaksFromLogs', () => {
     expect(state.foodStreak).toBe(1);
     expect(state.goalStreak).toBe(1);
     expect(state.megaStreak).toBe(1);
+  });
+});
+
+describe('dynamic point weighting hydration/sanitization', () => {
+  function rawWithoutWeightingSettings(): Record<string, unknown> {
+    const state = cloneDefaultState() as unknown as Record<string, unknown>;
+    const settings = state.settings as Record<string, unknown>;
+    delete settings.weightedFoodPtsEnabled;
+    delete settings.weightedFoodPtsExcluded;
+    return state;
+  }
+
+  it('backfills a pre-feature save with the feature off', () => {
+    expect(hydrateState(rawWithoutWeightingSettings()).settings.weightedFoodPtsEnabled).toBe(false);
+  });
+
+  it('backfills a pre-feature save with sweets excluded', () => {
+    const settings = hydrateState(rawWithoutWeightingSettings()).settings;
+    expect(settings.weightedFoodPtsExcluded).toEqual({ sweets: true });
+  });
+
+  it('does not force sweets back off for a parent who deliberately opted it in', () => {
+    const state = cloneDefaultState();
+    state.settings.weightedFoodPtsExcluded = { sweets: false };
+    expect(hydrateState(state).settings.weightedFoodPtsExcluded).toEqual({ sweets: false });
+  });
+
+  it('coerces a non-boolean enabled flag to off rather than trusting it', () => {
+    const state = cloneDefaultState() as unknown as Record<string, unknown>;
+    (state.settings as Record<string, unknown>).weightedFoodPtsEnabled = 'yes';
+    expect(hydrateState(state).settings.weightedFoodPtsEnabled).toBe(false);
+  });
+
+  it('drops non-boolean exclusion entries but keeps ids for foods it does not know', () => {
+    const state = cloneDefaultState() as unknown as Record<string, unknown>;
+    (state.settings as Record<string, unknown>).weightedFoodPtsExcluded = {
+      sweets: true, veggie: 'nope', pickles: true,
+    };
+    // `pickles` is kept, not stripped: this map is a shared setting riding the synced household
+    // payload, so a device on an older build must round-trip a newer build's food id.
+    expect(hydrateState(state).settings.weightedFoodPtsExcluded).toEqual({ sweets: true, pickles: true });
   });
 });
 

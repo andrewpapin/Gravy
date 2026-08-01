@@ -158,6 +158,39 @@ export function useCatalogActions(deps: CatalogDeps) {
     });
   }, [setState, actorRef]);
 
+  // Dynamic Point Weighting's two config knobs. Neither can ride saveSetting: its fallback branch
+  // coerces with parseInt, which would turn a boolean into NaN and a map into nothing. Nothing
+  // needs recomputing after either — the multipliers are derived from dayLogs on read (see
+  // weightedPoints.ts), so the tray reflects the change on the next render.
+  const setWeightedFoodPtsEnabled = useCallback((enabled: boolean) => {
+    setState((prev) => {
+      if (prev.settings.weightedFoodPtsEnabled === enabled) return prev;
+      const next = clone(prev);
+      next.settings.weightedFoodPtsEnabled = enabled;
+      appendAuditLog(next, actorRef.current, {
+        type: 'settingChanged',
+        label: `Turned dynamic point weighting ${enabled ? 'on' : 'off'}`,
+      });
+      return next;
+    });
+  }, [setState, actorRef]);
+
+  const setFoodWeightExcluded = useCallback((foodId: string, excluded: boolean) => {
+    setState((prev) => {
+      if ((prev.settings.weightedFoodPtsExcluded?.[foodId] === true) === excluded) return prev;
+      const next = clone(prev);
+      // Note this moves every *other* food's multiplier too, not just this one's — an excluded
+      // food is dropped from the peer average that all the others are measured against.
+      next.settings.weightedFoodPtsExcluded = { ...next.settings.weightedFoodPtsExcluded, [foodId]: excluded };
+      const food = FOODS.find((f) => f.id === foodId);
+      appendAuditLog(next, actorRef.current, {
+        type: 'settingChanged',
+        label: `${excluded ? 'Excluded' : 'Included'} ${food?.label ?? foodId} ${excluded ? 'from' : 'in'} point weighting`,
+      });
+      return next;
+    });
+  }, [setState, actorRef]);
+
   const resetToday = useCallback(() => {
     setState((prev) => {
       const next = clone(prev);
@@ -202,5 +235,9 @@ export function useCatalogActions(deps: CatalogDeps) {
     });
   }, [setState, actorRef, pendingTimersRef, setHouseholdCode, lastSyncedRef, setSyncStatus]);
 
-  return { addGoal, removeGoal, updateGoal, addReward, updateReward, removeReward, saveSetting, saveFoodPts, resetToday, resetAll };
+  return {
+    addGoal, removeGoal, updateGoal, addReward, updateReward, removeReward,
+    saveSetting, saveFoodPts, setWeightedFoodPtsEnabled, setFoodWeightExcluded,
+    resetToday, resetAll,
+  };
 }

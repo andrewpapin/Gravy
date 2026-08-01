@@ -71,6 +71,15 @@ work lives in `BACKLOG.md`.
 
 ## Epic 4 — Game Balance & Content Debt
 
+- **Dynamic Point Weighting (food tray)** — opt-in layer scaling each food group's configured
+  points by its trailing-30-day logging rate versus the other participating foods (0.5×–2.0×,
+  neutral below 7 logged days). Off by default; master switch in Advanced Settings → Dynamic
+  Points, per-food participation toggles in Game Settings → Points; `sweets` excluded by default
+  so avoiding it can't inflate its value. Config is household-wide, multipliers are derived per kid
+  from their own `dayLogs` and never cached. Shipped alongside a food award ledger
+  (`todayFoodApplied` / `DayLog.foodApplied`) that makes removals reverse the exact amount awarded
+  — closing a pre-existing hole where editing a base point value between award and undo shifted the
+  balance. `src/state/weightedPoints.ts`, PR #TBD.
 - **Points economy in one pass** — computed realistic daily ceiling (~285 max,
   120–200 typical); rescaled rank gaps 5× (250/rank, max 69,000, `src/data/ranks.ts`)
   to target ~11–15 months to max rank while keeping the first rank-up fast. Bonus
