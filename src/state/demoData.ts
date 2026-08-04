@@ -244,7 +244,7 @@ export function createDemoRoot(): GravyRoot {
   mayaState.settings.avatarIcon = 'faceGrinStars';
   mayaState.settings.avatarIconColor = '#C1440E';
   mayaState.settings.avatarBgColor = '#FFF3E0';
-  mayaState.settings.theme = 'capri';
+  mayaState.settings.theme = 'twopointoh';
 
   const mayaHistory: DayPlan[] = [
     { fullTray: true, goalsDone: 8, bonusGoalId: 9 },
