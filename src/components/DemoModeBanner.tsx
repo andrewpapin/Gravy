@@ -10,11 +10,11 @@ export function DemoModeBanner() {
   if (!demoMode) return null;
 
   return (
-    <div className="update-prompt demo-mode-banner">
+    <div className="demo-mode-banner">
       <FontAwesomeIcon icon={faWandMagicSparkles} />
-      <span>You're exploring a shared Demo — everyone sees the same household</span>
+      <span>Shared Demo — everyone sees this household</span>
       <button type="button" className="btn btn-sm btn-ghost" onClick={exitDemoMode}>
-        Exit Demo
+        Exit
       </button>
     </div>
   );
