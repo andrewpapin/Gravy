@@ -137,6 +137,12 @@ body {
   align-items: center;
   gap: 8px;
 }
+/* Reserves space for the fixed .demo-mode-banner ribbon (40px covers its own content+padding
+   height, measured with the .btn.btn-sm "Exit" button as the tallest row content) so it never
+   overlaps the avatar/greeting row below it — keep in sync with that rule. */
+.topbar-demo {
+  padding-top: calc(40px + env(safe-area-inset-top));
+}
 .topbar-icon-btn {
   justify-self: end;
   width: 44px;
@@ -2643,18 +2649,41 @@ button.gtile.checked:disabled:active { transform: none; }
   color: var(--danger);
 }
 
-/* Same top position as .storage-error-banner — safe to share, since GravyContext guarantees
-   storageError stays false for the whole duration demoMode is true (no local save happens to
-   fail). A friendly accent rather than the red error treatment — this isn't a problem, just a
-   standing reminder the household on screen is shared. */
+/* Standing reminder the household on screen is the shared Demo Mode household — a slim,
+   edge-to-edge top ribbon (not the .update-prompt pill: it needs to reserve its own strip of
+   space rather than float over content, see .topbar-demo below) so it never covers TopBar's
+   avatar/greeting or the QuickLinksRow underneath it. Card background + coral text/border rather
+   than a solid coral fill — --coral is near-black in the twopointoh theme (see
+   :root[data-theme="twopointoh"] above), so a coral fill + --dark text would be illegible there. */
 .demo-mode-banner {
-  top: 16px;
-  bottom: auto;
-  border-color: var(--coral);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
   color: var(--coral);
+  border-bottom: var(--border-width-lg) solid var(--coral);
+  padding: 7px 14px;
+  padding-top: calc(7px + env(safe-area-inset-top));
+  font-size: var(--text-xs);
+  font-weight: 800;
+}
+.demo-mode-banner span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .demo-mode-banner .btn {
+  flex-shrink: 0;
   color: var(--dark);
+  padding: 4px 10px;
+  font-size: var(--text-2xs);
 }
 
 /* Above SignedOutGate's .onb-screen (1100) — the toast confirms the sign-out that gate is

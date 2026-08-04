@@ -12,11 +12,11 @@ interface TopBarProps {
 }
 
 export function TopBar({ dateStr, onOpenAccountMenu, onOpenApprovals }: TopBarProps) {
-  const { state } = useGravy();
+  const { state, demoMode } = useGravy();
   const pendingCount = state.pendingRewards.length + state.pendingPointsAwards.length;
 
   return (
-    <div className="topbar">
+    <div className={demoMode ? 'topbar topbar-demo' : 'topbar'}>
       <div
         className="profile-avatar"
         aria-hidden="true"

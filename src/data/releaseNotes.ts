@@ -26,4 +26,5 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   { version: 11, note: 'Fixed logging out sometimes not working when the connection is spotty.', prNumber: 220, at: '2026-07-27T12:00:00-04:00' },
   { version: 12, note: 'Sign-in and cloud sync setup now open as their own full screen, instead of a popup over your other screen.', prNumber: 221, at: '2026-07-27T12:00:00-04:00' },
   { version: 13, note: 'The Calendar now has an "Oops, I forgot..." button for days nothing was logged — one tap gives your kid their usual daily points.', prNumber: 222, at: '2026-07-27T15:00:00-04:00' },
+  { version: 14, note: 'The "Shared Demo" banner is now a slim strip at the very top, instead of covering the profile and Daily/Stats/Prizes buttons.', prNumber: 230, at: '2026-08-04T22:45:00-04:00' },
 ];
