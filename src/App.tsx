@@ -4,6 +4,7 @@ import { HomeScreen } from './components/HomeScreen';
 import { GrownUpsDrawer } from './components/parent/GrownUpsDrawer';
 import { AccountMenu } from './components/AccountMenu';
 import { StorageErrorBanner } from './components/StorageErrorBanner';
+import { DemoModeBanner } from './components/DemoModeBanner';
 import { UpdatePrompt } from './components/UpdatePrompt';
 import { ReleaseNotesDrawer } from './components/ReleaseNotesDrawer';
 import { Celebration } from './components/Celebration';
@@ -62,7 +63,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 }
 
 function AppShell() {
-  const { passwordRecovery, authUser } = useGravy();
+  const { passwordRecovery, authUser, demoResuming } = useGravy();
   const [storeOpen, setStoreOpen] = useState(false);
   const [dailyGameOpen, setDailyGameOpen] = useState(false);
   const [rankOpen, setRankOpen] = useState(false);
@@ -217,7 +218,12 @@ function AppShell() {
       <Celebration />
       <Confetti />
       <StorageErrorBanner />
+      <DemoModeBanner />
       <UpdatePrompt />
+      {/* Covers the brief window where a same-tab refresh mid-demo is re-fetching the shared
+          household from Supabase (see GravyContext's mount-resume effect) — without this, that
+          window would flash real/blank content before demo data replaces it. */}
+      {demoResuming && <OverlayLoading />}
       <LogoutToast nonce={logoutToastNonce} />
       <Suspense fallback={null}>
         {showSignedOutGate ? (

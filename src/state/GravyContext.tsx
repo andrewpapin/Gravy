@@ -3,7 +3,11 @@ import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import type { ActionLogEntry, CollapsibleSection, DayLog, Goal, GravyRoot, GravyState, Reward, Theme } from './types';
 import {
   applyDayRollover,
+  DEMO_HOUSEHOLD_CODE,
+  DEMO_MODE_KEY,
+  hydrateState,
   loadRoot,
+  mirrorSharedFields,
   saveRoot,
   todayStr,
 } from './defaultState';
@@ -17,6 +21,8 @@ import {
   type SignUpResult,
   isGrownUpUnlocked,
 } from './auth';
+import { fetchHousehold } from './sync';
+import { safeSessionGetItem, safeSessionRemoveItem, safeSessionSetItem } from './storage';
 import { SYNC_SKIPPED_KEY, activeStateOf, buildMergedRoot, clone } from './actions/shared';
 import type { ProfilePatch, SettableSettingKey, SyncStatus } from './actions/types';
 import { useHouseholdSync } from './useHouseholdSync';
@@ -134,6 +140,14 @@ interface GravyContextValue {
   // checked yet (e.g. no household, or offline). Drives the "secure this household" prompt.
   householdStatus: HouseholdStatus | null;
   claimHousehold: () => Promise<boolean>;
+  // Demo Mode (see src/state/demoData.ts): joins the shared, unclaimed demo household and
+  // overrides grownUpUnlocked/requiresApproval locally, without ever touching real gravy_v1 /
+  // HOUSEHOLD_CODE_KEY. demoResuming is true while a same-tab refresh is re-fetching the demo
+  // household after a reload.
+  demoMode: boolean;
+  demoResuming: boolean;
+  enterDemoMode: () => Promise<boolean>;
+  exitDemoMode: () => void;
 }
 
 const GravyContext = createContext<GravyContextValue | null>(null);
@@ -155,6 +169,12 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   const pendingTimersRef = useRef<number[]>([]);
   const [storageError, setStorageError] = useState(false);
   const storageErrorRef = useRef(false);
+  // See enterDemoMode/exitDemoMode below. Initialized from the sessionStorage flag so a same-tab
+  // refresh mid-demo is recognized immediately (the actual re-fetch happens in the mount effect,
+  // since it's async and can't run inside a useState initializer); demoResuming starts true in
+  // that same case so AppShell can show a brief loading state instead of a flash of stale content.
+  const [demoMode, setDemoMode] = useState(() => safeSessionGetItem(DEMO_MODE_KEY) === 'true');
+  const [demoResuming, setDemoResuming] = useState(() => safeSessionGetItem(DEMO_MODE_KEY) === 'true');
 
   // Cloud-sync + parent-account reactive layer: householdCode/syncStatus/authUser/authReady/
   // householdStatus state plus the Supabase realtime push/subscribe, auth-tracking, and
@@ -169,13 +189,72 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     lastSyncedRef, actorRef,
   } = useHouseholdSync({ root, state, setRoot, setState });
 
-  const grownUpUnlocked = isGrownUpUnlocked(authUser, householdStatus);
+  // Demo Mode overrides both gates locally — see enterDemoMode below. The demo household is
+  // deliberately left unclaimed in Supabase (no owner account), so isGrownUpUnlocked can never be
+  // true for it on its own; demoMode is the one place that bypass is granted.
+  const grownUpUnlocked = demoMode || isGrownUpUnlocked(authUser, householdStatus);
   // True on a device that's never signed in with a real account — i.e. a "kid device" joined
   // via family code only (see Onboarding's "just enter a family code" fork). Unlike
   // grownUpUnlocked this doesn't flip back on when the app is merely locked again; it's a
   // property of the device's auth state, not the momentary lock. Every point-earning action
   // gates on it — see useKidProgressActions.
-  const requiresApproval = !authUser;
+  const requiresApproval = !demoMode && !authUser;
+
+  // Joins the shared, unclaimed demo household (see src/state/demoData.ts) and flips demoMode on.
+  // Deliberately NOT built on top of the generic joinHousehold action (useHouseholdActions.ts) —
+  // that one persists HOUSEHOLD_CODE_KEY to real localStorage, which would make a demo visitor's
+  // device silently reconnect to the shared demo household on their next real visit. This fetches
+  // and hydrates the household itself and only sets the *React* householdCode state (which is what
+  // actually drives useHouseholdSync's realtime push/subscribe effects — that's what makes the
+  // demo genuinely shared/live), never the persisted key. Used both by the Onboarding "Try Demo"
+  // button and by the mount-resume effect below (a same-tab refresh mid-demo).
+  const enterDemoMode = useCallback(async (): Promise<boolean> => {
+    setDemoResuming(true);
+    try {
+      const remoteRoot = await fetchHousehold(DEMO_HOUSEHOLD_CODE);
+      if (!remoteRoot) return false;
+      const profiles = (remoteRoot.profiles || [])
+        .filter((p) => p && p.state)
+        .map((p) => ({ id: p.id, state: hydrateState(p.state) }));
+      if (profiles.length === 0) return false;
+      const finalRoot: GravyRoot = {
+        version: 2,
+        activeProfileId: profiles.some((p) => p.id === remoteRoot.activeProfileId)
+          ? remoteRoot.activeProfileId
+          : profiles[0].id,
+        profiles,
+      };
+      mirrorSharedFields(finalRoot);
+      safeSessionSetItem(DEMO_MODE_KEY, 'true');
+      setDemoMode(true);
+      setRoot(finalRoot);
+      setState(activeStateOf(finalRoot));
+      setHouseholdCode(DEMO_HOUSEHOLD_CODE);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setDemoResuming(false);
+    }
+  }, [setHouseholdCode]);
+
+  // Real gravy_v1/HOUSEHOLD_CODE_KEY were never written by demo mode, so a reload cleanly restores
+  // whatever the visitor's device had before — no extra cleanup needed beyond the session flag.
+  const exitDemoMode = useCallback(() => {
+    safeSessionRemoveItem(DEMO_MODE_KEY);
+    window.location.reload();
+  }, []);
+
+  // Resumes demo mode after a same-tab refresh. enterDemoMode is async, so this can't happen
+  // inside the root/state useState initializers above — this runs once on mount instead, and only
+  // does anything when the sessionStorage flag from a previous enterDemoMode() call is still set.
+  useEffect(() => {
+    if (safeSessionGetItem(DEMO_MODE_KEY) === 'true') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      void enterDemoMode();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Applies the parent-selected theme to the whole app. useLayoutEffect (rather than
   // useEffect) so the attribute is set before paint, avoiding a flash of the light theme.
@@ -212,14 +291,25 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   // again once a write succeeds) rather than silently losing the kid's progress. Only calls
   // setStorageError on an actual transition, so a dismissed banner doesn't immediately reappear
   // on every subsequent write while the same failure is ongoing.
+  // During demo mode, skip real gravy_v1 entirely — durability during a demo is Supabase's job
+  // (the shared household already gets pushed there by useHouseholdSync's own push effect, keyed
+  // off householdCode), and a local cache would serve no purpose since a refresh re-fetches from
+  // Supabase (see the mount-resume effect above) rather than from any local snapshot.
   useEffect(() => {
+    if (demoMode) {
+      if (storageErrorRef.current) {
+        storageErrorRef.current = false;
+        setStorageError(false);
+      }
+      return;
+    }
     const saved = saveRoot(buildMergedRoot(root, state));
     const hasError = !saved;
     if (hasError !== storageErrorRef.current) {
       storageErrorRef.current = hasError;
       setStorageError(hasError);
     }
-  }, [state, root]);
+  }, [state, root, demoMode]);
 
   const dismissStorageError = useCallback(() => setStorageError(false), []);
 
@@ -308,6 +398,7 @@ export function GravyProvider({ children }: { children: ReactNode }) {
   const household = useHouseholdActions({
     setState, setRoot, stateRef, rootRef, actorRef, setSyncStatus,
     setHouseholdCode, lastSyncedRef, pendingTimersRef, householdCode, authUser, setHouseholdStatus,
+    demoMode,
   });
 
   // The active kid's identity comes from the live `state`; the others from the root.
@@ -342,6 +433,10 @@ export function GravyProvider({ children }: { children: ReactNode }) {
     householdStatus,
     passwordRecovery,
     clearPasswordRecovery,
+    demoMode,
+    demoResuming,
+    enterDemoMode,
+    exitDemoMode,
     ...kidProgress,
     ...dayEdit,
     ...rewards,

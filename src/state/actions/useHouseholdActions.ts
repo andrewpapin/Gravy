@@ -42,6 +42,12 @@ export interface HouseholdDeps {
   householdCode: string | null;
   authUser: AuthUser | null;
   setHouseholdStatus: Dispatch<SetStateAction<HouseholdStatus | null>>;
+  // True while exploring the shared Demo Mode household (see GravyContext's demoMode). Every
+  // household-mutating action here is guarded to a no-op in that case — the demo household is
+  // shared across every visitor, so create/join/leave/delete/rename/claim could otherwise disrupt
+  // it for everyone, or (for leave/delete) even wipe a *returning real parent's* own
+  // HOUSEHOLD_CODE_KEY if they try the demo from a device already synced to their real household.
+  demoMode: boolean;
 }
 
 // Cloud-sync household lifecycle (create/join/leave/delete/rename) and parent-account auth
@@ -51,9 +57,11 @@ export function useHouseholdActions(deps: HouseholdDeps) {
   const {
     setState, setRoot, stateRef, rootRef, actorRef, setSyncStatus,
     setHouseholdCode, lastSyncedRef, pendingTimersRef, householdCode, authUser, setHouseholdStatus,
+    demoMode,
   } = deps;
 
   const createHousehold = useCallback(async (customCode?: string) => {
+    if (demoMode) return null;
     if (customCode) {
       const normalized = customCode.trim().toUpperCase();
       if (!isValidHouseholdCode(normalized)) return null;
@@ -94,9 +102,10 @@ export function useHouseholdActions(deps: HouseholdDeps) {
       }
     }
     return null;
-  }, [setState, stateRef, rootRef, actorRef, setSyncStatus, setHouseholdCode, lastSyncedRef]);
+  }, [demoMode, setState, stateRef, rootRef, actorRef, setSyncStatus, setHouseholdCode, lastSyncedRef]);
 
   const joinHousehold = useCallback(async (code: string) => {
+    if (demoMode) return false;
     const normalized = code.trim().toUpperCase();
     setSyncStatus('syncing');
     try {
@@ -132,9 +141,10 @@ export function useHouseholdActions(deps: HouseholdDeps) {
       setSyncStatus('error');
       return false;
     }
-  }, [setState, setRoot, actorRef, setSyncStatus, setHouseholdCode, lastSyncedRef]);
+  }, [demoMode, setState, setRoot, actorRef, setSyncStatus, setHouseholdCode, lastSyncedRef]);
 
   const leaveHousehold = useCallback(() => {
+    if (demoMode) return;
     // Cancel any deferred celebration overlays queued just before disconnecting — they'd
     // otherwise still fire afterward, referencing a state snapshot from the now-disconnected sync.
     pendingTimersRef.current.forEach((t) => clearTimeout(t));
@@ -144,11 +154,12 @@ export function useHouseholdActions(deps: HouseholdDeps) {
     lastSyncedRef.current = null;
     setSyncStatus('idle');
     setState((prev) => { const next = clone(prev); appendAuditLog(next, actorRef.current, { type: 'syncDisabled', label: 'Turned off cloud sync (this device)' }); return next; });
-  }, [setState, actorRef, setSyncStatus, setHouseholdCode, lastSyncedRef, pendingTimersRef]);
+  }, [demoMode, setState, actorRef, setSyncStatus, setHouseholdCode, lastSyncedRef, pendingTimersRef]);
 
   // Unlike leaveHousehold (which only disconnects this device), this deletes the household
   // row server-side — every other device synced to this code loses access to it too.
   const deleteHouseholdEverywhere = useCallback(async () => {
+    if (demoMode) return false;
     if (!householdCode) return false;
     pendingTimersRef.current.forEach((t) => clearTimeout(t));
     pendingTimersRef.current = [];
@@ -165,9 +176,10 @@ export function useHouseholdActions(deps: HouseholdDeps) {
       setSyncStatus('error');
       return false;
     }
-  }, [householdCode, setState, actorRef, setSyncStatus, setHouseholdCode, lastSyncedRef, pendingTimersRef]);
+  }, [demoMode, householdCode, setState, actorRef, setSyncStatus, setHouseholdCode, lastSyncedRef, pendingTimersRef]);
 
   const changeHouseholdCode = useCallback(async (newCode: string) => {
+    if (demoMode) return false;
     const normalized = newCode.trim().toUpperCase();
     if (!isValidHouseholdCode(normalized)) return false;
     if (!householdCode || normalized === householdCode) return true;
@@ -183,7 +195,7 @@ export function useHouseholdActions(deps: HouseholdDeps) {
       setSyncStatus('error');
       return false;
     }
-  }, [householdCode, setState, actorRef, setSyncStatus, setHouseholdCode]);
+  }, [demoMode, householdCode, setState, actorRef, setSyncStatus, setHouseholdCode]);
 
   // --- Parent account actions (Epic 8) ---
   const signUp = useCallback(async (email: string, password: string) => {
@@ -222,6 +234,7 @@ export function useHouseholdActions(deps: HouseholdDeps) {
   // Secures the currently-synced household to the signed-in account (the claim-or-deprecate
   // path for an existing PIN-only household). No-ops harmlessly if already owned by this account.
   const claimHousehold = useCallback(async () => {
+    if (demoMode) return false;
     if (!householdCode) return false;
     if (!authUser) return false;
     try {
@@ -233,7 +246,7 @@ export function useHouseholdActions(deps: HouseholdDeps) {
     } catch {
       return false;
     }
-  }, [householdCode, authUser, setState, actorRef, setHouseholdStatus]);
+  }, [demoMode, householdCode, authUser, setState, actorRef, setHouseholdStatus]);
 
   return {
     createHousehold, joinHousehold, leaveHousehold, deleteHouseholdEverywhere, changeHouseholdCode,

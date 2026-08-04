@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTriangleExclamation, faCheck, faCloud, faTrashCan, faShieldHalved, faLock } from '@fortawesome/free-solid-svg-icons';
+import { faTriangleExclamation, faCheck, faCloud, faTrashCan, faShieldHalved, faLock, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 import { useGravy } from '../../state/GravyContext';
 import { isValidHouseholdCode } from '../../state/sync';
 import { ConfirmDialog } from '../ConfirmDialog';
@@ -16,6 +16,7 @@ export function SyncPanel() {
     deleteHouseholdEverywhere,
     changeHouseholdCode,
     householdStatus,
+    demoMode,
   } = useGravy();
   const [joinCode, setJoinCode] = useState('');
   const [customCreateCode, setCustomCreateCode] = useState('');
@@ -23,6 +24,19 @@ export function SyncPanel() {
   const [justChanged, setJustChanged] = useState<string | null>(null);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // The shared demo household is joined without ever persisting HOUSEHOLD_CODE_KEY, and every
+  // household-mutating action already no-ops during demoMode (see useHouseholdActions.ts) — this
+  // just replaces the controls so nothing here looks clickable-but-dead.
+  if (demoMode) {
+    return (
+      <div className="settings-row settings-row--col">
+        <div className="settings-sub">
+          <FontAwesomeIcon icon={faWandMagicSparkles} /> Cloud sync controls are disabled during Demo Mode.
+        </div>
+      </div>
+    );
+  }
 
   const handleJoin = () => {
     if (!joinCode.trim()) return;

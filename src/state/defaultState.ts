@@ -17,6 +17,15 @@ export const HOME_TOUR_DONE_KEY = 'gravy_home_tour_done';
 // survives a reload/relaunch instead of a PWA restart silently dropping the device straight back
 // into a fully-usable HomeScreen. See the showSignedOutGate wiring in AppShell.
 export const SIGNED_OUT_PENDING_KEY = 'gravy_signed_out_pending';
+// sessionStorage flag set while a visitor is exploring the shared Demo Mode household (see
+// GravyContext's demoMode/enterDemoMode/exitDemoMode) — tab-scoped so it never persists across a
+// real device's normal usage, and never mixed into gravy_v1/HOUSEHOLD_CODE_KEY.
+export const DEMO_MODE_KEY = 'gravy_demo_mode';
+// Fixed, publicly-known household code for the shared demo household — deliberately unclaimed
+// (no owner account), reseeded on a schedule (see supabase/functions/reseed-demo). Knowing the
+// code already implies full read/write on an unclaimed household (see BACKLOG.md), so there's no
+// meaningful secrecy to preserve by hiding this constant.
+export const DEMO_HOUSEHOLD_CODE = 'TRYDEM';
 // Fallback points for a food item with no configured value (e.g. one added to FOODS after a
 // save was written) — mirrors the points-per-food-group default every FOODS entry starts at.
 export const DEFAULT_FOOD_PTS = 10;
