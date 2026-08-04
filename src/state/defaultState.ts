@@ -94,7 +94,7 @@ export const defaultState: GravyState = {
     bonusPts: 25,
     gamePts: 15,
     childName: 'Zack',
-    theme: 'capri',
+    theme: 'twopointoh',
     avatarIcon: 'faceSmile',
     avatarIconColor: '#2F3E46',
     avatarBgColor: '#FFFFFF',
@@ -213,12 +213,13 @@ export function migrateLegacyState(state: Record<string, unknown>): void {
   // 'capri' was later introduced as the new base/default theme, with the old
   // default demoted to a selectable 'classic' theme. The set was later trimmed
   // to just capri/classic/twopointoh, so any saved midnight/ocean/bubblegum/
-  // cyberpunk/ranger value falls back here too.
+  // cyberpunk/ranger value falls back here too. 'twopointoh' ("2.0") then became
+  // the new default theme, superseding capri.
   const settings = state.settings as Record<string, unknown> | undefined;
   if (settings) {
     const validThemes = ['capri', 'classic', 'twopointoh'];
     if (!validThemes.includes(settings.theme as string)) {
-      settings.theme = 'capri';
+      settings.theme = 'twopointoh';
     }
   }
 
