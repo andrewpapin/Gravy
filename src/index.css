@@ -2643,6 +2643,20 @@ button.gtile.checked:disabled:active { transform: none; }
   color: var(--danger);
 }
 
+/* Same top position as .storage-error-banner — safe to share, since GravyContext guarantees
+   storageError stays false for the whole duration demoMode is true (no local save happens to
+   fail). A friendly accent rather than the red error treatment — this isn't a problem, just a
+   standing reminder the household on screen is shared. */
+.demo-mode-banner {
+  top: 16px;
+  bottom: auto;
+  border-color: var(--coral);
+  color: var(--coral);
+}
+.demo-mode-banner .btn {
+  color: var(--dark);
+}
+
 /* Above SignedOutGate's .onb-screen (1100) — the toast confirms the sign-out that gate is
    currently covering the screen for, so it needs to render on top of it, not behind. */
 .logout-toast {

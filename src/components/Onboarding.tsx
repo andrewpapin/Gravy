@@ -21,12 +21,14 @@ import { FullPageOverlay } from './FullPageOverlay';
 type Phase = 'welcome' | 'account' | 'join' | 'creating';
 
 export function Onboarding({ onComplete }: { onComplete: (result: { isNewFamily: boolean }) => void }) {
-  const { createHousehold, joinHousehold, findMyHousehold, syncStatus } = useGravy();
+  const { createHousehold, joinHousehold, findMyHousehold, syncStatus, enterDemoMode } = useGravy();
   const [phase, setPhase] = useState<Phase>('welcome');
   const [accountInitialMode, setAccountInitialMode] = useState<'signup' | 'signin'>('signup');
   const [joinCode, setJoinCode] = useState('');
   const [joinHint, setJoinHint] = useState<string | null>(null);
   const [revealFailed, setRevealFailed] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [demoFailed, setDemoFailed] = useState(false);
 
   const syncing = syncStatus === 'syncing';
 
@@ -54,6 +56,18 @@ export function Onboarding({ onComplete }: { onComplete: (result: { isNewFamily:
     joinHousehold(joinCode).then((ok) => {
       if (ok) finish({ isNewFamily: false });
     });
+  };
+
+  // Joins the shared, live Demo Mode household (see GravyContext's enterDemoMode) — deliberately
+  // doesn't call finish() (no real ONBOARDING_DONE_KEY write), so a device that only ever tries
+  // the demo leaves zero trace in real storage.
+  const handleTryDemo = async () => {
+    setDemoLoading(true);
+    setDemoFailed(false);
+    const ok = await enterDemoMode();
+    setDemoLoading(false);
+    if (ok) onComplete({ isNewFamily: false });
+    else setDemoFailed(true);
   };
 
   // Reported by AccountSetupStep once the parent is signed in — a brand-new account auto-creates
@@ -109,7 +123,15 @@ export function Onboarding({ onComplete }: { onComplete: (result: { isNewFamily:
             <button className="btn btn-ghost" onClick={() => goJoin(null)}>
               Existing Kid
             </button>
+            <button className="btn btn-ghost" onClick={handleTryDemo} disabled={demoLoading}>
+              {demoLoading ? 'Loading Demo…' : 'Try Demo'}
+            </button>
           </div>
+          {demoFailed && (
+            <div className="settings-sub sync-gate-status sync-gate-error">
+              <FontAwesomeIcon icon={faTriangleExclamation} /> Couldn't load the demo — check your connection and try again
+            </div>
+          )}
         </>
       )}
 
